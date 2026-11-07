@@ -22,59 +22,7 @@ A cloud migration blueprint for a fictional Nigerian retail/distribution company
 
 ## Architecture
 
-```mermaid
-flowchart TB
- U[Approved users] --> DNS[Route 53]
- DNS --> ALB[Public ALB HTTPS 443<br/>ACM certificate]
- subgraph VPC["VPC 10.30.0.0/16 — us-east-1 — two AZs"]
-  IGW[Internet Gateway]
-  subgraph PUB["Public subnets A/B"]
-   ALB
-   N1[NAT Gateway A]
-   N2[NAT Gateway B]
-  end
-  subgraph APP["Private application subnets A/B"]
-   ASG[Application Auto Scaling Group<br/>desired capacity 2]
-   A[EC2 app A<br/>4 vCPU / 16 GiB]
-   B[EC2 app B<br/>4 vCPU / 16 GiB]
-   ASG --> A
-   ASG --> B
-  end
-  subgraph DB["Isolated DB subnets A/B"]
-   R[(RDS PostgreSQL Multi-AZ DB instance<br/>primary + standby<br/>500 GB logical data)]
-  end
-  E[(Regional EFS<br/>1 TB; mount targets A/B)]
-  S3EP[S3 Gateway Endpoint]
-  S[(S3 archives<br/>500 GB)]
-  C[CloudWatch]
-  M[Systems Manager / Secrets Manager]
-  subgraph MIG["Private migration-only subnet"]
-   STG[MGN staging / replication servers]
-  end
-  IGW --> ALB
-  ALB --> A
-  ALB --> B
-  A --> R
-  B --> R
-  A --> E
-  B --> E
-  A --> S3EP --> S
-  B --> S3EP
-  A --> C
-  B --> C
-  A --> M
-  B --> M
-  A --> N1
-  B --> N2
- end
- O[On-premises source] <-->|Site-to-Site VPN / VGW| VPC
- MGN[AWS Application Migration Service] -. replication .-> STG
- DMS[AWS DMS full load + CDC] -.-> R
- DS[AWS DataSync] -. NFS .-> E
- DS -. archives .-> S
-```
-
-Migration services are temporary migration paths, not permanent runtime components. The MGN staging subnet is an additional migration-only subnet beyond the six steady-state subnets. S3 Gateway Endpoint is preferred where appropriate; interface endpoints are added only when justified.
+The canonical source diagram is [architecture/target-architecture.mmd](architecture/target-architecture.mmd). It shows the steady-state VPC, MGN staging area, hybrid VPN path, and distinct MGN, DMS and DataSync flows. GitHub renders Mermaid diagrams when embedded in Markdown; the source diagram still requires final visual review before design sign-off.
 
 ## Deliverables
 
@@ -88,9 +36,9 @@ Migration services are temporary migration paths, not permanent runtime componen
 
 Additional assets: `architecture/target-architecture.mmd`, `cost/pricing-assumptions.csv`, `evidence/README.md`, `DESIGN-CONSISTENCY.md`.
 
-## Cost headline
+## Cost review status
 
-Illustrative steady-state estimate: **USD $2,214–$2,702/month** (730 hours/month). This includes the Multi-AZ RDS primary and standby provisioned storage assumption. RDS compute and several allowances remain provisional. This is not an AWS quote; use AWS Pricing Calculator with exact instance classes, Region and configuration before budget approval.
+**No approved monthly total.** The previous USD $2,214–$2,702/month worksheet range is superseded and must not be used for budgeting. Exact RDS class/storage/IOPS, VPN connection configuration, NAT, EFS, ALB, endpoint, monitoring and transfer inputs must be entered into AWS Pricing Calculator. The cost document records the outstanding decisions and the required calculator export.
 
 ## Important limitations
 
@@ -98,4 +46,4 @@ No AWS resources have been provisioned; no MGN replication, DMS migration, DataS
 
 ## Suggested review sequence
 
-Read discovery and assumptions, compare architecture with network/security, review migration and runbook, review validation/rollback, then refresh the cost model. Do not describe this as an actual customer migration or deployed system.
+Read discovery and assumptions, compare architecture with network/security, review migration and runbook, review validation/rollback, then complete the AWS Pricing Calculator estimate. Do not describe this as an actual customer migration or deployed system.

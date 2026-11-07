@@ -1,0 +1,40 @@
+flowchart TB
+ U[Approved users] --> DNS[Route 53]
+ DNS --> ALB[Public ALB HTTPS 443]
+ subgraph VPC["VPC 10.30.0.0/16 — us-east-1 — two AZs"]
+  subgraph PUB["Public subnets"]
+   ALB
+   N1[NAT Gateway A]
+   N2[NAT Gateway B]
+  end
+  subgraph APP["Private app subnets"]
+   A[EC2 app A<br/>4 vCPU / 16 GiB]
+   B[EC2 app B<br/>4 vCPU / 16 GiB]
+  end
+  subgraph DB["Isolated DB subnets"]
+   R[(RDS PostgreSQL Multi-AZ<br/>500 GB planning assumption)]
+  end
+  E[(Regional EFS<br/>1 TB)]
+  S[(S3 archives<br/>500 GB)]
+  C[CloudWatch]
+  M[Systems Manager / Secrets Manager]
+  ALB --> A
+  ALB --> B
+  A --> R
+  B --> R
+  A --> E
+  B --> E
+  A --> S
+  B --> S
+  A --> C
+  B --> C
+  A --> M
+  B --> M
+  A --> N1
+  B --> N2
+ end
+ O[On-premises source] <-->|Site-to-Site VPN / VGW| VPC
+ MGN[AWS MGN] -.-> APP
+ DMS[AWS DMS full load + CDC] -.-> R
+ DS[AWS DataSync] -. NFS .-> E
+ DS -. archives .-> S

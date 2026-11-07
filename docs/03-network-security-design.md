@@ -1,6 +1,6 @@
 # 03 — Network and Security Design
 
-**ID:** CLI-AWS-NET-003 | **Version:** 1.0 | **Status:** Proposed baseline
+**ID:** CLI-AWS-NET-003 | **Version:** 1.1 | **Status:** Proposed baseline
 
 ## Network
 
@@ -8,9 +8,10 @@ VPC `clafoke-production-vpc`, CIDR `10.30.0.0/16`, `us-east-1`, two AZs, DNS sup
 
 | Subnet | CIDR | Purpose |
 |---|---|---|
-| Public A/B | `10.30.1.0/24`, `10.30.2.0/24` | ALB and NAT Gateways |
+| Public A/B | `10.30.1.0/24`, `10.30.2.0/24` | Internet-facing ALB and NAT Gateways |
 | App A/B | `10.30.11.0/24`, `10.30.12.0/24` | Private EC2 |
 | DB A/B | `10.30.21.0/24`, `10.30.22.0/24` | Isolated RDS subnet group |
+| MGN staging | Additional private CIDR to allocate | MGN replication servers; migration-only subnet, not in six-subnet steady-state count |
 
 ## Routing
 
@@ -19,6 +20,7 @@ VPC `clafoke-production-vpc`, CIDR `10.30.0.0/16`, `us-east-1`, two AZs, DNS sup
 - DB subnets local route only; no direct internet route.
 - S3 prefix-list route through S3 Gateway Endpoint.
 - Site-to-Site VPN via customer gateway + VGW; static/BGP choice pending source discovery.
+- MGN staging subnet routes and security must allow source replication traffic to staging replication servers and staging servers to required AWS service endpoints. Validate current MGN network requirements and whether VPN/private connectivity or controlled outbound access is used; do not assume the six-subnet diagram covers it.
 - Interface endpoints in suitable private subnets; dedicated endpoint subnets optional.
 
 ## Security-group intent
@@ -26,16 +28,17 @@ VPC `clafoke-production-vpc`, CIDR `10.30.0.0/16`, `us-east-1`, two AZs, DNS sup
 | Group | Inbound | Outbound |
 |---|---|---|
 | ALB | TCP 443 from approved client ranges | App listener to app SG |
-| App | TCP 8080 from ALB SG (provisional) | TCP 5432 to DB SG; TCP 2049 to EFS; approved HTTPS |
+| App | TCP 8080 from ALB SG (provisional) | TCP 5432 to DB SG; TCP 2049 to EFS mount-target SG; approved HTTPS |
 | DB | TCP 5432 from app SG and approved DBA path | Minimal required |
-| EFS | TCP 2049 from app SG | Stateful responses |
+| EFS mount target | TCP 2049 from app SG | Stateful responses |
 | Interface endpoint | TCP 443 from approved private workloads | Stateful responses |
+| MGN staging/replication | Only documented source-to-replication and service-endpoint paths | Only required replication and AWS service paths; exact rules from current MGN requirements |
 
-No public SSH or PostgreSQL. Confirm port 8080. Default NACLs initially; custom NACLs only where justified.
+No public SSH or PostgreSQL. Confirm port 8080. Default NACLs initially; custom NACLs only where justified. EFS requires TCP 2049 from EC2 client SG to mount-target SG.
 
-## Endpoints
+## Endpoints and certificates
 
-Candidate endpoints: S3 Gateway; Systems Manager (`ssm`, `ssmmessages`, and `ec2messages` where applicable); CloudWatch Logs/Monitoring; Secrets Manager; ECR API/Docker only if image pulls require them. Interface endpoints incur hourly and data-processing costs; model actual count and AZ coverage.
+Candidate endpoints: S3 Gateway; Systems Manager (`ssm`, `ssmmessages`, and `ec2messages` where applicable); CloudWatch Logs/Monitoring; Secrets Manager; ECR API/Docker only if image pulls require them. Interface endpoints incur hourly and data-processing costs; model actual count and AZ coverage. Provision an ACM certificate for ALB HTTPS and Route 53 alias/DNS records if Route 53 is authoritative; certificate/DNS costs and prerequisites must be checked separately.
 
 ## Identity and security
 
@@ -49,10 +52,10 @@ Candidate endpoints: S3 Gateway; Systems Manager (`ssm`, `ssmmessages`, and `ec2
 
 ## Validation
 
-Confirm non-overlapping CIDRs, route tables, DB isolation, ALB-only public entry, restricted app/DB/EFS paths, VPN health, endpoint connectivity, encryption, IAM and audit logs.
+Confirm non-overlapping CIDRs, route tables, DB isolation, ALB-only public entry, restricted app/DB/EFS paths, VPN health, endpoint connectivity, MGN replication path, encryption, IAM and audit logs.
 
 ## Open decisions
 
-N01 AZ IDs; N02 source CIDRs; N03 static/BGP; N04 app port; N05 API allowlisting; N06 endpoint inventory; N07 egress inspection; N08 NACL requirements; N09 IAM boundaries; N10 retention.
+N01 AZ IDs; N02 source CIDRs; N03 static/BGP; N04 app port; N05 API allowlisting; N06 endpoint inventory; N07 egress inspection; N08 NACL requirements; N09 IAM boundaries; N10 retention; N11 MGN staging CIDR and network path; N12 DNS zone/certificate ownership.
 
 **Status:** Proposed design; no AWS network/security resources deployed.

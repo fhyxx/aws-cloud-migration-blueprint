@@ -1,6 +1,6 @@
 # 02 — Target Architecture and Design Decisions
 
-**ID:** CLI-AWS-ARC-002 | **Version:** 1.0 | **Status:** Proposed, not deployed
+**ID:** CLI-AWS-ARC-002 | **Version:** 1.1 | **Status:** Proposed, not deployed
 
 ## Objectives
 
@@ -13,6 +13,7 @@ Design a two-AZ AWS target with public entry, private application tier, isolated
 - Two AZs; actual AZ IDs selected at deployment.
 - Internet Gateway attached.
 - Site-to-Site VPN via VGW; Transit Gateway is not assumed.
+- Six steady-state subnets as listed below. **AWS Application Migration Service (MGN) also requires a staging-area subnet** for replication servers. Allocate a separate private migration-only subnet/CIDR (or explicitly reserve a suitable dedicated subnet); it is additional to the six steady-state subnets and must be included in final IP, routing and cost design.
 
 | Tier | AZ-A | AZ-B |
 |---|---|---|
@@ -24,15 +25,16 @@ VPC endpoints may reside in appropriate private subnets; dedicated endpoint subn
 
 ## Compute and application
 
-Two EC2 application instances, one per AZ, each initially assumed 4 vCPU / 16 GiB. `t3.xlarge` is a pricing proxy, not a final production recommendation; T3 is burstable and sustained CPU may require another family. Instances are private. Public entry is through an ALB on HTTPS 443. App listener TCP 8080 is provisional and must be discovered. No public SSH; use Systems Manager where supported.
+Two EC2 application instances, one per AZ, each initially assumed 4 vCPU / 16 GiB. `t3.xlarge` is a pricing proxy, not a final production recommendation; T3 is burstable and sustained CPU may require another family. Instances are private. Public entry is through an internet-facing ALB in at least two public subnets on HTTPS 443. Provision an ACM certificate and Route 53 alias (if Route 53 hosts the zone); DNS and certificate are implementation requirements omitted from the cost baseline. App listener TCP 8080 is provisional and must be discovered. No public SSH; use Systems Manager where supported.
 
 ## Database and storage
 
-- RDS for PostgreSQL, Multi-AZ, with a 500 GB planning storage assumption.
+- RDS for PostgreSQL, **Multi-AZ DB instance deployment with one standby** (not a Multi-AZ DB cluster), with 500 GB logical data/storage assumption.
 - Source DB sizing assumption is 8 vCPU / 32 GiB; target class remains subject to benchmark and compatibility.
 - RDS DB subnet group spans both isolated DB subnets.
-- Regional EFS for 1 TB shared-file assumption.
-- S3 Standard for 500 GB archive pricing assumption.
+- Cost model includes primary and standby instance-hours and provisioned storage copies.
+- Regional EFS for 1 TB shared-file assumption, with a mount target in each application AZ. EFS mount target SG permits inbound TCP 2049 from the application SG.
+- S3 Standard for 500 GB archive pricing assumption, accessed privately through an S3 Gateway Endpoint where appropriate.
 - EFS throughput, lifecycle tiers and S3 retention/storage class require discovery.
 
 ## Routing and egress
@@ -52,6 +54,6 @@ Two NAT Gateways cost more but avoid a single-AZ NAT dependency and reduce cross
 
 ## Open decisions
 
-Confirm app port/OS, EC2 family, RDS version/class/storage/IOPS, NFS semantics/EFS throughput, source CIDRs/VPN routing, API allowlists, retention and workload thresholds.
+Confirm app port/OS, EC2 family, RDS version/class/storage/IOPS, NFS semantics/EFS throughput, MGN staging subnet CIDR/route/security, source CIDRs/VPN routing, API allowlists, Route 53 ownership, certificate domain validation, retention and workload thresholds.
 
 **Status:** Proposed architecture; no infrastructure deployed or load-tested.

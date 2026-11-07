@@ -1,6 +1,6 @@
 # 05 — Migration Runbook
 
-**ID:** CLI-AWS-RUN-005 | **Version:** 1.0 | **Status:** Proposed, not executed
+**ID:** CLI-AWS-RUN-005 | **Version:** 1.1 | **Status:** Proposed, not executed
 
 ## Roles
 
@@ -12,19 +12,19 @@ Appoint owners, approve scope/change/maintenance window, communications, escalat
 
 ## Phase 1 — Source readiness
 
-Inventory OS, packages, runtime, ports, services, jobs, database version/extensions/logging/backups, NFS paths/permissions/locking and API/session/queue dependencies. Exit: critical gaps have owners. Stop if recovery or dependencies are unknown.
+Inventory OS, packages, runtime, ports, services, jobs, database version/extensions/logging/backups, NFS paths/permissions/locking and API/session/queue dependencies. Confirm PostgreSQL WAL/logical replication prerequisites, table primary keys/replica identity, source DMS permissions and acceptable WAL retention. Exit: critical gaps have owners. Stop if recovery or dependencies are unknown.
 
 ## Phase 2 — AWS readiness
 
-Validate VPC `10.30.0.0/16`, six subnets/two AZs, IGW, two NAT Gateways, VGW VPN, ALB, private EC2, isolated RDS, EFS, S3, IAM, Secrets Manager, Systems Manager, endpoints, encryption and CloudWatch. Exit: infrastructure/security approval.
+Validate VPC `10.30.0.0/16`, six steady-state subnets/two AZs, additional private MGN staging subnet, IGW, two NAT Gateways, VGW VPN, ALB, ACM certificate, DNS, private EC2, isolated RDS, EFS mount targets in both app AZs, S3 Gateway Endpoint, IAM, Secrets Manager, Systems Manager, endpoints, encryption and CloudWatch. Exit: infrastructure/security approval.
 
 ## Phase 3 — MGN
 
-Check OS compatibility; configure IAM and MGN; install agents; monitor replication; configure private launch settings; test launch in isolation; validate boot, services, app dependencies and admin access. Exit: both test launches approved.
+Check source OS/kernel/disk compatibility; create/identify dedicated staging-area subnet; configure MGN replication settings, IAM and network/security paths; install agents; monitor replication lag and staging capacity; configure private launch settings; test launch in isolation; validate boot, services, app dependencies and admin access. Exit: both test launches approved. Confirm staging resources and temporary costs are understood.
 
 ## Phase 4 — DMS
 
-Assess PostgreSQL compatibility; prepare encrypted Multi-AZ RDS; configure DMS endpoints/task; full load; review errors; enable CDC; monitor lag; reconcile schema, critical rows, sequences and permissions. Exit: DBA sign-off.
+Complete schema/object migration separately using an approved method; prepare encrypted Multi-AZ RDS; configure PostgreSQL logical replication and DMS endpoint permissions; configure DMS endpoints/task; full load; review errors, validation and referential integrity; enable CDC; monitor lag, replication slots and WAL retention; reconcile schema, critical rows, sequences, grants and permissions. DBA signs off on trigger/foreign-key handling and final sequence state. Exit: DBA sign-off.
 
 ## Phase 5 — DataSync
 
@@ -40,9 +40,9 @@ Test login, order creation/retrieval/update, payment/delivery test APIs, DB conn
 2. Stop source order creation and background writers.
 3. Confirm source DB and file writes stopped.
 4. Final DataSync transfer.
-5. DMS CDC catch-up.
-6. Reconcile critical orders and financial records.
-7. Configure AWS application with RDS/EFS/secrets.
+5. DMS CDC catch-up; verify lag is zero/within agreed threshold and no task errors.
+6. Reconcile critical orders and financial records; reconcile sequences and grants.
+7. Configure target app with RDS/EFS/secrets.
 8. Smoke test.
 9. Migration Lead and Business Owner go/no-go.
 10. Switch traffic to ALB.

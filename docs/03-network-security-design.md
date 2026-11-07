@@ -1,6 +1,6 @@
 # 03 — Network and Security Design
 
-**ID:** CLI-AWS-NET-003 | **Version:** 1.1 | **Status:** Proposed baseline
+**ID:** CLI-AWS-NET-003 | **Version:** 1.2 | **Status:** Proposed baseline
 
 ## Network
 
@@ -13,6 +13,8 @@ VPC `clafoke-production-vpc`, CIDR `10.30.0.0/16`, `us-east-1`, two AZs, DNS sup
 | DB A/B | `10.30.21.0/24`, `10.30.22.0/24` | Isolated RDS subnet group |
 | MGN staging | Additional private CIDR to allocate | MGN replication servers; migration-only subnet, not in six-subnet steady-state count |
 
+The MGN staging subnet is a seventh, migration-only network segment in addition to the six steady-state subnets. Allocate its CIDR after confirming source/VPC CIDR non-overlap and required IP capacity. Record the AZ placement, route table, NAT or VPC endpoint strategy, NACL and security-group rules before enabling replication.
+
 ## Routing
 
 - Public default route to IGW.
@@ -20,7 +22,8 @@ VPC `clafoke-production-vpc`, CIDR `10.30.0.0/16`, `us-east-1`, two AZs, DNS sup
 - DB subnets local route only; no direct internet route.
 - S3 prefix-list route through S3 Gateway Endpoint.
 - Site-to-Site VPN via customer gateway + VGW; static/BGP choice pending source discovery.
-- MGN staging subnet routes and security must allow source replication traffic to staging replication servers and staging servers to required AWS service endpoints. Validate current MGN network requirements and whether VPN/private connectivity or controlled outbound access is used; do not assume the six-subnet diagram covers it.
+- MGN source agents must reach the regional MGN service API over TCP 443 and the staging-area replication servers over TCP 1500. Replication servers in the staging subnet must reach the regional MGN service API over TCP 443. Implement only these documented flows plus required DNS/time and management dependencies; do not expose the staging subnet broadly.
+- If private connectivity is not implemented for MGN service access, the staging subnet needs a controlled outbound path (for example, same-AZ NAT) to the regional service endpoint. Confirm current MGN service endpoint and network guidance before deployment. The source-to-replication TCP 1500 path must be routable over the selected VPN or other approved connectivity.
 - Interface endpoints in suitable private subnets; dedicated endpoint subnets optional.
 
 ## Security-group intent
@@ -32,9 +35,9 @@ VPC `clafoke-production-vpc`, CIDR `10.30.0.0/16`, `us-east-1`, two AZs, DNS sup
 | DB | TCP 5432 from app SG and approved DBA path | Minimal required |
 | EFS mount target | TCP 2049 from app SG | Stateful responses |
 | Interface endpoint | TCP 443 from approved private workloads | Stateful responses |
-| MGN staging/replication | Only documented source-to-replication and service-endpoint paths | Only required replication and AWS service paths; exact rules from current MGN requirements |
+| MGN staging/replication | TCP 1500 from explicitly approved source-server CIDRs/security groups where supported; no public inbound | TCP 443 to regional MGN API and only required replication/service paths |
 
-No public SSH or PostgreSQL. Confirm port 8080. Default NACLs initially; custom NACLs only where justified. EFS requires TCP 2049 from EC2 client SG to mount-target SG.
+No public SSH or PostgreSQL. Confirm port 8080. Default NACLs initially; custom NACLs only where justified. EFS requires TCP 2049 from EC2 client SG to mount-target SG. MGN port requirements must be checked against the current AWS documentation for the selected Region and connectivity design before rules are applied.
 
 ## Endpoints and certificates
 
@@ -52,7 +55,7 @@ Candidate endpoints: S3 Gateway; Systems Manager (`ssm`, `ssmmessages`, and `ec2
 
 ## Validation
 
-Confirm non-overlapping CIDRs, route tables, DB isolation, ALB-only public entry, restricted app/DB/EFS paths, VPN health, endpoint connectivity, MGN replication path, encryption, IAM and audit logs.
+Confirm non-overlapping CIDRs, route tables, DB isolation, ALB-only public entry, restricted app/DB/EFS paths, VPN health, endpoint connectivity, MGN agent-to-service TCP 443, source-to-replication TCP 1500, replication-server-to-service TCP 443, encryption, IAM and audit logs.
 
 ## Open decisions
 

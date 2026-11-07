@@ -1,80 +1,78 @@
 # 07 — AWS Cost Estimation and Optimisation
 
-**ID:** CLI-AWS-COST-007 | **Version:** 1.1 | **Status:** Illustrative planning model  
-**Region:** `us-east-1` | **Currency:** USD | **Month:** 730 hours
+**ID:** CLI-AWS-COST-007 | **Version:** 1.2 | **Status:** Pricing review open — no approved total  
+**Region:** `us-east-1` | **Currency:** USD | **Planning month:** 730 hours
 
-## Executive estimate
+## Executive decision
 
-**Approximately $2,214–$2,702/month** or **$26,568–$32,424/year**. This is not a quote or actual bill. RDS compute and several allowances are provisional and must be priced in AWS Pricing Calculator before budget approval.
+The earlier **$2,214–$2,702/month** range is retained only as a historical, illustrative worksheet result. **Do not use it as a budget, quotation, expected bill or customer commitment.** The earlier worksheet used unverified RDS compute/storage rates and a VPN hourly example from a different Region and connection design. Those values do not support a defensible current total.
 
-## Model aligned to architecture
+A final AWS Pricing Calculator estimate has not been produced. This document deliberately does not invent one. The exact RDS class/storage/IOPS and VPN product configuration must be selected and entered into AWS Pricing Calculator; the saved estimate URL and exported CSV/PDF should then be committed alongside this document.
 
-| Service | Assumption | Monthly USD |
-|---|---|---:|
-| EC2 | 2 × t3.xlarge × $0.167/hr × 730 | 243.82 |
-| EBS gp3 | 200 GB × $0.08/GB-month | 16.00 |
-| RDS compute | Multi-AZ DB instance: primary + standby; 2 × $0.80–$1.10/hr × 730 | 1,168–1,606 |
-| RDS storage | 500 GB logical data × 2 copies × planning $0.23/GB-month | 230.00 |
-| RDS backup | Usage allowance | 20–50 |
-| EFS Standard | 1,000 GB × $0.30/GB-month | 300.00 |
-| S3 Standard | 500 GB × $0.023/GB-month | 11.50 |
-| NAT hourly | 2 × $0.045/hr × 730 | 65.70 |
-| NAT processing | 200 GB × $0.045/GB | 9.00 |
-| ALB hourly | 730 × $0.0225/hr | 16.43 |
-| ALB LCU | Low usage allowance | 6.00 |
-| Site-to-Site VPN | 730 × $0.05/hr planning proxy | 36.50 |
-| VPN public IPv4 | 2 × $0.005/hr × 730 allowance | 7.30 |
-| CloudWatch | Basic logs/metrics allowance | 25.00 |
-| Interface endpoints | Small multi-AZ set allowance | 30–50 |
-| Internet transfer | 100 GB × $0.09/GB allowance | 9.00 |
-| Contingency | Usage allowance | 20.00 |
-| **Total** | | **2,214–2,702** |
+## Architecture quantities to price
 
-The detailed inputs and confidence labels are in `cost/pricing-assumptions.csv`. Arithmetic from unrounded inputs is $2,214.25–$2,702.25/month; displayed figures are rounded to the nearest dollar.
+| Service | Current design input | Pricing status / required decision |
+|---|---|---|
+| EC2 | 2 × Linux `t3.xlarge`, 730 h/month | Reference rate exists for us-east-1; retain as sizing proxy only. Benchmark sustained CPU and compare a non-burstable family. |
+| EBS | 2 × 100 GB gp3 | Confirm provisioned IOPS/throughput and current regional rates. |
+| RDS PostgreSQL | Multi-AZ DB instance deployment, one standby; 500 GB logical/provisioned-storage assumption | **Not priced.** Select PostgreSQL major version, exact class, gp3/io2, provisioned IOPS/throughput and backup retention. Calculator must include primary and standby instance-hours and provisioned storage. |
+| RDS backups | Usage-dependent | Calculate retention, changed-data volume and snapshot needs; avoid a flat unsupported allowance. |
+| EFS | Regional Standard, 1,000 GB, mount targets in both app AZs | Confirm regional storage rate, lifecycle mix, throughput mode and metered throughput. |
+| S3 | Standard, 500 GB | Confirm storage, requests, retrieval, lifecycle and replication requirements. |
+| NAT Gateway | 2 gateways, same-AZ app egress | Confirm us-east-1 gateway-hour and data-processing rates plus realistic processed GB; include cross-AZ transfer if any. |
+| ALB | 1 internet-facing ALB | Price hours and estimated LCU dimensions (new connections, active connections, processed bytes, rule evaluations). |
+| Site-to-Site VPN | 1 standard connection to VGW | **Not priced.** Select standard connection type and verify exact us-east-1 connection-hour rate, tunnel public IPv4 addresses and transfer. Do not reuse the earlier $0.05/hour example: it was a US East (Ohio) example for a different connection scenario. |
+| Interface endpoints | Count and AZ coverage not final | Inventory each endpoint and AZ; price endpoint-hours and data processing. S3 Gateway Endpoint has no hourly endpoint charge. |
+| CloudWatch | Logs, metrics, alarms and Flow Logs | Estimate ingestion GB, retention, custom metrics, alarms and Flow Log destinations. |
+| Internet/data transfer | 100 GB was a placeholder | Replace with direction, destination, monthly volume and applicable free tiers. |
+| ACM / Route 53 | Public ALB certificate and DNS alias | Confirm public hosted-zone ownership, query volume and certificate validation prerequisites; model Route 53 charges where applicable. |
+| MGN / DMS / DataSync | Temporary migration-period use | Model separately as one-time/overlap costs, including staging EC2/EBS, replication duration, DMS compute, DataSync transfer and temporary network resources. |
 
-## Important RDS billing correction
+## RDS billing treatment
 
-This estimate assumes a **Multi-AZ DB instance deployment with one standby**, not a Multi-AZ DB cluster with two readable standbys. AWS bills instance-hours for both primary and standby, and provisioned storage for both primary and standby. The model therefore includes 500 GB for each copy (1,000 GB total billed storage). Confirm the exact deployment type and storage billing in the AWS Pricing Calculator. AWS describes these billing rules in its [RDS DB instance billing documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_OnDemandDBInstances.html).
+The design is specifically a **Multi-AZ DB instance deployment with one standby**, not a Multi-AZ DB cluster with two readable standbys. AWS documents that both primary and standby instance-hours are billed, and storage is charged for the provisioned storage on both instances. The 500 GB logical/provisioned storage assumption must therefore be costed for both copies in the calculator. The final rate must come from the calculator for the chosen DB class, engine version, storage type and Region.
 
-## Confidence and limitations
+AWS references:
+- [RDS for PostgreSQL pricing and deployment options](https://aws.amazon.com/rds/postgresql/pricing/)
+- [RDS Multi-AZ DB instance billing details](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_OnDemandDBInstances.html)
 
-EC2 T3 xlarge Linux us-east-1 proxy rate is based on public AWS instance pricing. NAT Gateway public example rate is $0.045/hour and $0.045/GB. ALB costs include base hourly and usage-dependent LCU. EFS/S3 storage rates are reference assumptions.
+## Pricing method and acceptance
 
-RDS $0.80–$1.10 per instance-hour and $0.23/GB-month are planning ranges, not verified quotes for a selected RDS class/storage configuration. VPN $0.05/hour is a public AWS pricing-example rate shown for a particular connection in us-east-2; do not treat it as confirmed us-east-1 pricing. Confirm connection type, Region, public IPv4 count/charges, data transfer, exact PostgreSQL version, instance class, storage type/IOPS, backup usage, endpoint count, CloudWatch ingestion, ALB LCU and transfer allowances in AWS Pricing Calculator.
+1. Open [AWS Pricing Calculator](https://calculator.aws/).
+2. Create a named estimate for `Clafoke Investors Ltd — us-east-1 — steady state`.
+3. Add EC2, EBS, RDS for PostgreSQL, EFS, S3, VPC/NAT, ALB, Site-to-Site VPN, CloudWatch and Route 53 as applicable.
+4. Use 730 hours/month and the architecture quantities above. Record all selections, including exact DB class, PostgreSQL version, storage type, provisioned IOPS/throughput, backup retention, NAT processed GB, ALB LCU inputs, VPN connection type, endpoint count/AZs, logs and transfer.
+5. Create a separate migration-period group for MGN staging, DMS, DataSync, temporary instances, transfer and overlap duration.
+6. Export the estimate as CSV and PDF and retain the public share URL. Record the estimate date and pricing assumptions.
+7. Reconcile the exported service totals with this document and `cost/pricing-assumptions.csv`. Do not approve a budget until missing inputs are resolved.
 
-## Optimisation
+AWS explains that the calculator uses service configuration and Region inputs, can export CSV/PDF and can generate a shareable estimate link. Its estimate excludes taxes and only includes the information entered.
 
-1. EFS lifecycle: hot files in Standard; eligible cold files to IA/Archive after access and retrieval analysis.
-2. Retain two NAT Gateways for production-oriented resilience; use S3 Gateway Endpoint and justified interface endpoints to reduce NAT processing. One NAT is cheaper but less resilient.
-3. Benchmark EC2; T3 is burstable and may not suit sustained CPU.
-4. Benchmark RDS; preserve Multi-AZ unless business explicitly accepts availability trade-off. Consider commitments only after stable use.
-5. Select S3 storage classes by access and retention.
-6. Set log retention and control ingestion.
-7. AWS Budgets alerts at 50%, 80%, 100%; Cost Explorer and allocation tags.
+## Optimisation decisions
 
-## Exclusions
+1. Keep two NAT Gateways in the production-oriented baseline; compare a one-NAT cost option only with an explicit availability/cross-AZ trade-off.
+2. Use the S3 Gateway Endpoint for eligible S3 traffic and avoid routing that traffic through NAT.
+3. Select interface endpoints from an actual service dependency inventory; do not add endpoints speculatively.
+4. Benchmark EC2 and RDS using representative CPU, memory, IOPS, throughput, connection and latency measurements before right-sizing.
+5. Use EFS lifecycle policies only after file access patterns and retrieval requirements are known.
+6. Apply S3 lifecycle and retention policies based on approved archive requirements.
+7. Set AWS Budgets alerts and Cost Explorer allocation tags after the cost baseline is approved.
 
-Taxes, support plan, engineering labour, customer gateway/internet, migration staging/overlap, DMS/MGN/DataSync execution, unknown transfer, optional security services, detailed backup, EFS throughput, S3 requests/retrieval, extra endpoints and unmodelled usage.
+## Exclusions / separate estimates
 
-## Required decisions
-
-Exact EC2 family; RDS version/class/storage/IOPS; EFS tier mix/throughput; archive retention; NAT GB; endpoint count/AZs; internet transfer; migration duration; support plan; budget approval.
-
-**Recommendation:** Retain two-AZ design. Optimise storage and egress first; right-size compute after workload tests. Recalculate all line items in AWS Pricing Calculator before budget approval.
-
-**Status:** Planning estimate only—not a quotation or actual bill.
+Taxes, support plan, engineering labour, customer gateway and on-premises internet costs, migration staging/overlap, MGN/DMS/DataSync execution, unknown transfer, optional security services, detailed backup, EFS throughput, S3 requests/retrieval and unmodelled usage require separate inputs or estimates.
 
 ## Public pricing references
 
-Pricing pages are dynamic; confirm current rates and configuration in AWS Pricing Calculator before approval.
-
+- [AWS Pricing Calculator](https://calculator.aws/)
 - [Amazon EC2 On-Demand pricing](https://aws.amazon.com/ec2/pricing/on-demand/)
-- [Amazon VPC pricing — NAT Gateway](https://aws.amazon.com/vpc/pricing/)
+- [Amazon VPC pricing — NAT Gateway and public IPv4](https://aws.amazon.com/vpc/pricing/)
 - [Elastic Load Balancing pricing](https://aws.amazon.com/elasticloadbalancing/pricing/)
+- [Amazon RDS for PostgreSQL pricing](https://aws.amazon.com/rds/postgresql/pricing/)
 - [Amazon EFS pricing](https://aws.amazon.com/efs/pricing/)
 - [Amazon S3 pricing](https://aws.amazon.com/s3/pricing/)
 - [AWS Site-to-Site VPN pricing](https://aws.amazon.com/vpn/pricing/)
-- [AWS Pricing Calculator](https://calculator.aws/)
-- [RDS Multi-AZ DB instance billing](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_OnDemandDBInstances.html)
+- [AWS Pricing Calculator guide: export estimate](https://docs.aws.amazon.com/pricing-calculator/latest/userguide/export-estimate.html)
+- [AWS Pricing Calculator guide: share estimate](https://docs.aws.amazon.com/pricing-calculator/latest/userguide/save-share-estimate.html)
 
-The published EC2 T3 xlarge reference lists 4 vCPU, 16 GiB and a Linux On-Demand rate of $0.167/hour in US East (N. Virginia). AWS VPC pricing examples show NAT Gateway at $0.045/hour and $0.045/GB in the cited example Region; validate the exact Region and current rate. The RDS, VPN, IPv4, CloudWatch and endpoint figures in this model remain provisional allowances until a precise calculator configuration is saved.
+**Status:** Architecture quantities and cost drivers reviewed. Final numerical estimate is **blocked pending exact configuration and an exported AWS Pricing Calculator result**. No AWS resources have been deployed.

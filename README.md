@@ -10,13 +10,14 @@ A cloud migration blueprint for a fictional Nigerian retail/distribution company
 |---|---|
 | Region | `us-east-1` |
 | VPC | `10.30.0.0/16`, two AZs |
-| Subnets | 2 public, 2 private app, 2 isolated DB; a dedicated MGN staging subnet is a required implementation detail to be added during deployment |
-| Application | 2 Linux servers, 4 vCPU / 16 GiB each, EC2 |
-| Database | PostgreSQL to RDS PostgreSQL Multi-AZ DB instance deployment; 500 GB logical data assumption, storage billing includes primary and standby copies |
+| Steady-state subnets | 2 public, 2 private app, 2 isolated DB |
+| Migration subnet | Additional private MGN staging subnet; migration-only |
+| Application | 2 Linux servers, 4 vCPU / 16 GiB each, EC2 in a two-AZ Auto Scaling Group |
+| Database | PostgreSQL to RDS PostgreSQL Multi-AZ DB instance deployment; 500 GB logical data assumption; primary and standby storage billed |
 | Shared files | 1 TB Regional EFS, mount target in each application AZ |
-| Archives | 500 GB S3 Standard |
+| Archives | 500 GB S3 Standard via Gateway Endpoint where appropriate |
 | Hybrid | 1 Site-to-Site VPN using VGW design |
-| Entry | Public ALB, HTTPS 443 |
+| Entry | Public ALB, HTTPS 443; ACM certificate and DNS required |
 | Business targets | 99.9% availability; RTO 4h; RPO 15m—not demonstrated |
 
 ## Architecture
@@ -24,32 +25,41 @@ A cloud migration blueprint for a fictional Nigerian retail/distribution company
 ```mermaid
 flowchart TB
  U[Approved users] --> DNS[Route 53]
- DNS --> ALB[Public ALB HTTPS 443]
- subgraph VPC["VPC 10.30.0.0/16 — two AZs"]
-  subgraph PUB["Public subnets"]
+ DNS --> ALB[Public ALB HTTPS 443<br/>ACM certificate]
+ subgraph VPC["VPC 10.30.0.0/16 — us-east-1 — two AZs"]
+  IGW[Internet Gateway]
+  subgraph PUB["Public subnets A/B"]
    ALB
    N1[NAT Gateway A]
    N2[NAT Gateway B]
   end
-  subgraph APP["Private app subnets"]
+  subgraph APP["Private application subnets A/B"]
+   ASG[Application Auto Scaling Group<br/>desired capacity 2]
    A[EC2 app A<br/>4 vCPU / 16 GiB]
    B[EC2 app B<br/>4 vCPU / 16 GiB]
+   ASG --> A
+   ASG --> B
   end
-  subgraph DB["Isolated DB subnets"]
-   R[(RDS PostgreSQL Multi-AZ<br/>500 GB logical data)]
+  subgraph DB["Isolated DB subnets A/B"]
+   R[(RDS PostgreSQL Multi-AZ DB instance<br/>primary + standby<br/>500 GB logical data)]
   end
   E[(Regional EFS<br/>1 TB; mount targets A/B)]
-  S[(S3 archives<br/>500 GB via Gateway Endpoint)]
+  S3EP[S3 Gateway Endpoint]
+  S[(S3 archives<br/>500 GB)]
   C[CloudWatch]
   M[Systems Manager / Secrets Manager]
+  subgraph MIG["Private migration-only subnet"]
+   STG[MGN staging / replication servers]
+  end
+  IGW --> ALB
   ALB --> A
   ALB --> B
   A --> R
   B --> R
   A --> E
   B --> E
-  A --> S
-  B --> S
+  A --> S3EP --> S
+  B --> S3EP
   A --> C
   B --> C
   A --> M
@@ -58,14 +68,13 @@ flowchart TB
   B --> N2
  end
  O[On-premises source] <-->|Site-to-Site VPN / VGW| VPC
- STG[Dedicated private MGN staging subnet] --- VPC
- MGN[AWS MGN] -. replication .-> STG
+ MGN[AWS Application Migration Service] -. replication .-> STG
  DMS[AWS DMS full load + CDC] -.-> R
  DS[AWS DataSync] -. NFS .-> E
  DS -. archives .-> S
 ```
 
-Migration services are temporary migration paths, not permanent runtime components. The MGN staging subnet is an additional subnet requirement beyond the six steady-state subnets. S3 Gateway Endpoint is preferred where appropriate; interface endpoints are added only when justified.
+Migration services are temporary migration paths, not permanent runtime components. The MGN staging subnet is an additional migration-only subnet beyond the six steady-state subnets. S3 Gateway Endpoint is preferred where appropriate; interface endpoints are added only when justified.
 
 ## Deliverables
 
@@ -81,11 +90,11 @@ Additional assets: `architecture/target-architecture.mmd`, `cost/pricing-assumpt
 
 ## Cost headline
 
-Illustrative steady-state estimate: **USD $2,214–$2,702/month** (730 hours/month). This corrects the Multi-AZ RDS storage assumption to include both primary and standby provisioned storage. RDS compute and several allowances remain provisional. This is not an AWS quote; use AWS Pricing Calculator with exact instance classes, Region and configuration before budget approval.
+Illustrative steady-state estimate: **USD $2,214–$2,702/month** (730 hours/month). This includes the Multi-AZ RDS primary and standby provisioned storage assumption. RDS compute and several allowances remain provisional. This is not an AWS quote; use AWS Pricing Calculator with exact instance classes, Region and configuration before budget approval.
 
 ## Important limitations
 
-No AWS resources have been provisioned; no MGN replication, DMS migration, DataSync transfer, cutover, rollback, performance test or recovery test has occurred. RTO/RPO and availability are targets, not results. Cost excludes taxes, support plan, engineering labour and several usage-dependent charges.
+No AWS resources have been provisioned; no MGN replication, DMS migration, DataSync transfer, cutover, rollback, performance test or recovery test has occurred. RTO/RPO and availability are targets, not results. Cost excludes taxes, support plan, engineering labour and several usage-dependent charges, including migration-service execution and migration staging resources.
 
 ## Suggested review sequence
 

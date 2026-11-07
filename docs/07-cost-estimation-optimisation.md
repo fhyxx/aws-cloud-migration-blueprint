@@ -1,11 +1,11 @@
 # 07 — AWS Cost Estimation and Optimisation
 
-**ID:** CLI-AWS-COST-007 | **Version:** 1.0 | **Status:** Illustrative planning model  
+**ID:** CLI-AWS-COST-007 | **Version:** 1.1 | **Status:** Illustrative planning model  
 **Region:** `us-east-1` | **Currency:** USD | **Month:** 730 hours
 
 ## Executive estimate
 
-**Approximately $2,099–$2,587/month** or **$25,191–$31,047/year**. This is not a quote or actual bill. RDS compute and several allowances are provisional and must be priced in AWS Pricing Calculator before budget approval.
+**Approximately $2,214–$2,702/month** or **$26,568–$32,424/year**. This is not a quote or actual bill. RDS compute and several allowances are provisional and must be priced in AWS Pricing Calculator before budget approval.
 
 ## Model aligned to architecture
 
@@ -13,8 +13,8 @@
 |---|---|---:|
 | EC2 | 2 × t3.xlarge × $0.167/hr × 730 | 243.82 |
 | EBS gp3 | 200 GB × $0.08/GB-month | 16.00 |
-| RDS compute | 2 Multi-AZ instances × $0.80–$1.10/hr × 730 | 1,168–1,606 |
-| RDS storage | 500 GB × planning $0.23/GB-month | 115.00 |
+| RDS compute | Multi-AZ DB instance: primary + standby; 2 × $0.80–$1.10/hr × 730 | 1,168–1,606 |
+| RDS storage | 500 GB logical data × 2 copies × planning $0.23/GB-month | 230.00 |
 | RDS backup | Usage allowance | 20–50 |
 | EFS Standard | 1,000 GB × $0.30/GB-month | 300.00 |
 | S3 Standard | 500 GB × $0.023/GB-month | 11.50 |
@@ -22,21 +22,25 @@
 | NAT processing | 200 GB × $0.045/GB | 9.00 |
 | ALB hourly | 730 × $0.0225/hr | 16.43 |
 | ALB LCU | Low usage allowance | 6.00 |
-| Site-to-Site VPN | 730 × $0.05/hr planning rate | 36.50 |
+| Site-to-Site VPN | 730 × $0.05/hr planning proxy | 36.50 |
 | VPN public IPv4 | 2 × $0.005/hr × 730 allowance | 7.30 |
 | CloudWatch | Basic logs/metrics allowance | 25.00 |
 | Interface endpoints | Small multi-AZ set allowance | 30–50 |
 | Internet transfer | 100 GB × $0.09/GB allowance | 9.00 |
 | Contingency | Usage allowance | 20.00 |
-| **Total** | | **2,099–2,587** |
+| **Total** | | **2,214–2,702** |
 
-The detailed inputs and confidence labels are in `cost/pricing-assumptions.csv`.
+The detailed inputs and confidence labels are in `cost/pricing-assumptions.csv`. Arithmetic from unrounded inputs is $2,214.25–$2,702.25/month; displayed figures are rounded to the nearest dollar.
+
+## Important RDS billing correction
+
+This estimate assumes a **Multi-AZ DB instance deployment with one standby**, not a Multi-AZ DB cluster with two readable standbys. AWS bills instance-hours for both primary and standby, and provisioned storage for both primary and standby. The model therefore includes 500 GB for each copy (1,000 GB total billed storage). Confirm the exact deployment type and storage billing in the AWS Pricing Calculator. AWS describes these billing rules in its [RDS DB instance billing documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_OnDemandDBInstances.html).
 
 ## Confidence and limitations
 
 EC2 T3 xlarge Linux us-east-1 proxy rate is based on public AWS instance pricing. NAT Gateway public example rate is $0.045/hour and $0.045/GB. ALB costs include base hourly and usage-dependent LCU. EFS/S3 storage rates are reference assumptions.
 
-RDS $0.80–$1.10 per instance-hour is a planning range, not a verified quote for a selected RDS class. Confirm exact PostgreSQL version, instance class, Multi-AZ deployment, storage type/IOPS and backup usage. VPN/public IPv4 treatment, endpoint count, CloudWatch, LCU and transfer allowances must also be recalculated.
+RDS $0.80–$1.10 per instance-hour and $0.23/GB-month are planning ranges, not verified quotes for a selected RDS class/storage configuration. VPN $0.05/hour is a public AWS pricing-example rate shown for a particular connection in us-east-2; do not treat it as confirmed us-east-1 pricing. Confirm connection type, Region, public IPv4 count/charges, data transfer, exact PostgreSQL version, instance class, storage type/IOPS, backup usage, endpoint count, CloudWatch ingestion, ALB LCU and transfer allowances in AWS Pricing Calculator.
 
 ## Optimisation
 
@@ -71,5 +75,6 @@ Pricing pages are dynamic; confirm current rates and configuration in AWS Pricin
 - [Amazon S3 pricing](https://aws.amazon.com/s3/pricing/)
 - [AWS Site-to-Site VPN pricing](https://aws.amazon.com/vpn/pricing/)
 - [AWS Pricing Calculator](https://calculator.aws/)
+- [RDS Multi-AZ DB instance billing](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_OnDemandDBInstances.html)
 
 The published EC2 T3 xlarge reference lists 4 vCPU, 16 GiB and a Linux On-Demand rate of $0.167/hour in US East (N. Virginia). AWS VPC pricing examples show NAT Gateway at $0.045/hour and $0.045/GB in the cited example Region; validate the exact Region and current rate. The RDS, VPN, IPv4, CloudWatch and endpoint figures in this model remain provisional allowances until a precise calculator configuration is saved.

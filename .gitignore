@@ -1,0 +1,10 @@
+.DS_Store
+Thumbs.db
+*.tfstate
+*.tfstate.*
+.terraform/
+.env
+.env.*
+!.env.example
+*.pem
+*.key

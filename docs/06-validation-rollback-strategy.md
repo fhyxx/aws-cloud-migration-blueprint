@@ -1,6 +1,6 @@
 # 06 — Validation, Testing and Rollback Strategy
 
-**ID:** CLI-AWS-VAL-006 | **Version:** 1.0 | **Status:** Proposed, not tested
+**ID:** CLI-AWS-VAL-006 | **Version:** 1.1 | **Status:** Proposed, not tested
 
 ## Objectives and targets
 
@@ -17,11 +17,11 @@ Prove infrastructure, application, database, storage, security, performance and 
 
 ## Infrastructure/network tests
 
-- VPC and six planned subnets match `10.30.0.0/16` across two AZs.
+- VPC and six steady-state subnets match `10.30.0.0/16` across two AZs; dedicated MGN staging subnet is separately allocated and validated.
 - Route tables match design; DB has no direct internet route.
 - VPN routes/tunnels work.
-- Security groups permit only approved paths.
-- ALB HTTPS listener/certificate and target health pass.
+- Security groups permit only approved paths, including EFS TCP 2049 and MGN replication flows.
+- ALB HTTPS listener, ACM certificate, Route 53 records and target health pass.
 - App port 8080 remains provisional pending discovery.
 
 ## Application tests
@@ -30,11 +30,11 @@ Test startup, authentication, invalid credentials, order create/retrieve/update,
 
 ## Database validation
 
-Validate schema objects, constraints, indexes, sequences, procedures, triggers, extensions, roles and permissions. Compare table inventory and row counts; reconcile critical orders and financial records by stable IDs; test transactions; review all DMS errors and CDC latency. Row counts alone do not prove integrity.
+Validate schema objects, constraints, indexes, sequences, procedures, triggers, extensions, roles and permissions. Confirm DMS full load/CDC prerequisites and inspect task errors. Verify primary keys/replica identity for all CDC tables; reconcile sequence values after replication stops; compare table inventory and row counts; reconcile critical orders and financial records by stable IDs; test transactions. Row counts alone do not prove integrity. Explicitly test foreign-key/trigger handling during full load and restore normal enforcement before application acceptance.
 
 ## Storage validation
 
-Mount EFS from both AZs; test read/write, ownership, permissions and locking; reconcile DataSync counts/sizes and errors. Validate S3 object inventory, encryption, Block Public Access, policy and retrieval.
+Mount EFS from both AZs; test read/write, ownership, permissions and locking; confirm mount targets in each AZ and security-group TCP 2049 path; reconcile DataSync counts/sizes and errors. Validate S3 object inventory, encryption, Block Public Access, policy and retrieval.
 
 ## Security validation
 

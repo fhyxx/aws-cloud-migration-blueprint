@@ -1,19 +1,24 @@
 service,assumption,quantity,unit_rate_usd,unit,monthly_low_usd,monthly_high_usd,confidence,notes
-EC2,t3.xlarge Linux us-east-1,2,0.167,hour,243.82,243.82,reference,2 x 730 hours
-EBS,gp3 storage,200,0.08,GB-month,16,16,planning,100 GB per instance
-RDS compute,Multi-AZ DB instance primary plus standby,1460,0.80-1.10,instance-hour,1168,1606,provisional,2 billed instances x 730 hours; exact DB class must be priced
-RDS storage,500 GB primary plus 500 GB standby,1000,0.23,GB-month,230,230,provisional,Multi-AZ DB instance storage billed for both primary and standby; validate storage type/IOPS
-RDS backup,Usage allowance,1,20-50,monthly,20,50,placeholder,Actual usage varies
-EFS Standard,Regional Standard,1000,0.30,GB-month,300,300,reference,Excludes throughput and lifecycle tiers
-S3 Standard,Archive storage,500,0.023,GB-month,11.5,11.5,reference,Excludes requests/retrieval
-NAT hourly,Two NAT Gateways,1460,0.045,gateway-hour,65.70,65.70,reference,2 x 730 hours
-NAT processing,Processed data,200,0.045,GB,9,9,reference,Assumed 200 GB
-ALB hourly,One ALB,730,0.0225,hour,16.43,16.43,reference,Base hourly component
-ALB LCU,Low usage allowance,1,6,monthly,6,6,placeholder,Actual LCU varies
-VPN,Standard Site-to-Site VPN connection,730,0.05,hour,36.5,36.5,provisional,Public AWS example shows this in us-east-2; confirm exact us-east-1 connection type/rate
-VPN IPv4,Tunnel public IPv4 allowance,2,0.005,IPv4-hour,7.3,7.3,provisional,2 public tunnel IPv4s x 730 hours; validate current VPC public IPv4 charge
-CloudWatch,Basic logs and metrics,1,25,monthly,25,25,placeholder,Depends on ingestion/retention
-Interface endpoints,Small multi-AZ set,1,30-50,monthly,30,50,placeholder,Confirm count/AZ/data
-Internet transfer,Outbound allowance,100,0.09,GB,9,9,planning,Confirm tiers and destination
-Contingency,Unmodelled usage,1,20,monthly,20,20,placeholder,Not a service price
-TOTAL,Planning range,,,,2214,2702,planning-only,Not a quotation; arithmetic rounded to nearest dollar
+EC2,Linux t3.xlarge us-east-1,2,0.167,hour,243.82,243.82,reference,Reference price only; validate current calculator result and benchmark burstable suitability
+EBS,gp3 storage,200,UNPRICED,GB-month,,,pending,Confirm IOPS throughput and regional calculator rate
+RDS compute,PostgreSQL Multi-AZ DB instance primary plus standby,2 x 730,UNPRICED,instance-hour,,,pending,Select exact DB class and PostgreSQL version; price both billed instances in AWS Pricing Calculator
+RDS storage,500 GB provisioned assumption on primary plus standby,1000,UNPRICED,GB-month,,,pending,Price both provisioned storage copies using selected storage type and exact us-east-1 rate
+RDS IOPS,PostgreSQL storage performance,UNCONFIRMED,UNPRICED,IOPS,,,pending,Select gp3 baseline/extra IOPS or io2 after workload discovery
+RDS backup,Automated backup and snapshots,UNCONFIRMED,UNPRICED,GB-month,,,pending,Model retention and backup storage usage; do not use unsupported flat allowance
+EFS,Regional Standard 1000 GB,1000,UNPRICED,GB-month,,,pending,Confirm current us-east-1 storage tier and throughput charges
+S3,Standard archive storage,500,UNPRICED,GB-month,,,pending,Add requests retrieval lifecycle and transfer
+NAT hourly,Two NAT Gateways,1460,UNPRICED,gateway-hour,,,pending,Confirm current us-east-1 hourly rate in calculator
+NAT processing,Processed data,UNCONFIRMED,UNPRICED,GB,,,pending,Replace prior 200 GB placeholder with measured estimate
+ALB hourly,One ALB,730,UNPRICED,hour,,,pending,Confirm current us-east-1 rate
+ALB LCU,Load balancer capacity units,UNCONFIRMED,UNPRICED,LCU-hour,,,pending,Estimate new connections active connections bytes and rule evaluations
+VPN,Standard Site-to-Site VPN to VGW,730,UNPRICED,connection-hour,,,pending,Prior 0.05/hour Ohio example not valid as confirmed us-east-1 VGW rate; select exact product
+VPN IPv4,VPN tunnel public IPv4 addresses,2,0.005,IPv4-hour,7.30,7.30,reference,Assumes two charged in-use public IPv4 tunnel endpoints; confirm actual endpoint count
+CloudWatch,Logs metrics alarms and Flow Logs,UNCONFIRMED,UNPRICED,monthly,,,pending,Estimate ingestion retention metrics and alarms
+Interface endpoints,Endpoint inventory,UNCONFIRMED,UNPRICED,endpoint-hour and GB,,,pending,Confirm services endpoint count AZ coverage and data processing
+Internet transfer,Outbound data,UNCONFIRMED,UNPRICED,GB,,,pending,Model destination and tiered transfer pricing
+Route 53,Hosted zone and DNS queries,UNCONFIRMED,UNPRICED,monthly,,,pending,Include only if Route 53 hosts zone and account for queries
+ACM,Public ALB certificate,1,0,certificate-month,0,0,reference,Public ACM certificate used with integrated AWS services generally has no additional certificate charge; confirm use case
+MGN staging,Temporary replication servers and EBS,UNCONFIRMED,UNPRICED,migration-period,,,pending,One-time migration overlap cost; staging instance and storage sizing depends on source disk and replication settings
+DMS,Replication capacity and runtime,UNCONFIRMED,UNPRICED,migration-period,,,pending,Select DMS provisioned or Serverless and model duration and data volume
+DataSync,Transferred data and task runtime,UNCONFIRMED,UNPRICED,migration-period,,,pending,Model transfer GB and task schedule
+TOTAL,No approved total,,UNPRICED,monthly,,,pending,Earlier 2214-2702 USD/month worksheet is superseded and must not be used for budgeting; complete AWS Pricing Calculator estimate first

@@ -10,10 +10,10 @@ A cloud migration blueprint for a fictional Nigerian retail/distribution company
 |---|---|
 | Region | `us-east-1` |
 | VPC | `10.30.0.0/16`, two AZs |
-| Subnets | 2 public, 2 private app, 2 isolated DB |
+| Subnets | 2 public, 2 private app, 2 isolated DB; a dedicated MGN staging subnet is a required implementation detail to be added during deployment |
 | Application | 2 Linux servers, 4 vCPU / 16 GiB each, EC2 |
-| Database | PostgreSQL to RDS Multi-AZ; 500 GB planning storage |
-| Shared files | 1 TB Regional EFS |
+| Database | PostgreSQL to RDS PostgreSQL Multi-AZ DB instance deployment; 500 GB logical data assumption, storage billing includes primary and standby copies |
+| Shared files | 1 TB Regional EFS, mount target in each application AZ |
 | Archives | 500 GB S3 Standard |
 | Hybrid | 1 Site-to-Site VPN using VGW design |
 | Entry | Public ALB, HTTPS 443 |
@@ -36,10 +36,10 @@ flowchart TB
    B[EC2 app B<br/>4 vCPU / 16 GiB]
   end
   subgraph DB["Isolated DB subnets"]
-   R[(RDS PostgreSQL Multi-AZ<br/>500 GB planning assumption)]
+   R[(RDS PostgreSQL Multi-AZ<br/>500 GB logical data)]
   end
-  E[(Regional EFS<br/>1 TB)]
-  S[(S3 archives<br/>500 GB)]
+  E[(Regional EFS<br/>1 TB; mount targets A/B)]
+  S[(S3 archives<br/>500 GB via Gateway Endpoint)]
   C[CloudWatch]
   M[Systems Manager / Secrets Manager]
   ALB --> A
@@ -58,13 +58,14 @@ flowchart TB
   B --> N2
  end
  O[On-premises source] <-->|Site-to-Site VPN / VGW| VPC
- MGN[AWS MGN] -. replication .-> APP
+ STG[Dedicated private MGN staging subnet] --- VPC
+ MGN[AWS MGN] -. replication .-> STG
  DMS[AWS DMS full load + CDC] -.-> R
  DS[AWS DataSync] -. NFS .-> E
  DS -. archives .-> S
 ```
 
-Migration services are temporary migration paths, not permanent runtime components. S3 Gateway Endpoint is preferred where appropriate; interface endpoints are added only when justified.
+Migration services are temporary migration paths, not permanent runtime components. The MGN staging subnet is an additional subnet requirement beyond the six steady-state subnets. S3 Gateway Endpoint is preferred where appropriate; interface endpoints are added only when justified.
 
 ## Deliverables
 
@@ -80,7 +81,7 @@ Additional assets: `architecture/target-architecture.mmd`, `cost/pricing-assumpt
 
 ## Cost headline
 
-Illustrative steady-state estimate: **USD $2,099–$2,587/month** (730 hours/month). RDS Multi-AZ compute and backup allowances are provisional. This is not an AWS quote; use AWS Pricing Calculator with exact instance classes, Region and configuration before budget approval.
+Illustrative steady-state estimate: **USD $2,214–$2,702/month** (730 hours/month). This corrects the Multi-AZ RDS storage assumption to include both primary and standby provisioned storage. RDS compute and several allowances remain provisional. This is not an AWS quote; use AWS Pricing Calculator with exact instance classes, Region and configuration before budget approval.
 
 ## Important limitations
 

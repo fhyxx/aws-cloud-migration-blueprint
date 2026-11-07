@@ -1,15 +1,16 @@
 flowchart TB
  U[Approved users] --> DNS[Route 53]
- DNS --> ALB[Public ALB HTTPS 443<br/>ACM certificate]
+ DNS --> ALB[Internet-facing ALB HTTPS 443<br/>ACM certificate]
  subgraph VPC["VPC 10.30.0.0/16 — us-east-1 — two AZs"]
   IGW[Internet Gateway]
+  VGW[Virtual Private Gateway]
   subgraph PUB["Public subnets A/B"]
    ALB
    N1[NAT Gateway A]
    N2[NAT Gateway B]
   end
   subgraph APP["Private application subnets A/B"]
-   ASG[Application Auto Scaling Group<br/>desired capacity 2]
+   ASG[Auto Scaling Group<br/>desired capacity 2]
    A[EC2 app A<br/>4 vCPU / 16 GiB]
    B[EC2 app B<br/>4 vCPU / 16 GiB]
    ASG --> A
@@ -24,7 +25,7 @@ flowchart TB
   C[CloudWatch]
   M[Systems Manager / Secrets Manager]
   subgraph MIG["Private migration-only subnet"]
-   STG[MGN staging / replication servers]
+   STG[MGN staging area<br/>replication servers]
   end
   IGW --> ALB
   ALB --> A
@@ -33,17 +34,22 @@ flowchart TB
   B --> R
   A --> E
   B --> E
-  A --> S3EP --> S
+  A --> S3EP
   B --> S3EP
+  S3EP --> S
   A --> C
   B --> C
   A --> M
   B --> M
   A --> N1
   B --> N2
+  VGW --- APP
+  VGW --- DB
  end
- O[On-premises source] <-->|Site-to-Site VPN / VGW| VPC
- MGN[AWS Application Migration Service] -. replication .-> STG
- DMS[AWS DMS full load + CDC] -.-> R
- DS[AWS DataSync] -. NFS .-> E
- DS -. archives .-> S
+ O[On-premises / VirtualBox source] <-->|Site-to-Site VPN tunnels| VGW
+ SRC[Source server with MGN agent] -. secure replication traffic .-> STG
+ MGN[AWS Application Migration Service] -. orchestrates .-> STG
+ DMS[AWS DMS replication instance / serverless migration] -. full load + CDC .-> R
+ PG[Self-managed PostgreSQL source] -. database connection / CDC .-> DMS
+ DS[AWS DataSync] -. NFS data transfer .-> E
+ DS -. archive transfer .-> S

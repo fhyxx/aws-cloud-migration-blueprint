@@ -8,18 +8,24 @@ flowchart TB
    N1[NAT Gateway A]
    N2[NAT Gateway B]
   end
-  subgraph APP["Private app subnets A/B"]
+  subgraph APP["Private application subnets A/B"]
+   ASG[Application Auto Scaling Group<br/>desired capacity 2]
    A[EC2 app A<br/>4 vCPU / 16 GiB]
    B[EC2 app B<br/>4 vCPU / 16 GiB]
+   ASG --> A
+   ASG --> B
   end
   subgraph DB["Isolated DB subnets A/B"]
-   R[(RDS PostgreSQL Multi-AZ<br/>primary + standby<br/>500 GB logical data)]
+   R[(RDS PostgreSQL Multi-AZ DB instance<br/>primary + standby<br/>500 GB logical data)]
   end
   E[(Regional EFS<br/>1 TB; mount targets A/B)]
   S3EP[S3 Gateway Endpoint]
   S[(S3 archives<br/>500 GB)]
   C[CloudWatch]
   M[Systems Manager / Secrets Manager]
+  subgraph MIG["Private migration-only subnet"]
+   STG[MGN staging / replication servers]
+  end
   IGW --> ALB
   ALB --> A
   ALB --> B
@@ -37,9 +43,7 @@ flowchart TB
   B --> N2
  end
  O[On-premises source] <-->|Site-to-Site VPN / VGW| VPC
- STG[Dedicated private MGN staging subnet<br/>additional migration-only subnet]
  MGN[AWS Application Migration Service] -. replication .-> STG
- STG -. test/launch .-> APP
  DMS[AWS DMS full load + CDC] -.-> R
  DS[AWS DataSync] -. NFS .-> E
  DS -. archives .-> S

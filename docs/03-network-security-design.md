@@ -126,6 +126,32 @@ The ALB health-check port and application listener port must match the actual ta
 Security groups are stateful: response traffic for an allowed flow is automatically permitted. Network ACLs are stateless; if custom NACLs are introduced, explicitly allow both request and return traffic, including the correct ephemeral port ranges for initiating clients and AWS-managed services. Retain default NACLs until a specific subnet-level deny/guardrail requirement justifies custom rules. Do not copy a generic ephemeral range without validating the client OS and service behaviour.
 
 No public SSH or PostgreSQL.
+## Migration traffic and security validation matrix
+
+The following paths are the intended allow-list for the fictional reference design. A route only establishes network reachability; security groups, on-premises firewall policy and host firewalls must independently permit the flow. Return traffic must be routable in both directions.
+
+| Initiator | Destination | Protocol / port | Intended path | Required control / evidence |
+|---|---|---|---|---|
+| DMS ENI in 10.30.41.0/24 or 10.30.42.0/24 | PostgreSQL source 10.50.20.0/24 | TCP 5432 | DMS route table → VGW → VPN → customer gateway | DMS SG egress to source TCP 5432; customer firewall permits only the two DMS subnet CIDRs; source host firewall permits PostgreSQL; on-premises return route to VPC via VPN; successful connection test from DMS endpoint |
+| DMS ENI | RDS PostgreSQL target | TCP 5432 | VPC-local route | RDS SG inbound from DMS SG only during migration; target endpoint test; remove temporary rule after migration |
+| Source MGN agents 10.50.10.0/24 | MGN replication servers 10.30.31.0/24 | TCP 1500 | Customer gateway → VPN → VGW → MGN staging | MGN staging SG inbound only from source app subnet; on-premises firewall permits only staging destination/port; return route; agent replication status |
+| Source MGN agents | Regional MGN service API | TCP 443 | Approved source-side internet or private service path | Source egress firewall/DNS allow-list; validate documented regional endpoint; do not assume this API flow traverses the VPN |
+| MGN replication servers | Regional MGN service API | TCP 443 | Staging route table → same-AZ NAT-A or separately validated private endpoint | Staging SG egress and NAT/endpoint policy; DNS and service connectivity test |
+| DataSync agent | On-premises NFS server | TCP 2049 (NFSv4.x); TCP 111 and 2049 (NFSv3) | Local source network | Agent host firewall and NFS export ACL; validate selected NFS version and mount/read test |
+| DataSync agent | DataSync service | TCP 443 public endpoint, or VPC-endpoint-specific ports | Public endpoint or approved VPN-to-VPC service endpoint | Use the correct endpoint model and its documented port requirements; activation/control/data transfer test |
+| DataSync task ENI | EFS mount target | TCP 2049 | VPC-local, same VPC/AZ as selected mount target | Task-ENI SG egress to EFS mount-target SG; EFS SG inbound from task-ENI SG; mount and file verification |
+| Application EC2 | RDS / EFS | TCP 5432 / TCP 2049 | VPC-local | App SG egress to RDS/EFS SG; target SG inbound from App SG; application health and file/database operation tests |
+
+### Required negative and failover tests
+
+- From an application EC2 instance, verify that no route to 10.50.0.0/16 is present in its effective route table and that direct PostgreSQL/NFS source access is denied.
+- From DMS migration subnets, verify PostgreSQL TCP 5432 succeeds; from application subnets and unrelated VPC sources, verify the on-premises firewall does not permit the same connection.
+- From MGN source agents, verify TCP 1500 reaches only the staging subnet and is denied to unrelated AWS subnets.
+- Verify the database subnet route tables contain no VGW propagation and no internet/NAT default route.
+- Disable one VPN tunnel only in an approved test window; confirm the other tunnel carries traffic, BGP/session state converges, and application/migration flows recover within the agreed objective. Restore both tunnels and capture sanitized metrics.
+- Confirm a failed/withdrawn BGP route does not leave an unintended static or broad fallback path. Review effective route tables after recovery.
+- Capture source/destination/port, timestamp, test origin, expected/actual result, route-table export, SG/NACL/firewall evidence and responsible approver. Never record pre-shared keys or credentials.
+
 ## VPC endpoint inventory and private service access
 
 Do not create every possible endpoint by default. First decide whether each private workload uses a VPC interface/gateway endpoint or the existing controlled same-AZ NAT egress path. The following is a workload-driven candidate inventory for `us-east-1`; none of these endpoints is deployed or approved yet.

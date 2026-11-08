@@ -68,6 +68,7 @@ The selected source aggregate `10.50.0.0/16` does not overlap the AWS VPC `10.30
 - The database subnets retain only the VPC-local route. RDS is reached from DMS inside the VPC, not directly from the on-premises VPN. This prevents the VPN design from becoming a general database access path.
 - Configure both tunnels for high availability and monitor BGP state, tunnel state and packet metrics. A VGW does not support ECMP; AWS selects a tunnel for egress. Permit asymmetric routing and test failover in both directions. Do not describe this as active-active bandwidth aggregation.
 - Static routing is the documented alternative if the customer gateway cannot speak BGP. It requires explicit on-premises prefixes in the VPN configuration and matching VPC route-table entries; it is not the selected reference design.
+- Do not treat a propagated route's continued presence as proof that a tunnel is healthy. AWS documents that if connectivity is interrupted while the VPN connection status remains UP, propagated routes might not be automatically removed. Monitor both tunnel/BGP state and active end-to-end probes; test failover and recovery rather than relying on route-table presence alone.
 
 ## Routing
 

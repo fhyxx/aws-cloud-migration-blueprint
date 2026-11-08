@@ -1,55 +1,71 @@
 flowchart TB
- U[Approved users] --> DNS[Route 53]
- DNS --> ALB[Internet-facing ALB HTTPS 443<br/>ACM certificate]
- subgraph VPC["VPC 10.30.0.0/16 — us-east-1 — two AZs"]
-  IGW[Internet Gateway]
-  VGW[Virtual Private Gateway]
-  subgraph PUB["Public subnets A/B"]
-   ALB
-   N1[NAT Gateway A]
-   N2[NAT Gateway B]
+  USERS[Approved users] --> DNS[Public DNS / Route 53 if authoritative]
+  DNS --> ALB[Internet-facing ALB<br/>HTTPS 443 + ACM certificate]
+
+  subgraph ONPREM["On-premises source environment"]
+    APP_SRC[Two Linux application VMs<br/>MGN sources]
+    PG_SRC[(Self-managed PostgreSQL source)]
+    NFS_SRC[(NFS file server)]
+    ARCH_SRC[Archive source<br/>location and type TBD]
+    DS_AGENT[DataSync agent VM<br/>near on-premises storage]
+    NFS_SRC -->|NFS TCP 2049 or 111 + 2049| DS_AGENT
+    ARCH_SRC -.->|agent or source connection<br/>depends on source type| DS_AGENT
   end
-  subgraph APP["Private application subnets A/B"]
-   ASG[Auto Scaling Group<br/>desired capacity 2]
-   A[EC2 app A<br/>4 vCPU / 16 GiB]
-   B[EC2 app B<br/>4 vCPU / 16 GiB]
-   ASG --> A
-   ASG --> B
+
+  subgraph VPC["AWS VPC 10.30.0.0/16 — us-east-1 — two AZs"]
+    IGW[Internet Gateway]
+    VGW[Virtual Private Gateway]
+    subgraph PUB["Public subnets A/B"]
+      ALB
+      NAT_A[NAT Gateway A]
+      NAT_B[NAT Gateway B]
+    end
+    subgraph APP["Private application subnets A/B"]
+      ASG[Application Auto Scaling Group<br/>desired capacity 2]
+      EC2_A[EC2 app A<br/>4 vCPU / 16 GiB]
+      EC2_B[EC2 app B<br/>4 vCPU / 16 GiB]
+      ASG --> EC2_A
+      ASG --> EC2_B
+      DMS[ DMS replication instance or Serverless<br/>subnet group spans private subnets A/B<br/>dedicated DMS security group ]
+    end
+    subgraph DB["Isolated DB subnets A/B"]
+      RDS[(RDS PostgreSQL<br/>Multi-AZ DB instance deployment<br/>500 GB provisioned-storage assumption)]
+    end
+    subgraph MGN_STAGING["Private MGN staging-area subnet<br/>additional migration-only subnet"]
+      MGN_REPL[MGN replication servers]
+    end
+    EFS[(Regional EFS<br/>1 TB assumption<br/>mount target in each app AZ)]
+    S3EP[S3 Gateway Endpoint]
+    S3[(S3 archive target<br/>500 GB capacity assumption)]
+    CW[CloudWatch]
+    OPS[Systems Manager / Secrets Manager]
+
+    IGW --> ALB
+    ALB --> EC2_A
+    ALB --> EC2_B
+    EC2_A --> RDS
+    EC2_B --> RDS
+    EC2_A --> EFS
+    EC2_B --> EFS
+    EC2_A --> S3EP
+    EC2_B --> S3EP
+    S3EP --> S3
+    EC2_A --> CW
+    EC2_B --> CW
+    EC2_A --> OPS
+    EC2_B --> OPS
+    EC2_A --> NAT_A
+    EC2_B --> NAT_B
+    DMS -->|TCP 5432| RDS
+    MGN_REPL -->|TCP 443| MGN_SVC[AWS MGN regional service API]
   end
-  subgraph DB["Isolated DB subnets A/B"]
-   R[(RDS PostgreSQL Multi-AZ DB instance<br/>primary + standby<br/>500 GB logical data)]
-  end
-  E[(Regional EFS<br/>1 TB; mount targets A/B)]
-  S3EP[S3 Gateway Endpoint]
-  S[(S3 archives<br/>500 GB)]
-  C[CloudWatch]
-  M[Systems Manager / Secrets Manager]
-  subgraph MIG["Private migration-only subnet"]
-   STG[MGN staging area<br/>replication servers]
-  end
-  IGW --> ALB
-  ALB --> A
-  ALB --> B
-  A --> R
-  B --> R
-  A --> E
-  B --> E
-  A --> S3EP
-  B --> S3EP
-  S3EP --> S
-  A --> C
-  B --> C
-  A --> M
-  B --> M
-  A --> N1
-  B --> N2
-  VGW --- APP
-  VGW --- DB
- end
- O[On-premises / VirtualBox source] <-->|Site-to-Site VPN tunnels| VGW
- SRC[Source server with MGN agent] -. secure replication traffic .-> STG
- MGN[AWS Application Migration Service] -. orchestrates .-> STG
- DMS[AWS DMS replication instance / serverless migration] -. full load + CDC .-> R
- PG[Self-managed PostgreSQL source] -. database connection / CDC .-> DMS
- DS[AWS DataSync] -. NFS data transfer .-> E
- DS -. archive transfer .-> S
+
+  APP_SRC -->|MGN agent to replication servers<br/>TCP 1500 over approved VPN path| MGN_REPL
+  APP_SRC -->|MGN agent service access<br/>TCP 443 via approved egress| MGN_SVC
+  PG_SRC -->|DMS source connection<br/>TCP 5432 over VPN| DMS
+  DS_AGENT -->|DataSync service endpoint<br/>public or VPC endpoint; TCP 443 or documented VPC endpoint ports| DS[AWS DataSync service]
+  DS -->|EFS data path TCP 2049| EFS
+  DS -->|S3 service-side transfer| S3
+  VGW ---|VPN routes to approved private subnets| APP
+  VGW ---|VPN routes to source DB path| DB
+  VGW ---|TCP 1500 path to MGN staging| MGN_STAGING

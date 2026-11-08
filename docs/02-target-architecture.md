@@ -35,7 +35,7 @@ Two EC2 application instances, one per AZ, are managed by an Auto Scaling Group 
 
 ## Database and storage
 
-- RDS for PostgreSQL, Multi-AZ DB instance deployment with one standby (not a Multi-AZ DB cluster), with 500 GB logical data/storage assumption.
+- RDS for PostgreSQL, Multi-AZ DB instance deployment with one standby (not a Multi-AZ DB cluster). The source discovery assumption is 500 GB logical data; the current Calculator entry separately uses 500 GB of target gp3 provisioned storage. Validate actual used bytes, growth and headroom before finalising target storage.
 - Source DB sizing assumption is 8 vCPU / 32 GiB; target class remains subject to benchmark and compatibility.
 - RDS DB subnet group spans both isolated DB subnets.
 - Cost model includes primary and standby instance-hours and provisioned storage copies.

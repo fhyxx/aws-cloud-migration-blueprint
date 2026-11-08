@@ -6,8 +6,7 @@ This focused view separates MGN, DMS and DataSync paths so their distinct source
 
 ## Rendered migration-flow diagram
 
-```mermaid
-flowchart LR
+```mermaidflowchart LR
   subgraph SOURCE["On-premises source environment"]
     APP_SRC["Two Linux application VMs<br/>10.50.10.0/24 • MGN sources"]
     PG_SRC[("Self-managed PostgreSQL source<br/>10.50.20.0/24")]
@@ -28,7 +27,7 @@ flowchart LR
       MGN_REPL -->|"TCP 443"| MGN_EGRESS
     end
 
-    subgraph DMS_SUBNETS["Private application subnets A and B<br/>DMS replication subnet group"]
+    subgraph DMS_SUBNETS["Dedicated private DMS migration subnets<br/>10.30.41.0/24 • AZ-A and 10.30.42.0/24 • AZ-B"]
       DMS["AWS DMS replication<br/>instance or Serverless<br/>dedicated DMS SG"]
     end
 

@@ -1,6 +1,6 @@
 # 08 — Assumptions and Decisions Register
 
-**ID:** CLI-AWS-ADR-008 | **Version:** 1.2 | **Status:** Open — workload validation required  
+**ID:** CLI-AWS-ADR-008 | **Version:** 1.3 | **Status:** Open — workload validation required  
 **Project:** Clafoke Investors Ltd (fictional portfolio case study)  
 **Region:** `us-east-1` | **Currency:** USD | **Planning month:** 730 hours  
 **Related:** [Discovery assessment](01-discovery-assessment.md), [Target architecture](02-target-architecture.md), [Network and security design](03-network-security-design.md), [Migration strategy](04-data-migration-strategy.md), [Migration runbook](05-migration-runbook.md), [Validation and rollback](06-validation-rollback-strategy.md), [Cost estimation and optimisation](07-cost-estimation-optimisation.md), [pricing assumptions](../cost/pricing-assumptions.csv), [target architecture diagram](../architecture/target-architecture.mmd)

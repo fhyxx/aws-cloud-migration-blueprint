@@ -31,11 +31,11 @@ DMS full-load table ordering and referential-integrity behaviour must be tested.
 
 ## NFS to EFS
 
-Inventory exports, paths, file counts, ownership and locking. Configure encrypted Regional EFS and mount targets in both AZs. Allow NFS TCP 2049 from the application security group to the EFS mount-target security group. Run initial DataSync transfer; review errors/skips; reconcile counts/sizes; test permissions and application behaviour. Pause all writers before final sync, reconcile and obtain approval.
+Discovery estimates shared NFS at approximately 1 TB; this is a planning assumption, not measured used bytes. Before sizing, inventory exports/paths, allocated and used bytes, file counts/size distribution, ownership/ACLs, symlinks, locking/open files, active writers, exclusions and change rate. Configure encrypted Regional EFS and mount targets in both AZs. Allow NFS TCP 2049 from the application security group to the EFS mount-target security group. Run initial DataSync early enough to review task reports, errors/skips and verification; reconcile counts/sizes and test permissions/application behaviour. Pause all writers before final sync, capture the final delta and approve reconciliation.
 
 ## Archives to S3
 
-Confirm scope/retention/retrieval. Configure private bucket, Block Public Access and encryption. Transfer with DataSync, validate object inventory/content and errors. Apply lifecycle policies only after approval. Route application access through an S3 Gateway Endpoint where appropriate.
+The 500 GB S3 figure is target storage, not source archive quantity. Inventory eligible archive bytes, object/file counts and sizes, source storage class/restore state, scope/exclusions, retention and destination prefix. Configure private bucket, Block Public Access and encryption. Transfer with DataSync, validate object inventory/content and errors. Apply lifecycle policies only after approval. Route application access through an S3 Gateway Endpoint where appropriate.
 
 ## Application servers
 
@@ -45,8 +45,8 @@ Verify MGN OS compatibility, allocate a dedicated staging-area subnet for replic
 
 1. Maintenance window; stop new orders and source writers.
 2. Pause jobs/queues/integrations writing source data.
-3. Final DataSync sync.
-4. DMS CDC catch-up and critical record reconciliation.
+3. Run final DataSync sync after all file writers/jobs are paused and reconcile its completion and verification evidence.
+4. Complete DMS CDC catch-up and critical-record reconciliation. Both the independent file-transfer gate and database gate must pass before go/no-go; exact concurrency/order and wait time are set in the approved maintenance plan.
 5. Configure target app with RDS/EFS/secrets.
 6. Smoke tests and formal go/no-go.
 7. Switch DNS/traffic to ALB.

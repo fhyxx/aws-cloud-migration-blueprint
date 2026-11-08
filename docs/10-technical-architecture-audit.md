@@ -1,6 +1,6 @@
 # 10 — Technical Architecture Audit
 
-**ID:** CLI-AWS-AUD-010 | **Version:** 1.0 | **Status:** In progress — design corrections published; operational and visual acceptance pending  
+**ID:** CLI-AWS-AUD-010 | **Version:** 1.1 | **Status:** In progress — diagram rendering visually checked; implementation and operational validation pending  
 **Project:** Clafoke Investors Ltd (fictional, design-only)  
 **Audit date:** 2026-11-08
 
@@ -27,7 +27,7 @@ The design is **not yet approved for implementation**. Source compatibility, net
 | AUD-04 | MGN staging server service egress was not explicit in the diagram. | Diagram and network design now show controlled TCP 443 egress from staging to the regional MGN service; source-to-staging TCP 1500 remains a separate VPN path. | Confirm AZ, route table, same-AZ NAT/private endpoint design and source CIDRs. |
 | AUD-05 | Source logical database size and target RDS provisioned storage could be read as the same measured quantity. | README and architecture register now distinguish the 500 GB source logical-data assumption from the separate 500 GB target gp3 Calculator input. | Measure source used bytes, growth and required storage headroom. |
 | AUD-06 | Monitoring, health-check, scaling and recovery targets lacked measurable acceptance criteria. | Provisional monitoring/health/scaling and timed recovery acceptance criteria are now specified in [Validation and Rollback](06-validation-rollback-strategy.md). | Confirm app readiness path, load-test thresholds, backup policy and execute recovery tests. |
-| AUD-07 | Saved monthly estimate could be mistaken for a complete architecture cost. | README and cost guide explicitly call $1,930.76/month a partial calculator subtotal, not an approved budget. | Add/verify ALB, monitoring, DNS, data transfer, backup, endpoints and migration-period costs after inputs are known. |
+| AUD-07 | Saved monthly estimate could be mistaken for a complete architecture cost. | README and cost guide explicitly call $1,930.76/month a partial calculator subtotal, not an approved budget. | Add/verify ALB, monitoring, DNS, data transfer, backup, endpoints and migration-period costs after inputs are known. |\n| AUD-08 | The first focused runtime diagram placed the ALB node outside the VPC boundary, which could imply incorrect network placement. | Corrected the rendered and source Mermaid so the ALB is inside the VPC and explicitly attached to both public subnets. Both focused diagrams were visually confirmed rendering in GitHub. | Recheck the corrected runtime rendering; implementation subnet associations, routes and security groups remain untested. |
 
 ## RDS calculator reconciliation
 
@@ -58,7 +58,7 @@ The proposed starting thresholds and recovery tests are documented in `docs/06-v
 6. Confirm application readiness endpoint, health-check behaviour, EC2 family, ASG maximum/scaling, RDS performance, backup retention and log retention.
 7. Execute load, AZ/failover, database restore, EFS restore, S3 recovery and end-to-end application tests; retain dated evidence.
 8. Complete migration-period cost modelling from measured source profiles, benchmarks, network flows and approved dates.
-9. Visually inspect the rendered Mermaid diagram and reconcile it with all architecture/network/runbook descriptions.
+9. GitHub rendering of the master and both focused diagrams has been visually confirmed from user screenshots. The runtime ALB boundary issue found during review was corrected in source and rendered Markdown; inspect the corrected runtime page once more. Reconcile implementation separately.
 
 ## AWS service references
 

@@ -1,6 +1,6 @@
 # 03 — Network and Security Design
 
-**ID:** CLI-AWS-NET-003 | **Version:** 1.4 | **Status:** Proposed reference design — fictional source network
+**ID:** CLI-AWS-NET-003 | **Version:** 1.5 | **Status:** Proposed reference design — fictional source network
 
 ## Architecture diagrams
 
@@ -23,7 +23,7 @@ The MGN staging subnet is a seventh, migration-only network segment in addition 
 
 ## Subnet sizing and Availability Zone placement
 
-The six steady-state subnet CIDRs are distinct, contained within `10.30.0.0/16`, and do not overlap one another.
+The six steady-state subnet CIDRs are distinct, contained within `10.30.0.0/16`, and do not overlap one another. The three migration-only subnets (`10.30.31.0/24`, `10.30.41.0/24`, `10.30.42.0/24`) are also distinct and do not overlap the steady-state CIDRs or illustrative on-premises `10.50.0.0/16`.
 
 | Subnet | CIDR | IPv4 addresses in block | AWS-reserved | Initially assignable |
 |---|---|---:|---:|---:|
@@ -60,8 +60,8 @@ The selected source aggregate `10.50.0.0/16` does not overlap the AWS VPC `10.30
 - Create one Customer Gateway resource with the illustrative public outside IP represented as a placeholder (never invent or publish a real address) and customer ASN `65010`.
 - Create and attach a VGW using AWS ASN `64512`, then create one dynamic-routing Site-to-Site VPN connection. AWS supplies two independent IPsec tunnel definitions and tunnel inside addressing/BGP peer details.
 - Configure both customer-side tunnel interfaces and BGP peers from the generated AWS VPN configuration. Do not hard-code tunnel outside IPs, inside CIDRs, pre-shared keys or device commands in this portfolio document.
-- Enable VGW route propagation only on the App-A, App-B and MGN-staging route tables. These are the subnets that need source reachability for DMS and MGN. Do not enable propagation on public or DB route tables.
-- The customer gateway advertises `10.50.0.0/16`; AWS propagates that route to the selected private route tables. The VGW advertises the VPC CIDR to the customer gateway; customer-side firewall/ACL policy must restrict access to the intended DMS and MGN destinations.
+- Enable VGW route propagation only on the two dedicated DMS migration route tables and the MGN-staging route table. Do not enable propagation on public, application or DB route tables. This confines source-network route availability to migration workloads.
+- The customer gateway advertises `10.50.0.0/16`; AWS propagates that route only to the DMS-A, DMS-B and MGN-staging route tables. The VGW advertises the VPC CIDR to the customer gateway; customer-side firewall/ACL policy must restrict access to the DMS migration subnet CIDRs for PostgreSQL and the MGN staging CIDR for replication.
 - The database subnets retain only the VPC-local route. RDS is reached from DMS inside the VPC, not directly from the on-premises VPN. This prevents the VPN design from becoming a general database access path.
 - Configure both tunnels for high availability and monitor BGP state, tunnel state and packet metrics. A VGW does not support ECMP; AWS selects a tunnel for egress. Permit asymmetric routing and test failover in both directions. Do not describe this as active-active bandwidth aggregation.
 - Static routing is the documented alternative if the customer gateway cannot speak BGP. It requires explicit on-premises prefixes in the VPN configuration and matching VPC route-table entries; it is not the selected reference design.
@@ -69,8 +69,8 @@ The selected source aggregate `10.50.0.0/16` does not overlap the AWS VPC `10.30
 ## Routing
 
 - Public default route to IGW.
-- App A to NAT A; App B to NAT B; propagated illustrative on-premises route `10.50.0.0/16 → VGW` on both app route tables.
-- MGN staging `10.30.31.0/24` has `10.50.0.0/16 → VGW` and a controlled same-AZ NAT default route for regional MGN service HTTPS unless a separately validated private service path is selected.
+- App A to NAT A; App B to NAT B; no VGW route propagation on application route tables.
+- MGN staging `10.30.31.0/24` has `10.50.0.0/16 → VGW` and a controlled same-AZ NAT default route for regional MGN service HTTPS unless a separately validated private service path is selected. Dedicated DMS subnets `10.30.41.0/24` and `10.30.42.0/24` each have `10.50.0.0/16 → VGW` plus same-AZ NAT default egress for required DMS service/logging APIs.
 - DB subnets local route only; no direct internet route and no VGW route propagation.
 - S3 prefix-list route through S3 Gateway Endpoint.
 - Site-to-Site VPN uses dynamic BGP with customer ASN `65010`, VGW ASN `64512` and two redundant tunnels; both are configured, but VGW ECMP is not supported.
@@ -81,7 +81,7 @@ The selected source aggregate `10.50.0.0/16` does not overlap the AWS VPC `10.30
 
 ## Migration-service network paths
 
-- **DMS placement:** create a DMS replication subnet group using the private application subnets in AZ-A and AZ-B. The replication instance/Serverless ENIs use a dedicated DMS security group. DMS initiates TCP 5432 connections to the self-managed PostgreSQL source over the VPN and to the RDS PostgreSQL target. The on-premises source firewall must allow the DMS-originating VPC CIDR/path; the RDS DB security group must allow TCP 5432 from the DMS security group during migration. Keep application-to-database access separate. Remove the temporary DMS ingress rule after migration only when DMS is no longer needed.
+- **DMS placement:** create a DMS replication subnet group using dedicated private migration subnets `10.30.41.0/24` and `10.30.42.0/24` in AZ-A and AZ-B. Associate dedicated route tables with the BGP-propagated `10.50.0.0/16 → VGW` route and same-AZ NAT default egress. The replication instance/Serverless ENIs use a dedicated DMS security group. Application subnets do not receive on-premises route propagation. DMS initiates TCP 5432 connections to the self-managed PostgreSQL source over the VPN and to the RDS PostgreSQL target. The on-premises source firewall must allow the DMS-originating VPC CIDR/path; the RDS DB security group must allow TCP 5432 from the DMS security group during migration. Keep application-to-database access separate. Remove the temporary DMS ingress rule after migration only when DMS is no longer needed.
 - **MGN:** the source agent requires TCP 1500 to the replication servers in the MGN staging subnet and TCP 443 to the regional MGN API. Staging replication servers require TCP 443 to the regional MGN API. Route source-to-staging traffic over the approved VPN path; provide controlled staging-subnet egress (for example, same-AZ NAT) or a separately validated private endpoint design.
 - **DataSync NFS:** place a Basic or Enhanced mode agent (as appropriate to the selected task mode) close to the on-premises NFS server. Agent-to-NFS TCP ports are 2049 for NFSv4.x and 111 plus 2049 for NFSv3. Agent-to-service and data-plane paths depend on public versus VPC service endpoint selection. For an EFS location, DataSync creates task network interfaces in a selected subnet in the same VPC and an AZ with an EFS mount target; use a dedicated task-ENI security group and allow TCP 2049 from it to the EFS mount-target security group. DataSync accesses S3 on the bucket's behalf. For a public service endpoint, the agent uses HTTPS TCP 443 to the documented activation/control/data-plane endpoints. For a VPC service endpoint, the agent uses TCP 1024–1064 for control-plane traffic and TCP 443 to task data-plane ENIs; add TCP 22 only if the Basic-mode support channel is intentionally enabled. Do not assume the public-endpoint port model applies.
 - **Archive source:** source type and location are unknown. Confirm whether an agent is required and document its actual source-to-agent/service path before approving the archive transfer.
@@ -94,13 +94,14 @@ Use separate route tables where isolation or failure-domain control matters. The
 |---|---|---|
 | Public-A — public subnet `10.30.1.0/24` | `10.30.0.0/16 → local`; `0.0.0.0/0 → IGW` | Hosts ALB-A node and NAT-A. NAT-A requires an allocated Elastic IP. |
 | Public-B — public subnet `10.30.2.0/24` | `10.30.0.0/16 → local`; `0.0.0.0/0 → IGW` | Hosts ALB-B node and NAT-B. NAT-B requires an allocated Elastic IP. |
-| App-A — private app subnet `10.30.11.0/24` | `10.30.0.0/16 → local`; `0.0.0.0/0 → NAT-A`; propagated `10.50.0.0/16 → VGW`; S3 regional prefix list `→ S3 Gateway Endpoint` | Enable VGW route propagation. The propagated source route is more specific than the default NAT route. |
-| App-B — private app subnet `10.30.12.0/24` | `10.30.0.0/16 → local`; `0.0.0.0/0 → NAT-B`; propagated `10.50.0.0/16 → VGW`; S3 regional prefix list `→ S3 Gateway Endpoint` | Enable VGW route propagation. DMS replication subnet group reuses these private subnets. |
+| App-A — private app subnet `10.30.11.0/24` | `10.30.0.0/16 → local`; `0.0.0.0/0 → NAT-A`; S3 regional prefix list `→ S3 Gateway Endpoint` | No VGW route propagation; application instances do not need direct on-premises reachability. |
+| App-B — private app subnet `10.30.12.0/24` | `10.30.0.0/16 → local`; `0.0.0.0/0 → NAT-B`; S3 regional prefix list `→ S3 Gateway Endpoint` | No VGW route propagation; application instances do not need direct on-premises reachability. |
+| DMS-A / DMS-B — private migration subnets `10.30.41.0/24`, `10.30.42.0/24` | `10.30.0.0/16 → local`; propagated `10.50.0.0/16 → VGW`; `0.0.0.0/0 → same-AZ NAT`; required S3 prefix-list route only if DMS task design needs S3 | Dedicated two-AZ DMS replication subnet group; only these route tables receive source-network route propagation for PostgreSQL TCP 5432. Validate AZ placement, IP capacity, egress and subnet group membership. |
 | DB-A / DB-B — isolated DB subnets `10.30.21.0/24`, `10.30.22.0/24` | `10.30.0.0/16 → local` | No default route to IGW or NAT. No VGW route is proposed for RDS subnets in this baseline; DMS-to-RDS traffic is VPC-local. Add a specific route only for an approved operational use case. |
 | MGN staging — `10.30.31.0/24`, AZ-A (illustrative) | `10.30.0.0/16 → local`; propagated `10.50.0.0/16 → VGW`; `0.0.0.0/0 → NAT-A` for regional MGN service HTTPS | Enable VGW route propagation. NAT-A is the selected reference egress path; private endpoint alternative requires separate validation. Single-AZ staging is a planning simplification, not an HA claim. |
 | S3 Gateway Endpoint association | S3 prefix-list route automatically added to selected app route tables (and other route tables only if needed) | Endpoint policy, IAM and bucket policy must restrict access. Same-Region S3 traffic uses the endpoint route rather than NAT. |
 
-**VPN route control:** For this fictional design, the customer gateway advertises `10.50.0.0/16` using BGP ASN `65010`; the VGW uses ASN `64512` and advertises the attached VPC CIDR. Enable route propagation only in App-A, App-B and MGN-staging route tables. The customer-side router/firewall must accept the AWS VPC route and restrict actual reachability to the approved DMS and MGN paths. Configure both tunnels, permit asymmetric routing and test tunnel failure/recovery. A VGW does not support ECMP, so this is redundant tunnel design, not aggregate active-active throughput. Static routing remains the alternative for a non-BGP customer gateway.
+**VPN route control:** For this fictional design, the customer gateway advertises `10.50.0.0/16` using BGP ASN `65010`; the VGW uses ASN `64512` and advertises the attached VPC CIDR. Enable route propagation only in DMS-A, DMS-B and MGN-staging route tables. Do not propagate the on-premises route into ordinary application, public or DB route tables. The customer-side router/firewall must accept the AWS VPC route but permit TCP 5432 only from `10.30.41.0/24` and `10.30.42.0/24` to PostgreSQL, and TCP 1500 only from MGN source VMs to `10.30.31.0/24`. Configure both tunnels, permit asymmetric routing and test tunnel failure/recovery. A VGW does not support ECMP, so this is redundant tunnel design, not aggregate active-active throughput. Static routing remains the alternative for a non-BGP customer gateway.
 
 **Route precedence:** More-specific routes for on-premises CIDRs and the S3 prefix list should override the private-subnet default route to NAT. Confirm effective routes on every subnet association; a route in an unassociated route table has no effect.
 
@@ -114,7 +115,7 @@ Security groups are stateful and should reference peer security groups wherever 
 | App SG | Provisional TCP 8080 from ALB SG only; no public or on-premises direct ingress | TCP 5432 to RDS SG; TCP 2049 to EFS mount-target SG; TCP 443 to approved external/service destinations or required interface endpoint SGs; required DNS/time dependencies |
 | RDS SG | TCP 5432 from App SG; temporary TCP 5432 from DMS SG during migration; DBA access only through a separately approved controlled path | Stateful responses; no broad outbound access without a documented database requirement |
 | EFS mount-target SG | TCP 2049 from App SG and dedicated DataSync task-ENI SG | Stateful responses |
-| DMS SG | No unsolicited inbound required | TCP 5432 to PostgreSQL source subnet `10.50.20.0/24` over VGW and to RDS SG; required DMS service/logging dependencies |
+| DMS SG | No unsolicited inbound required | TCP 5432 to PostgreSQL source subnet `10.50.20.0/24` over VGW and to RDS SG; TCP 443 to required DMS service/logging APIs; narrowly scoped DNS dependencies |
 | DataSync task-ENI SG | No unsolicited inbound required | TCP 2049 to EFS mount-target SG; required DataSync task data-plane dependencies |
 | MGN staging SG | TCP 1500 from illustrative MGN source subnet `10.50.10.0/24` only; no public inbound | TCP 443 to regional MGN service and only documented dependencies |
 | Interface endpoint SG | TCP 443 from only the private workload SGs that need the endpoint | Stateful responses |

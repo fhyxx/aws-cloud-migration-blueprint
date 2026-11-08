@@ -48,9 +48,9 @@ flowchart LR
   APP_SRC -->|"Service connectivity TCP 443<br/>approved source egress"| MGN_SERVICE
   MGN_EGRESS -->|"HTTPS TCP 443"| MGN_SERVICE
 
-  PG_SRC -->|"DMS source connection TCP 5432<br/>over VPN; source firewall allows DMS path"| VPN
-  VPN --> VGW
-  VGW --> DMS
+  DMS -->|"Initiates source connection TCP 5432<br/>over VPN; source firewall allows DMS subnet path"| VGW
+  VGW --> VPN
+  VPN --> PG_SRC
   DMS -->|"Target connection TCP 5432<br/>temporary DB ingress from DMS SG"| RDS
 
   DS_AGENT -->|"HTTPS TCP 443 for public endpoint<br/>or VPC endpoint-specific ports"| DS_SERVICE

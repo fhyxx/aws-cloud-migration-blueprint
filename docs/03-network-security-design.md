@@ -18,6 +18,7 @@ VPC `clafoke-production-vpc`, CIDR `10.30.0.0/16`, `us-east-1`, two AZs, DNS sup
 | App A/B | `10.30.11.0/24`, `10.30.12.0/24` | Private EC2 |
 | DB A/B | `10.30.21.0/24`, `10.30.22.0/24` | Isolated RDS subnet group |
 | MGN staging | `10.30.31.0/24` | MGN replication servers; migration-only subnet, not in six-subnet steady-state count |
+| DMS-A / DMS-B | `10.30.41.0/24`, `10.30.42.0/24` | Dedicated DMS replication subnets across two AZs; migration-only |
 
 The MGN staging subnet is a seventh, migration-only network segment in addition to the six steady-state subnets. For this fictional reference design, use `10.30.31.0/24` in AZ-A as the initial staging subnet. It is non-overlapping with the six steady-state subnets and the illustrative on-premises `10.50.0.0/16`. The single-AZ staging choice is a cost-conscious migration assumption, not a production availability recommendation; validate replication-server capacity and recovery objectives before deployment. Record its route table, controlled service egress, NACL and security-group rules.
 

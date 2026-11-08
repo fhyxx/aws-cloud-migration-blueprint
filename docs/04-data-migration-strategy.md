@@ -1,6 +1,6 @@
 # 04 — Data Migration Strategy and Execution Plan
 
-**ID:** CLI-AWS-DATA-004 | **Version:** 1.1 | **Status:** Proposed baseline
+**ID:** CLI-AWS-DATA-004 | **Version:** 1.2 | **Status:** Proposed baseline — source evidence and migration readiness pending
 
 ## Strategy
 
@@ -29,13 +29,34 @@ Confirm Linux distribution/kernel/boot/disk support; PostgreSQL version/extensio
 
 DMS full-load table ordering and referential-integrity behaviour must be tested. Foreign-key/trigger handling during load needs an explicit DBA-approved approach; do not disable constraints casually or without a tested re-enable/validation plan.
 
+## DMS compatibility and readiness gates
+
+DMS compatibility is **unverified** until the exact PostgreSQL source version/patch, chosen RDS PostgreSQL target version and DMS replication engine version have been checked together against the current AWS DMS source/target support matrix. AWS documents self-managed PostgreSQL sources from 9.4, subject to engine-version support; PostgreSQL 17 and 18 require DMS 3.5.4 or later. These are compatibility reference points, not confirmation that this source is supported. Capture `SELECT version();`, `SHOW server_version;`, OS/package details and the selected DMS engine version before approval. Recheck the live matrix at implementation time.
+
+Before full load plus CDC, the DBA must validate:
+
+- Replication account permissions and required source privileges for the selected DMS version and deployment model.
+- `wal_level = logical`, sufficient `max_replication_slots` and `max_wal_senders`, and any other current DMS prerequisites.
+- WAL generation, retention, disk headroom and monitoring. DMS replication slots can retain WAL until changes are decoded; stalled tasks or long-running transactions can cause WAL growth and source-storage pressure.
+- Primary keys or suitable replica identity for every table. Tables without primary keys require explicit review and testing; UPDATE/DELETE capture may be incomplete without an appropriate replica-identity strategy.
+- Network reachability, source stability, encryption, endpoint permissions and task logging.
+- Full-load window, transaction/write rate, CDC latency objective, and tested recovery/stop criteria.
+
+DMS data replication is not a substitute for a complete schema/object migration. Inventory schemas, tables, types, constraints, indexes, sequences, views/materialized views, functions, procedures, triggers, extensions, roles, grants, ownership and large objects. Select and rehearse a separate schema deployment/conversion method. DMS PostgreSQL target behavior does not keep sequence values synchronized during ongoing replication; after CDC stops, reconcile sequence values (including `NEXTVAL` state) before application writes are enabled. Foreign-key and trigger handling during full load must be explicitly tested and approved; do not disable constraints without a documented restoration and validation plan.
+
+Do not size DMS from the source VM's 8 vCPU / 32 GiB or the 500 GB logical-data planning assumption. Those figures do not establish DMS capacity. Compare provisioned replication instance classes against Serverless using the same representative full-load and CDC workload. Record CPU, memory, storage/IOPS, task throughput, CDC latency, errors and observed capacity. Provisioned pricing depends on class, Single-AZ/Multi-AZ mode, running hours and included/additional storage; Serverless pricing depends on observed DCU-hours and configured minimum/maximum capacity. No class, DCU range, AZ mode, storage amount or runtime is selected until a DBA-supported benchmark exists.
+
+DMS exit evidence: source/target/DMS version compatibility; object and extension assessment; approved schema method; WAL/slot/permission readiness; table key/replica-identity report; representative full-load plus CDC benchmark; acceptable lag and full-load completion; validation/reconciliation results; and approved cutover/rollback criteria.
+
+[ DMS PostgreSQL source requirements ](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html) · [ DMS source-version matrix ](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Introduction.Sources.html) · [ DMS PostgreSQL target limitations ](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.PostgreSQL.html) · [ DMS replication-instance sizing ](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_BestPractices.SizingReplicationInstance.html) · [ DMS Serverless settings ](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Serverless.html)
+
 ## NFS to EFS
 
-Discovery estimates shared NFS at approximately 1 TB; this is a planning assumption, not measured used bytes. Before sizing, inventory exports/paths, allocated and used bytes, file counts/size distribution, ownership/ACLs, symlinks, locking/open files, active writers, exclusions and change rate. Configure encrypted Regional EFS and mount targets in both AZs. Allow NFS TCP 2049 from the application security group to the EFS mount-target security group. Run initial DataSync early enough to review task reports, errors/skips and verification; reconcile counts/sizes and test permissions/application behaviour. Pause all writers before final sync, capture the final delta and approve reconciliation.
+Discovery estimates shared NFS at approximately 1 TB; this is an unverified planning assumption, not measured used bytes. Do not treat it as a confirmed DataSync transfer quantity or cost. Before sizing, inventory exports/paths, allocated and used bytes, file counts/size distribution, ownership/ACLs, symlinks, locking/open files, active writers, exclusions and change rate. Configure encrypted Regional EFS and mount targets in both AZs. Allow NFS TCP 2049 from the application security group to the EFS mount-target security group. Run initial DataSync early enough to review task reports, errors/skips and verification; reconcile counts/sizes and test permissions/application behaviour. Pause all writers before final sync, capture the final delta and approve reconciliation.
 
 ## Archives to S3
 
-The 500 GB S3 figure is target storage, not source archive quantity. Inventory eligible archive bytes, object/file counts and sizes, source storage class/restore state, scope/exclusions, retention and destination prefix. Configure private bucket, Block Public Access and encryption. Transfer with DataSync, validate object inventory/content and errors. Apply lifecycle policies only after approval. Route application access through an S3 Gateway Endpoint where appropriate.
+The 500 GB S3 figure is target storage, not source archive quantity. The previous 1,500 GB combined DataSync assumption and $18.75 calculation are withdrawn; archive source bytes and object counts remain unknown. Inventory eligible archive bytes, object/file counts and sizes, source storage class/restore state, scope/exclusions, retention and destination prefix. Configure private bucket, Block Public Access and encryption. Transfer with DataSync, validate object inventory/content and errors. Apply lifecycle policies only after approval. Route application access through an S3 Gateway Endpoint where appropriate.
 
 ## Application servers
 
@@ -56,4 +77,4 @@ Verify MGN OS compatibility, allocate a dedicated staging-area subnet for replic
 
 Before target writes, return to source only after source readiness and consistency checks. After target writes, freeze writes, preserve logs and reconcile/reverse-migrate under DBA and Business Owner approval. DNS reversal alone is unsafe; reverse replication is not assumed.
 
-**Status:** Proposed migration plan; no data migrated.
+**Status:** Proposed migration plan; no data migrated. MGN source compatibility, DMS source/target compatibility and sizing, DataSync source quantities, and the migration calendar remain Pending Validation. See [Migration Readiness Matrix](09-migration-readiness-matrix.md).

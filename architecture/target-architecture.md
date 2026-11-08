@@ -2,7 +2,8 @@
 
 This page renders the current target architecture in GitHub's Markdown viewer. The source file is [target-architecture.mmd](target-architecture.mmd). Keep this Mermaid block synchronised with the source file when the diagram changes.
 
-```mermaidflowchart TB
+```mermaid
+flowchart TB
   USERS[Approved users] --> DNS[Public DNS<br/>Route 53 if authoritative]
   DNS --> ALB[Internet-facing ALB<br/>HTTPS 443 + ACM certificate]
 

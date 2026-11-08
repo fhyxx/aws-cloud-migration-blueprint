@@ -1,0 +1,72 @@
+flowchart TB
+  USERS["Approved users"] --> DNS["Public DNS<br/>Authoritative provider TBD"]
+  DNS --> ALB["Internet-facing Application Load Balancer<br/>HTTPS 443 / ACM certificate"]
+
+  subgraph VPC["VPC 10.30.0.0/16 — us-east-1 — two Availability Zones"]
+    IGW["Internet Gateway"]
+    VGW["Virtual Private Gateway<br/>Site-to-Site VPN"]
+
+    subgraph PUB_A["AZ-A — Public subnet 10.30.1.0/24"]
+      NAT_A["NAT Gateway A"]
+    end
+    subgraph PUB_B["AZ-B — Public subnet 10.30.2.0/24"]
+      NAT_B["NAT Gateway B"]
+    end
+
+    subgraph APP_A["AZ-A — Private app subnet 10.30.11.0/24"]
+      APP_EC2_A["EC2 application A<br/>ASG member"]
+      EFS_MTA["EFS mount target A"]
+    end
+    subgraph APP_B["AZ-B — Private app subnet 10.30.12.0/24"]
+      APP_EC2_B["EC2 application B<br/>ASG member"]
+      EFS_MTB["EFS mount target B"]
+    end
+
+    subgraph DB_A["AZ-A — Isolated DB subnet 10.30.21.0/24"]
+      DB_PRIMARY["RDS PostgreSQL<br/>Multi-AZ DB instance primary"]
+    end
+    subgraph DB_B["AZ-B — Isolated DB subnet 10.30.22.0/24"]
+      DB_STANDBY["RDS PostgreSQL<br/>Multi-AZ standby"]
+    end
+
+    EFS["Regional EFS<br/>1 TB planning assumption"]
+    S3EP["S3 Gateway Endpoint<br/>prefix-list route"]
+    S3["S3 Standard archive target<br/>500 GB capacity assumption"]
+    OPS["Private service access as required<br/>SSM / Secrets Manager / CloudWatch"]
+    
+    IGW --> ALB
+    ALB --> APP_EC2_A
+    ALB --> APP_EC2_B
+    APP_EC2_A -->|"TCP 5432 — application SG to DB SG"| DB_PRIMARY
+    APP_EC2_B -->|"TCP 5432 — application SG to DB SG"| DB_PRIMARY
+    DB_PRIMARY <-->|"Multi-AZ synchronous standby relationship"| DB_STANDBY
+    APP_EC2_A -->|"TCP 2049 — application SG to EFS mount-target SG"| EFS_MTA
+    APP_EC2_B -->|"TCP 2049 — application SG to EFS mount-target SG"| EFS_MTB
+    EFS_MTA --- EFS
+    EFS_MTB --- EFS
+    APP_EC2_A --> S3EP
+    APP_EC2_B --> S3EP
+    S3EP --> S3
+    APP_EC2_A --> OPS
+    APP_EC2_B --> OPS
+    APP_EC2_A -->|"Default route via same-AZ NAT"| NAT_A
+    APP_EC2_B -->|"Default route via same-AZ NAT"| NAT_B
+    NAT_A --> IGW
+    NAT_B --> IGW
+  end
+
+  ONPREM["On-premises networks<br/>Approved source CIDRs TBD"] ---|"Site-to-Site VPN — VGW<br/>static/BGP decision pending"| VGW
+
+  subgraph ROUTING["Route-table intent — proposed, not deployed"]
+    R1["Public A/B: default route to IGW"]
+    R2["App A: default route to NAT A<br/>App B: default route to NAT B<br/>Approved on-prem routes to VGW"]
+    R3["DB A/B: VPC-local routes only<br/>No direct internet default route"]
+    R4["S3 prefix-list route via Gateway Endpoint"]
+  end
+
+  subgraph SECURITY["Security-group intent — proposed, not deployed"]
+    SG1["ALB SG: inbound HTTPS 443<br/>approved client ranges"]
+    SG2["App SG: inbound app port 8080 from ALB SG<br/>port is provisional"]
+    SG3["DB SG: TCP 5432 from App SG<br/>and approved DBA path"]
+    SG4["EFS mount-target SG: TCP 2049<br/>from App SG"]
+  end

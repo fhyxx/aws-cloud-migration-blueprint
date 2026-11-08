@@ -6,7 +6,8 @@ This focused view separates MGN, DMS and DataSync paths so their distinct source
 
 ## Rendered migration-flow diagram
 
-```mermaidflowchart LR
+```mermaid
+flowchart LR
   subgraph SOURCE["On-premises source environment"]
     APP_SRC["Two Linux application VMs<br/>10.50.10.0/24 • MGN sources"]
     PG_SRC[("Self-managed PostgreSQL source<br/>10.50.20.0/24")]

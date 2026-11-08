@@ -2,12 +2,11 @@
 
 This page renders the current target architecture in GitHub's Markdown viewer. The source file is [target-architecture.mmd](target-architecture.mmd). Keep this Mermaid block synchronised with the source file when the diagram changes.
 
-```mermaid
-flowchart TB
+```mermaidflowchart TB
   USERS[Approved users] --> DNS[Public DNS<br/>Route 53 if authoritative]
   DNS --> ALB[Internet-facing ALB<br/>HTTPS 443 + ACM certificate]
 
-  subgraph ONPREM["On-premises source environment"]
+  subgraph ONPREM["Illustrative on-premises source<br/>10.50.0.0/16 • app 10.50.10.0/24 • DB/NFS 10.50.20.0/24"]
     APP_SRC[Two Linux application VMs<br/>MGN sources]
     PG_SRC[(Self-managed PostgreSQL source)]
     NFS_SRC[(NFS file server)]
@@ -22,7 +21,7 @@ flowchart TB
 
   subgraph VPC["AWS VPC 10.30.0.0/16 — us-east-1 — two AZs"]
     IGW[Internet Gateway]
-    VGW[Virtual Private Gateway]
+    VGW["Virtual Private Gateway<br/>BGP ASN 64512"]
     subgraph PUB["Public subnets A/B"]
       ALB[Internet-facing ALB nodes in public subnets A/B<br/>HTTPS 443 + ACM]
       NAT_A[NAT Gateway A]
@@ -39,7 +38,7 @@ flowchart TB
     subgraph DB["Isolated DB subnets A/B"]
       RDS[(RDS PostgreSQL<br/>Multi-AZ DB instance deployment<br/>500 GB configured storage input)]
     end
-    subgraph MGN_STAGING["Private MGN staging-area subnet<br/>additional migration-only subnet"]
+    subgraph MGN_STAGING["Private MGN staging-area subnet<br/>10.30.31.0/24 • AZ-A • migration-only"]
       MGN_REPL[MGN replication servers]
       MGN_EGRESS[Controlled TCP 443 egress<br/>same-AZ NAT or validated private endpoint]
       MGN_REPL --> MGN_EGRESS
@@ -78,8 +77,8 @@ flowchart TB
   DS -->|Creates task data-plane ENI| DS_ENI
   DS_ENI -->|NFS TCP 2049| EFS
   DS -->|S3 service-side transfer| S3
-  VGW ---|Approved source CIDRs for app/DMS paths| APP
-  VGW ---|TCP 1500 source-to-staging route| MGN_STAGING
+  VGW ---|BGP 10.50.0.0/16 route propagation to App-A/App-B only| APP
+  VGW ---|BGP source route • TCP 1500 to staging<br/>two tunnels • no VGW ECMP| MGN_STAGING
 ```
 
 **Review status:** Diagram content updated for DMS placement, MGN staging egress and DataSync agent/task-ENI paths. Visual review and implementation validation remain pending.

@@ -1,24 +1,33 @@
 service,assumption,quantity,unit_rate_usd,unit,monthly_low_usd,monthly_high_usd,confidence,notes
-EC2,Linux t3.xlarge us-east-1,2,0.167,hour,243.82,243.82,reference,Reference price only; validate current calculator result and benchmark burstable suitability
-EBS,gp3 storage,200,UNPRICED,GB-month,,,pending,Confirm IOPS throughput and regional calculator rate
-RDS compute,PostgreSQL Multi-AZ DB instance primary plus standby,2 x 730,UNPRICED,instance-hour,,,pending,Select exact DB class and PostgreSQL version; price both billed instances in AWS Pricing Calculator
-RDS storage,500 GB provisioned assumption on primary plus standby,1000,UNPRICED,GB-month,,,pending,Price both provisioned storage copies using selected storage type and exact us-east-1 rate
-RDS IOPS,PostgreSQL storage performance,UNCONFIRMED,UNPRICED,IOPS,,,pending,Select gp3 baseline/extra IOPS or io2 after workload discovery
-RDS backup,Automated backup and snapshots,UNCONFIRMED,UNPRICED,GB-month,,,pending,Model retention and backup storage usage; do not use unsupported flat allowance
-EFS,Regional Standard 1000 GB,1000,UNPRICED,GB-month,,,pending,Confirm current us-east-1 storage tier and throughput charges
-S3,Standard archive storage,500,UNPRICED,GB-month,,,pending,Add requests retrieval lifecycle and transfer
-NAT hourly,Two NAT Gateways,1460,UNPRICED,gateway-hour,,,pending,Confirm current us-east-1 hourly rate in calculator
-NAT processing,Processed data,UNCONFIRMED,UNPRICED,GB,,,pending,Replace prior 200 GB placeholder with measured estimate
-ALB hourly,One ALB,730,UNPRICED,hour,,,pending,Confirm current us-east-1 rate
-ALB LCU,Load balancer capacity units,UNCONFIRMED,UNPRICED,LCU-hour,,,pending,Estimate new connections active connections bytes and rule evaluations
-VPN,Standard Site-to-Site VPN to VGW,730,UNPRICED,connection-hour,,,pending,Prior 0.05/hour Ohio example not valid as confirmed us-east-1 VGW rate; select exact product
-VPN IPv4,VPN tunnel public IPv4 addresses,2,0.005,IPv4-hour,7.30,7.30,reference,Assumes two charged in-use public IPv4 tunnel endpoints; confirm actual endpoint count
-CloudWatch,Logs metrics alarms and Flow Logs,UNCONFIRMED,UNPRICED,monthly,,,pending,Estimate ingestion retention metrics and alarms
-Interface endpoints,Endpoint inventory,UNCONFIRMED,UNPRICED,endpoint-hour and GB,,,pending,Confirm services endpoint count AZ coverage and data processing
-Internet transfer,Outbound data,UNCONFIRMED,UNPRICED,GB,,,pending,Model destination and tiered transfer pricing
-Route 53,Hosted zone and DNS queries,UNCONFIRMED,UNPRICED,monthly,,,pending,Include only if Route 53 hosts zone and account for queries
-ACM,Public ALB certificate,1,0,certificate-month,0,0,reference,Public ACM certificate used with integrated AWS services generally has no additional certificate charge; confirm use case
-MGN staging,Temporary replication servers and EBS,UNCONFIRMED,UNPRICED,migration-period,,,pending,One-time migration overlap cost; staging instance and storage sizing depends on source disk and replication settings
-DMS,Replication capacity and runtime,UNCONFIRMED,UNPRICED,migration-period,,,pending,Select DMS provisioned or Serverless and model duration and data volume
-DataSync,Transferred data and task runtime,UNCONFIRMED,UNPRICED,migration-period,,,pending,Model transfer GB and task schedule
-TOTAL,No approved total,,UNPRICED,monthly,,,pending,Earlier 2214-2702 USD/month worksheet is superseded and must not be used for budgeting; complete AWS Pricing Calculator estimate first
+EC2,Linux t3.xlarge us-east-1; calculator entry includes attached gp3 volumes,2 instances x 730,calculator-result,hour,274.94,274.94,calculator-verified,Current saved EC2 estimate total; t3.xlarge remains a sizing proxy and sustained CPU suitability requires benchmark
+EBS,gp3 storage included in saved EC2 estimate,200,calculator-included,GB-month,,,calculator-verified-input,2 x 100 GB gp3; included in EC2 line above; do not add this quantity again
+RDS compute,PostgreSQL db.m6i.2xlarge Multi-AZ; one configured logical DB,1 configured DB x 730,1.424,Multi-AZ instance-hour,1039.52,1039.52,calculator-verified,Displayed calculator compute component; Multi-AZ selected and calculator rate applied to one configured DB; do not manually double
+RDS storage,gp3 storage input in Multi-AZ DB instance configuration,500,0.23,GB-month,115.00,115.00,calculator-verified,Displayed calculator storage component at calculator Multi-AZ rate; 500 GB input not manually doubled
+RDS IOPS,Configured gp3 baseline IOPS,12000,0,IOPS,0,0,calculator-verified-input,Selected value; calculator shows included at this storage size baseline; workload suitability remains pending
+RDS throughput,Configured gp3 baseline throughput,500,0,MiBps,0,0,calculator-verified-input,Selected value; calculator shows included at this storage size baseline; workload suitability remains pending
+RDS Database Insights,Database Insights for 8 vCPU instance,8 vCPU x 730,0.0125,vCPU-hour,73.00,73.00,calculator-verified,Displayed calculator component; included in the RDS service total of 1227.52 USD/month
+RDS backup,Automated backup and snapshots,UNCONFIRMED,UNPRICED,GB-month,,,pending,Model retention and actual backup storage; excluded from current subtotal
+EFS,Regional Standard storage; Elastic throughput mode provisional,1000,0.30,GB-month,300.00,300.00,calculator-verified,Current calculator result; two-AZ mount target topology retained; metered read/write usage is zero placeholder and throughput mode is provisional
+EFS throughput,Elastic throughput read/write activity,0,UNPRICED,GB,,,placeholder,Zero is a calculator placeholder only; obtain measured or approved read/write volume and throughput profile
+S3,Standard archive storage,500,0.023,GB-month,11.50,11.50,calculator-verified,Current calculator storage result; 500 GB planning assumption
+S3 requests,Requests and retrieval,0,UNPRICED,request,,,placeholder,Zero placeholder; request/retrieval profile remains unpriced
+S3 transfer,Data transfer,0,UNPRICED,GB,,,placeholder,Zero placeholder; transfer remains unpriced
+NAT hourly,Two conventional NAT Gateways,2 x 730,0.045,gateway-hour,65.70,65.70,calculator-verified,Current saved VPC calculator result; same-AZ application egress; regional NAT is not selected
+NAT processing,Processed data,0,UNPRICED,GB,,,placeholder,Zero processed-GB placeholder; replace after workload discovery; transfer charges excluded
+VPN,Standard Site-to-Site VPN connection to VGW,730,0.05,connection-hour,36.50,36.50,calculator-verified,Current saved calculator line item; validate exact connection/tunnel and any applicable public IPv4 treatment
+VPN IPv4,Tunnel public IPv4 address-hours,2,UNPRICED,IPv4-hour,,,pending,Prior 2-address / 7.30 USD reference is not confirmed in the current calculator line; do not include in subtotal unless current configuration and billing applicability are verified
+VPN transfer,Monthly data transfer,UNCONFIRMED,UNPRICED,GB,,,pending,Transfer remains unpriced; obtain volume, direction and destination
+ALB hourly,One internet-facing Application Load Balancer,730,UNPRICED,hour,,,pending,No ALB price included; retain architecture quantity and obtain calculator result without inventing LCU inputs
+ALB LCU,Load balancer capacity units,UNCONFIRMED,UNPRICED,LCU-hour,,,pending,New connections active connections processed bytes and rule evaluations require workload evidence; no ALB total in current subtotal
+CloudWatch,Logs metrics alarms and Flow Logs,UNCONFIRMED,UNPRICED,monthly,,,pending,Estimate ingestion retention metrics alarms and Flow Log destination/scope; excluded from current subtotal
+Interface endpoints,Endpoint inventory,UNCONFIRMED,UNPRICED,endpoint-hour and GB,,,pending,Confirm services endpoint count AZ coverage and data processing; S3 Gateway Endpoint has no hourly fee
+Internet transfer,Outbound data,UNCONFIRMED,UNPRICED,GB,,,pending,Model destination direction and tiered transfer pricing; excluded from current subtotal
+Route 53,Hosted zone and DNS queries,UNCONFIRMED,UNPRICED,monthly,,,pending,Include hosted zone only if Route 53 hosts it; determine query volume and applicable routing features
+ACM,Public ALB certificate,1,0,certificate-month,0,0,reference,Public ACM certificate use with integrated AWS service generally has no additional certificate charge; confirm domain/validation use case
+MIGRATION GROUP,MIGRATION-PERIOD COSTS — separate from steady-state monthly total,Not sized,UNPRICED,migration-period,,,pending,Do not combine with steady-state subtotal; duration and overlap pending
+MGN staging,Temporary replication servers and EBS,UNCONFIRMED,UNPRICED,migration-period,,,pending,Source disks replication profile staging shape and duration required; excluded from steady-state subtotal
+DMS,Replication capacity and runtime,UNCONFIRMED,UNPRICED,migration-period,,,pending,Select provisioned or Serverless based on DBA discovery; full load plus CDC; runtime pending
+DataSync,Transferred data and task runtime,UNCONFIRMED,UNPRICED,migration-period,,,pending,Source byte/file inventory and task schedule required; initial 1.5 TB derived planning amount is unverified
+Temporary network,VPN NAT endpoints and transfer during migration,UNCONFIRMED,UNPRICED,migration-period,,,pending,Add only evidenced temporary resources and traffic; overlap duration pending
+Parallel running,Source/target overlap duration and charges,UNCONFIRMED,UNPRICED,migration-period,,,pending,Requires approved migration calendar and retirement date; report separately from steady-state
+TOTAL,Verified partial calculator subtotal (steady state),,,"USD/month",1916.16,1916.16,calculator-verified,Annualised at 12 months: 22993.92 USD; not complete or approved budget; excludes unpriced/pending items and migration-period group. Historical 2214-2702 USD worksheet is withdrawn as a budget.

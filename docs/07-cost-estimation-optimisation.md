@@ -1,6 +1,6 @@
 # 07 — AWS Cost Estimation and Optimisation
 
-**ID:** CLI-AWS-COST-007 | **Version:** 1.6 | **Status:** Partial calculator baseline saved — usage scenario review open  
+**ID:** CLI-AWS-COST-007 | **Version:** 1.7 | **Status:** Partial calculator baseline saved — usage scenario review open  
 **Region:** `us-east-1` | **Currency:** USD | **Planning month:** 730 hours
 
 ## Executive decision
@@ -152,6 +152,36 @@ AWS references:
 - [RDS for PostgreSQL pricing and deployment options](https://aws.amazon.com/rds/postgresql/pricing/)
 - [RDS Multi-AZ DB instance billing details](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_OnDemandDBInstances.html)
 
+## Network traffic and temporary migration pricing audit
+
+### Steady-state VPN direction matters
+
+The saved VPN line remains $43.80/month: $36.50 for one standard connection at 730 hours plus $7.30 for two in-use public IPv4 tunnel endpoints. The saved entry continues to have no approved data transfer quantity. AWS Site-to-Site VPN has no separate per-GB service fee, but standard AWS data transfer out charges apply to data sent from AWS through the connection. Inbound traffic is not charged as AWS data transfer out. The A-015 100 GB / 1 TB / 10 TB values are illustrative monthly traffic points, not a directional requirement.
+
+At us-east-1's $0.09/GB first outbound tier and 1 TB = 1,024 GB, illustrative all-outbound charges are:
+
+| Monthly transfer scenario (A-015) | If all traffic is inbound | If all is outbound, 100 GB account-wide free allowance available | If all is outbound, allowance already used |
+|---|---:|---:|---:|
+| 100 GB | $0.00 | $0.00 | $9.00 |
+| 1 TB = 1,024 GB | $0.00 | $83.16 (924 × $0.09) | $92.16 |
+| 10 TB = 10,240 GB | $0.00 | $912.60 (10,140 × $0.09) | $921.60 |
+
+These are independent calculations against AWS pricing, not Calculator results, and assume the entire quantity traverses the VPN; mixed traffic should price only its AWS-to-on-premises/outbound component, applying the account-wide 100 GB allowance only if still available. Actual monthly direction and destination are unknown. Do not add these amounts to the subtotal.
+
+### NAT Gateways and VPC endpoints
+
+The saved NAT entry is $65.70/month (= 2 × 730 hours × $0.045/hour), with 0 processed GB. The saved entry's configuration summary lists two conventional NAT Gateways but no public IPv4 count. AWS VPC pricing charges $0.005 per in-use public IPv4 address-hour; two NAT gateway EIPs would be another **$7.30/month** (2 × 730 × $0.005) if not already included elsewhere. The currently displayed $65.70 matches NAT hours alone, so treat the NAT IPv4 amount as a likely omitted charge pending a detailed Calculator review. Do not alter the saved subtotal in this audit. The two VPN tunnel IPv4 addresses are already included in the separate $43.80 VPN entry; do not count those again.
+
+NAT data processing is separately $0.045/GB. There is no documented NAT-processed quantity. If (for arithmetic only, not as an assumption that VPN bytes also traverse NAT) the existing A-015 volume points were processed through NAT, the processing charges would be $4.50 / $46.08 / $460.80 for 100 / 1,024 / 10,240 GB. Add standard internet data-out charges where applicable; the NAT fee is not a substitute for egress billing. Same-AZ NAT routing is documented and should avoid inter-AZ traffic to NAT; validate actual route tables and bytes.
+
+The S3 Gateway Endpoint in the architecture has no hourly or data-processing charge; S3 requests, storage and applicable data transfer still apply. No interface endpoints are currently assumed. In us-east-1, interface endpoints are $0.01 per endpoint ENI-AZ-hour and $0.01/GB processed in the first tier. Thus one endpoint enabled in both app AZs would be $14.60/month fixed (2 × 730 × $0.01), before data processing; this is only a unit illustration, not an endpoint-count assumption. Endpoint cost is quantity × enabled AZs × 730 × hourly rate, plus actual bytes × processing rate. Add endpoints only after a service-by-service dependency/route decision; the use of same-AZ NAT means private AWS service access does not by itself prove that an endpoint is required.
+
+### Migration-period pricing work (kept separate)
+
+The saved estimate still has a separate empty **Migration period — temporary** group; no migration costs were added. A-019's derived 1,500 GB initial transfer at DataSync Basic's current $0.0125/GB is **$18.75 one-time**; the 15 / 75 / 300 GB final-delta scenarios cost $0.19 / $0.94 / $3.75 one-time. This prices only DataSync's volume fee, not the source inventory, file-operation request charges, EFS/S3 destination activity or temporary network path. Conditional EFS destination write activity is separately documented in the EFS section.
+
+AWS MGN's service charge has a 2,160-hour (90-continuous-day) free period per source server. Replication infrastructure (including MGN-provisioned compute/storage) is billable even during that period; test/cutover EC2 and EBS are also billed. A-017's two source servers and 2-week / 1-month / 3-month duration examples do not establish disk size, change rate or staging configuration. A 3 × 730-hour planning interval is 2,190 hours, which exceeds the service free window by 30 hours, but no post-free amount or staging-resource quantity is entered here. DMS full load + CDC remains documented, but replication mode/class, storage, CDC runtime and overlap are unresolved; AWS bills selected on-demand instance capacity or Serverless DCU-hours. No arbitrary DMS class was priced. DataSync initial and final delta, MGN replication, DMS, temporary VPN/NAT/endpoint/transfer, test/cutover compute and parallel-running duration must remain separately labelled migration-period costs. Migration calendar A-023, source data/change measurements A-017–A-019, and route/endpoint flow evidence A-020–A-022 are prerequisites to a responsible complete migration estimate.
+
 ## Pricing method and acceptance
 
 1. Open the existing saved estimate in [AWS Pricing Calculator](https://calculator.aws/); preserve its current service configurations.
@@ -176,7 +206,7 @@ AWS explains that the calculator uses service configuration and Region inputs, c
 
 ## Exclusions / separate estimates
 
-Taxes, support plan, engineering labour, customer gateway and on-premises internet costs, migration staging/overlap, MGN/DMS/DataSync execution, unknown transfer, optional security services, detailed backup, EFS cross-AZ transfer and workload-confirmed lifecycle/throughput, S3 requests/retrieval and unmodelled usage require separate inputs or estimates.
+Taxes, support plan, engineering labour, customer gateway and on-premises internet costs, migration staging/overlap, MGN/DMS/DataSync execution, unknown transfer, optional security services, detailed backup, EFS cross-AZ transfer and workload-confirmed lifecycle/throughput, likely NAT public IPv4 omission ($7.30/month pending Calculator verification), VPN/NAT traffic, endpoint inventory, S3 requests/retrieval and unmodelled usage require separate inputs or estimates.
 
 ## Public pricing references
 
@@ -189,7 +219,7 @@ Taxes, support plan, engineering labour, customer gateway and on-premises intern
 - [Amazon S3 pricing](https://aws.amazon.com/s3/pricing/)
 - [AWS Site-to-Site VPN pricing](https://aws.amazon.com/vpn/pricing/)
 - [Amazon Route 53 pricing](https://aws.amazon.com/route53/pricing/)
-- [Amazon CloudWatch pricing](https://aws.amazon.com/cloudwatch/pricing/)
+- [Amazon CloudWatch pricing](https://aws.amazon.com/cloudwatch/pricing/)\n- [AWS PrivateLink pricing](https://aws.amazon.com/privatelink/pricing/)\n- [AWS Transform MGN pricing](https://aws.amazon.com/application-migration-service/pricing/)\n- [AWS DMS pricing](https://aws.amazon.com/dms/pricing/)
 - [AWS Certificate Manager pricing](https://aws.amazon.com/certificate-manager/pricing/)
 - [AWS Pricing Calculator guide: export estimate](https://docs.aws.amazon.com/pricing-calculator/latest/userguide/export-estimate.html)
 - [AWS Pricing Calculator guide: share estimate](https://docs.aws.amazon.com/pricing-calculator/latest/userguide/save-share-estimate.html)

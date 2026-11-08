@@ -61,7 +61,7 @@ The proposed starting thresholds and recovery tests are documented in `docs/06-v
 2. Capture PostgreSQL source version/patch, choose exact RDS target version and DMS engine, then validate the live DMS compatibility matrix.
 3. Approve DMS source permissions, WAL/slot/sender headroom, primary-key/replica-identity handling, schema/object migration method and benchmark.
 4. Inventory NFS used bytes/file counts and archive source bytes/object counts; choose DataSync mode, agent and endpoint design.
-5. Validate illustrative VPN CIDRs, BGP ASNs, both tunnel sessions/failover, route propagation scope, MGN staging subnet/egress, DMS routes/SGs, DataSync task-ENI subnet/SG, workload-driven VPC endpoint inventory, DNS ownership and API allowlists.
+5. Validate illustrative VPN CIDRs, BGP ASNs, both tunnel sessions/failover, route propagation only to DMS-A/DMS-B/MGN staging, DMS source firewall allowlisting from `10.30.41.0/24` and `10.30.42.0/24`, MGN staging subnet/egress, DMS routes/SGs, DataSync task-ENI subnet/SG, workload-driven VPC endpoint inventory, DNS ownership and API allowlists.
 6. Confirm application readiness endpoint, health-check behaviour, EC2 family, ASG maximum/scaling, RDS performance, backup retention and log retention.
 7. Execute load, AZ/failover, database restore, EFS restore, S3 recovery and end-to-end application tests; retain dated evidence.
 8. Complete migration-period cost modelling from measured source profiles, benchmarks, network flows and approved dates.

@@ -22,7 +22,7 @@ A cloud migration blueprint for a fictional Nigerian retail/distribution company
 
 ## Architecture
 
-The canonical source diagram is [architecture/target-architecture.mmd](architecture/target-architecture.mmd). It shows the steady-state VPC, MGN staging area, hybrid VPN path, and distinct MGN, DMS and DataSync flows. GitHub renders Mermaid diagrams when embedded in Markdown; the source diagram still requires final visual review before design sign-off.
+The canonical Mermaid source is [architecture/target-architecture.mmd](architecture/target-architecture.mmd). Open the [rendered architecture page](architecture/target-architecture.md) to inspect the diagram in GitHub. It shows the steady-state VPC, MGN staging area, hybrid VPN path, and distinct MGN, DMS and DataSync flows. Visual review remains pending before design sign-off.
 
 ## Deliverables
 
@@ -35,8 +35,9 @@ The canonical source diagram is [architecture/target-architecture.mmd](architect
 7. [Cost estimate and optimisation](docs/07-cost-estimation-optimisation.md)
 8. [Assumptions and decisions register](docs/08-assumptions-decisions-register.md)
 9. [Migration readiness matrix](docs/09-migration-readiness-matrix.md)
+10. [Technical architecture audit](docs/10-technical-architecture-audit.md)
 
-Additional assets: `architecture/target-architecture.mmd`, `cost/pricing-assumptions.csv`, `evidence/README.md`, `DESIGN-CONSISTENCY.md`.
+Additional assets: `architecture/target-architecture.mmd`, `architecture/target-architecture.md` (rendered companion), `cost/pricing-assumptions.csv`, `evidence/README.md`, `DESIGN-CONSISTENCY.md`.
 
 ## Cost review status
 

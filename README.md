@@ -16,7 +16,7 @@ A cloud migration blueprint for a fictional Nigerian retail/distribution company
 | Database | PostgreSQL to RDS PostgreSQL Multi-AZ DB instance deployment; 500 GB source logical-data assumption and separate 500 GB target gp3 provisioned-storage input; primary and standby billed under Multi-AZ pricing |
 | Shared files | 1 TB Regional EFS, mount target in each application AZ |
 | Archives | 500 GB S3 Standard via Gateway Endpoint where appropriate |
-| Hybrid | 1 Site-to-Site VPN using VGW design |
+| Hybrid | 1 dynamic-BGP Site-to-Site VPN to VGW; fictional source `10.50.0.0/16`; ASN 65010/64512; two redundant tunnels (no VGW ECMP) |
 | Entry | Public ALB, HTTPS 443; ACM certificate and DNS required |
 | Business targets | 99.9% availability; RTO 4h; RPO 15m—not demonstrated |
 

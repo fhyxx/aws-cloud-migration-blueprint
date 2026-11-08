@@ -2,8 +2,7 @@
 
 This page renders the current target architecture in GitHub's Markdown viewer. The source file is [target-architecture.mmd](target-architecture.mmd). Keep this Mermaid block synchronised with the source file when the diagram changes.
 
-```mermaid
-flowchart TB
+```mermaidflowchart TB
   USERS[Approved users] --> DNS[Public DNS<br/>Route 53 if authoritative]
   DNS --> ALB[Internet-facing ALB<br/>HTTPS 443 + ACM certificate]
 
@@ -34,7 +33,9 @@ flowchart TB
       EC2_B[EC2 app B<br/>4 vCPU / 16 GiB]
       ASG --> EC2_A
       ASG --> EC2_B
-      DMS[DMS replication instance or Serverless<br/>replication subnet group spans both private app AZs<br/>dedicated DMS security group]
+    end
+    subgraph DMS_MIGRATION["Private DMS migration subnets A/B<br/>10.30.41.0/24 • 10.30.42.0/24"]
+      DMS[DMS replication instance or Serverless<br/>dedicated DMS security group<br/>source route via VGW; service egress via same-AZ NAT]
     end
     subgraph DB["Isolated DB subnets A/B"]
       RDS[(RDS PostgreSQL<br/>Multi-AZ DB instance deployment<br/>500 GB configured storage input)]
@@ -78,7 +79,7 @@ flowchart TB
   DS -->|Creates task data-plane ENI| DS_ENI
   DS_ENI -->|NFS TCP 2049| EFS
   DS -->|S3 service-side transfer| S3
-  VGW ---|BGP 10.50.0.0/16 route propagation to App-A/App-B only| APP
+  VGW ---|BGP 10.50.0.0/16 propagated only to DMS-A/DMS-B and MGN staging| DMS_MIGRATION
   VGW ---|BGP source route • TCP 1500 to staging<br/>two tunnels • no VGW ECMP| MGN_STAGING
 ```
 

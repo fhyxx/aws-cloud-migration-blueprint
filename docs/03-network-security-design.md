@@ -36,7 +36,7 @@ The six steady-state subnet CIDRs are distinct, contained within `10.30.0.0/16`,
 
 AWS reserves five IPv4 addresses in each ordinary subnet. The public /24 subnets exceed the ALB minimum of /27 and, at subnet creation, have substantially more than the required eight free IP addresses. Recheck free IP capacity before ALB deployment and during growth; NAT Gateway, ALB ENIs, endpoints and other ENIs consume addresses. Actual AZ IDs must be selected and recorded because AZ letters can map differently across AWS accounts.
 
-The MGN staging subnet has no CIDR yet and is excluded from the six-row calculation. Select its non-overlapping CIDR and AZ only after confirming the on-premises network ranges, MGN replication-server scale, IP headroom and chosen egress design. Do not infer a subnet size from the current application assumptions.
+The MGN staging subnet `10.30.31.0/24` in AZ-A is a separate migration-only subnet and is excluded from the six-row steady-state subnet sizing table. The CIDR is an illustrative planning assumption, not an approved customer allocation. Validate non-overlap against the actual customer address inventory, replication-server IP capacity, AZ mapping and egress design before deployment.
 
 ## Illustrative hybrid network and VPN assumptions
 

@@ -13,7 +13,7 @@ A cloud migration blueprint for a fictional Nigerian retail/distribution company
 | Steady-state subnets | 2 public, 2 private app, 2 isolated DB |
 | Migration subnet | Additional private MGN staging subnet; migration-only |
 | Application | 2 Linux servers, 4 vCPU / 16 GiB each, EC2 in a two-AZ Auto Scaling Group |
-| Database | PostgreSQL to RDS PostgreSQL Multi-AZ DB instance deployment; 500 GB logical data assumption; primary and standby storage billed |
+| Database | PostgreSQL to RDS PostgreSQL Multi-AZ DB instance deployment; 500 GB source logical-data assumption and separate 500 GB target gp3 provisioned-storage input; primary and standby billed under Multi-AZ pricing |
 | Shared files | 1 TB Regional EFS, mount target in each application AZ |
 | Archives | 500 GB S3 Standard via Gateway Endpoint where appropriate |
 | Hybrid | 1 Site-to-Site VPN using VGW design |

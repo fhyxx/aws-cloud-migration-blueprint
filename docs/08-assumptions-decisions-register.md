@@ -1,6 +1,6 @@
 # 08 — Assumptions and Decisions Register
 
-**ID:** CLI-AWS-ADR-008 | **Version:** 1.1 | **Status:** Open — workload validation required  
+**ID:** CLI-AWS-ADR-008 | **Version:** 1.2 | **Status:** Open — workload validation required  
 **Project:** Clafoke Investors Ltd (fictional portfolio case study)  
 **Region:** `us-east-1` | **Currency:** USD | **Planning month:** 730 hours  
 **Related:** [Discovery assessment](01-discovery-assessment.md), [Target architecture](02-target-architecture.md), [Network and security design](03-network-security-design.md), [Migration strategy](04-data-migration-strategy.md), [Migration runbook](05-migration-runbook.md), [Validation and rollback](06-validation-rollback-strategy.md), [Cost estimation and optimisation](07-cost-estimation-optimisation.md), [pricing assumptions](../cost/pricing-assumptions.csv), [target architecture diagram](../architecture/target-architecture.mmd)
@@ -11,7 +11,7 @@ This register distinguishes repository statements from architectural deductions,
 
 The existing saved AWS Pricing Calculator subtotal is **$1,923.46/month**, including two conventional NAT Gateways and the audited Site-to-Site VPN plus public IPv4 tunnel charges. This document does not change the calculator or convert that subtotal into a complete operating budget. The earlier $2,214–$2,702/month worksheet is withdrawn as a budget.
 
-Route 53 and CloudWatch price sensitivities have now been checked in AWS Pricing Calculator as unsaved scenarios; none is an approved client requirement or included in the saved estimate. The saved subtotal remains $1,923.46/month. Priority decisions remain: (1) ALB traffic and LCU dimensions; (2) DNS authority, zone ownership and billable query mix; (3) CloudWatch metrics, alarms, log ingestion/retention and Flow Log scope/destination; (4) EFS capacity, throughput, lifecycle and cross-AZ use; (5) VPN traffic; and (6) migration source sizing, MGN/DMS/DataSync profiles, temporary network and overlap duration.
+Route 53, CloudWatch and EFS price sensitivities have now been checked in AWS Pricing Calculator as unsaved scenarios; none is an approved client requirement or included in the saved estimate. EFS storage is the existing $300/month Calculator entry; usage scenarios exclude cross-AZ and migration-period charges. The saved subtotal remains $1,923.46/month. Priority decisions remain: (1) ALB traffic and LCU dimensions; (2) DNS authority, zone ownership and billable query mix; (3) CloudWatch metrics, alarms, log ingestion/retention and Flow Log scope/destination; (4) EFS capacity, throughput, lifecycle and cross-AZ use; (5) VPN traffic; and (6) migration source sizing, MGN/DMS/DataSync profiles, temporary network and overlap duration.
 
 ## Status definitions
 
@@ -112,6 +112,24 @@ The 1,000 GB EFS quantity is a documented planning assumption, not a measured us
 | A-012 | EFS capacity, growth and lifecycle distribution | 1,000 GB target planning quantity is documented; actual use/growth/tier mix unknown | Pending Validation | Infrastructure Lead; Application Lead validates scope | NFS inventory: used bytes, file count, growth, exclusions, access-age distribution, lifecycle/retrieval policy | EFS Regional Standard and lifecycle-tier storage, retrieval/transition charges | Determines storage and lifecycle cost; aligns DataSync scope A-019 |
 | A-013 | EFS read/write throughput and throughput mode | Read/write volume: 100/25, 500/100, 2,000/500 GB/month; illustrative peak throughput 5/25/100 MiB/s | Pending Validation | Application Lead; Infrastructure Lead selects mode | NFS telemetry/benchmark: bytes read/written, sustained/peak rate, concurrency and access pattern; compare eligible throughput modes | EFS throughput charges and performance configuration | Depends on data profile A-012 and app concurrency; selected performance metrics should appear in A-008 |
 | A-014 | EFS cross-AZ access and transfer | No volume approved; measure same-AZ versus cross-AZ traffic; two mount targets do not imply zero cross-AZ transfer | Pending Validation | Infrastructure Lead; Application Lead supplies placement/access evidence | ASG AZ placement and EFS client bytes by AZ | Cross-AZ data transfer and EFS client traffic | Depends on app placement and mount-target use; Flow Logs A-011 may help quantify |
+
+#### EFS pricing evidence and scenario calculations
+
+**Status remains Pending Validation for A-012, A-013 and A-014.** The existing 1,000 GB Regional file system quantity and one mount target per application AZ are documented; neither the usage scenarios nor the Calculator results approve a production workload. The saved estimate was not changed.
+
+| Scenario | Standard storage | Read / write | Elastic read / write charges | Lifecycle / retrieval | Cross-AZ transfer | EFS steady-state modeled subtotal |
+|---|---:|---:|---:|---|---|---:|
+| Conservative (A-013 illustrative) | 1,000 GB = $300.00 | 100 / 25 GB/month | 100×$0.03 + 25×$0.06 = $4.50 | $0 in all-Standard/no-lifecycle scenario; actual unknown | Unpriced; A-014 bytes not measured | **$304.50/month** |
+| Baseline (A-013 illustrative) | 1,000 GB = $300.00 | 500 / 100 GB/month | 500×$0.03 + 100×$0.06 = $21.00 | $0 in all-Standard/no-lifecycle scenario; actual unknown | Unpriced; A-014 bytes not measured | **$321.00/month** |
+| High (A-013 illustrative) | 1,000 GB = $300.00 | 2,000 / 500 GB/month | 2,000×$0.03 + 500×$0.06 = $90.00 | $0 in all-Standard/no-lifecycle scenario; actual unknown | Unpriced; A-014 bytes not measured | **$390.00/month** |
+
+These are unsaved AWS Pricing Calculator scenario results in us-east-1, not independent production forecasts. Totals exclude cross-AZ transfer, lifecycle/retrieval, backup and taxes. The $300 storage amount matches the existing EFS calculator line. AWS states Regional Standard storage has baseline throughput of 50 KB/s per GB; 1,000 GB therefore provides 50 MB/s. In the unsaved Provisioned Throughput comparison, 5/25 MB/s requested with 1,000 GB Standard produced $0 added throughput and $300 total; 100 MB/s produced 50 billable MB/s × $6 = $300, or $600 total with storage. This comparison does not imply peak rates must be provisioned. At 730 hours, average monthly read-plus-write rates from the illustrative volumes are approximately 0.0487 / 0.2336 / 0.9740 MiB/s; the separate 5 / 25 / 100 MiB/s peaks remain hypothetical.
+
+For lifecycle sensitivity only, 5% Standard / 15% IA / 80% Archive storage at 1,000 GB costs $23.80 monthly ($15.00 + $2.40 + $6.40). Baseline read/write throughput remains $21.00; 75 GB IA reads cost $0.75 and 400 GB Archive reads cost $12.00. With no new tiering input, this totals **$57.55/month**. With 150 GB/month tiered to IA ($1.50) and 800 GB/month tiered to Archive ($24.00), total is **$83.05/month**. The tier distribution, reads and monthly tiering are illustrative only. A one-time transition of 150/800 GB is $25.50 at the calculator rates; do not annualize one-time transition fees. Lifecycle access modes/minimum storage constraints and file age/size distribution require evidence.
+
+Regional EFS client access to a mount target in a different AZ can incur $0.01/GB transferred into the AZ and $0.01/GB out, while same-AZ access avoids the cross-AZ rate. Two mount targets allow an AZ-local endpoint but do not prove clients use it. A-014 has no approved quantity, so the cross-AZ cost remains unpriced in each scenario. Measure application placement and EFS bytes by client AZ/mount-target AZ.
+
+A-019's initial 1,500 GB derived quantity at current DataSync Basic $0.0125/GB is **$18.75 one-time** (not monthly operating cost). Its 1% / 5% / 20% delta examples (15 / 75 / 300 GB) cost **$0.19 / $0.94 / $3.75 one-time**. EFS destination writes may separately invoke Elastic write-throughput charges: if 1,000 GB initial NFS data and 15/75/300 GB delta are written to EFS, the illustrative write charges are $60.00 and $0.90/$4.50/$18.00, respectively. These are migration-period service charges distinct from the DataSync per-GB fee and ongoing application EFS read/write. S3 request costs for the 500 GB archive portion, and actual transfer paths over VPN/NAT/endpoints remain unpriced. The DataSync source inventory is still unverified.
 
 ### E. VPN and steady-state network
 

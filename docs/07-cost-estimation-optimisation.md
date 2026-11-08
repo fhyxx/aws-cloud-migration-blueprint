@@ -1,27 +1,27 @@
 # 07 — AWS Cost Estimation and Optimisation
 
-**ID:** CLI-AWS-COST-007 | **Version:** 1.2 | **Status:** Pricing review open — no approved total  
+**ID:** CLI-AWS-COST-007 | **Version:** 1.3 | **Status:** Partial calculator baseline saved — pricing review open  
 **Region:** `us-east-1` | **Currency:** USD | **Planning month:** 730 hours
 
 ## Executive decision
 
 The earlier **$2,214–$2,702/month** range is retained only as a historical, illustrative worksheet result. **Do not use it as a budget, quotation, expected bill or customer commitment.** The earlier worksheet used unverified RDS compute/storage rates and a VPN hourly example from a different Region and connection design. Those values do not support a defensible current total.
 
-A final AWS Pricing Calculator estimate has not been produced. This document deliberately does not invent one. The exact RDS class/storage/IOPS and VPN product configuration must be selected and entered into AWS Pricing Calculator; the saved estimate URL and exported CSV/PDF should then be committed alongside this document.
+A partial estimate is saved in AWS Pricing Calculator. Its currently verified subtotal is **$1,916.16/month** and **$22,993.92 annualised**. This is a calculator result for the entered configurations, not a complete operating budget, approved budget or proof of production workload suitability. Material usage-dependent items and migration costs remain unpriced. The saved RDS configuration is a sizing proxy pending PostgreSQL version, workload and compatibility validation. See [the Assumptions and Decisions Register](08-assumptions-decisions-register.md).
 
 ## Architecture quantities to price
 
 | Service | Current design input | Pricing status / required decision |
 |---|---|---|
-| EC2 | 2 × Linux `t3.xlarge`, 730 h/month | Reference rate exists for us-east-1; retain as sizing proxy only. Benchmark sustained CPU and compare a non-burstable family. |
-| EBS | 2 × 100 GB gp3 | Confirm provisioned IOPS/throughput and current regional rates. |
-| RDS PostgreSQL | Multi-AZ DB instance deployment, one standby; 500 GB logical/provisioned-storage assumption | **Not priced.** Select PostgreSQL major version, exact class, gp3/io2, provisioned IOPS/throughput and backup retention. Calculator must include primary and standby instance-hours and provisioned storage. |
+| EC2 (including attached EBS in the saved EC2 estimate) | 2 × Linux `t3.xlarge`, 730 h/month; 2 × 100 GB gp3 | **$274.94/month, calculator result.** Benchmark sustained CPU and compare a non-burstable family; confirm the gp3 sizing assumptions. |
+| EBS | 2 × 100 GB gp3 (200 GB total), represented in the saved EC2 estimate | Included in the $274.94/month EC2 calculator entry; do not add it again. Validate workload performance needs. |
+| RDS PostgreSQL | `db.m6i.2xlarge`, Multi-AZ DB instance deployment, 500 GB gp3 input, 12,000 IOPS, 500 MiB/s throughput | **$1,227.52/month, calculator result.** The current entry uses one configured logical DB with Multi-AZ selected. PostgreSQL version, compatibility and workload suitability remain unresolved; backup usage remains unpriced. |
 | RDS backups | Usage-dependent | Calculate retention, changed-data volume and snapshot needs; avoid a flat unsupported allowance. |
-| EFS | Regional Standard, 1,000 GB, mount targets in both app AZs | Confirm regional storage rate, lifecycle mix, throughput mode and metered throughput. |
-| S3 | Standard, 500 GB | Confirm storage, requests, retrieval, lifecycle and replication requirements. |
-| NAT Gateway | 2 gateways, same-AZ app egress | Confirm us-east-1 gateway-hour and data-processing rates plus realistic processed GB; include cross-AZ transfer if any. |
-| ALB | 1 internet-facing ALB | Price hours and estimated LCU dimensions (new connections, active connections, processed bytes, rule evaluations). |
-| Site-to-Site VPN | 1 standard connection to VGW | **Not priced.** Select standard connection type and verify exact us-east-1 connection-hour rate, tunnel public IPv4 addresses and transfer. Do not reuse the earlier $0.05/hour example: it was a US East (Ohio) example for a different connection scenario. |
+| EFS | Regional Standard, 1,000 GB, mount targets in both app AZs; Elastic throughput is provisional | **$300.00/month, calculator result.** Throughput mode and metered read/write workload remain provisional/unresolved; current metered throughput input is zero. |
+| S3 | Standard, 500 GB | **$11.50/month, calculator result.** Requests, retrieval and transfer remain zero placeholders; validate lifecycle and retention requirements. |
+| NAT Gateway | 2 conventional gateways, same-AZ app egress, 730 hours each | **$65.70/month, calculator result.** Processed data remains a zero placeholder; replace with workload evidence. Cross-AZ transfer, if any, is not included. |
+| ALB | 1 internet-facing ALB, HTTPS 443 | Not included in the subtotal. Do not enter a guessed LCU quantity or report an ALB total until connection, byte and rule-evaluation assumptions are validated. |
+| Site-to-Site VPN | 1 standard connection to VGW | **$36.50/month, calculator result.** Transfer is unpriced. Verify the selected connection/tunnel and any applicable public IPv4 treatment against the saved entry; do not use the historical Ohio example as a current rate. |
 | Interface endpoints | Count and AZ coverage not final | Inventory each endpoint and AZ; price endpoint-hours and data processing. S3 Gateway Endpoint has no hourly endpoint charge. |
 | CloudWatch | Logs, metrics, alarms and Flow Logs | Estimate ingestion GB, retention, custom metrics, alarms and Flow Log destinations. |
 | Internet/data transfer | 100 GB was a placeholder | Replace with direction, destination, monthly volume and applicable free tiers. |
@@ -30,7 +30,7 @@ A final AWS Pricing Calculator estimate has not been produced. This document del
 
 ## RDS billing treatment
 
-The design is specifically a **Multi-AZ DB instance deployment with one standby**, not a Multi-AZ DB cluster with two readable standbys. AWS documents that both primary and standby instance-hours are billed, and storage is charged for the provisioned storage on both instances. The 500 GB logical/provisioned storage assumption must therefore be costed for both copies in the calculator. The final rate must come from the calculator for the chosen DB class, engine version, storage type and Region.
+The design is specifically a **Multi-AZ DB instance deployment with one standby**, not a Multi-AZ DB cluster. AWS bills primary and standby instance-hours and provisioned storage for both copies. In the current saved calculator entry, the UI shows one configured logical DB, Multi-AZ selected, and 500 GB gp3 input; the resulting line item is $1,227.52/month. Its displayed calculation is $1,039.52 compute ($1.424/hour × 730), $115.00 storage (500 GB × $0.23/GB-month at the calculator's displayed Multi-AZ rate), and $73.00 Database Insights. The calculator entry applies its Multi-AZ rates to the configured quantity; **do not manually double the 500 GB input or the $1,227.52 result**. This verifies only what the calculator currently calculates. It is not independent proof that `db.m6i.2xlarge`, the PostgreSQL version, IOPS/throughput or performance is suitable for production. Confirm those through version/compatibility review and workload measurement.
 
 AWS references:
 - [RDS for PostgreSQL pricing and deployment options](https://aws.amazon.com/rds/postgresql/pricing/)
@@ -38,10 +38,10 @@ AWS references:
 
 ## Pricing method and acceptance
 
-1. Open [AWS Pricing Calculator](https://calculator.aws/).
-2. Create a named estimate for `Clafoke Investors Ltd — us-east-1 — steady state`.
+1. Open the existing saved estimate in [AWS Pricing Calculator](https://calculator.aws/); preserve its current service configurations.
+2. Treat the current subtotal as partial and keep usage-dependent or unresolved components clearly excluded.
 3. Add EC2, EBS, RDS for PostgreSQL, EFS, S3, VPC/NAT, ALB, Site-to-Site VPN, CloudWatch and Route 53 as applicable.
-4. Use 730 hours/month and the architecture quantities above. Record all selections, including exact DB class, PostgreSQL version, storage type, provisioned IOPS/throughput, backup retention, NAT processed GB, ALB LCU inputs, VPN connection type, endpoint count/AZs, logs and transfer.
+4. Use 730 hours/month. Record selected calculator configurations and remaining decisions, including PostgreSQL version/workload validation, backup retention, NAT processed GB, ALB LCU inputs, VPN transfer, endpoint count/AZs, logs and transfer.
 5. Create a separate migration-period group for MGN staging, DMS, DataSync, temporary instances, transfer and overlap duration.
 6. Export the estimate as CSV and PDF and retain the public share URL. Record the estimate date and pricing assumptions.
 7. Reconcile the exported service totals with this document and `cost/pricing-assumptions.csv`. Do not approve a budget until missing inputs are resolved.
@@ -75,4 +75,4 @@ Taxes, support plan, engineering labour, customer gateway and on-premises intern
 - [AWS Pricing Calculator guide: export estimate](https://docs.aws.amazon.com/pricing-calculator/latest/userguide/export-estimate.html)
 - [AWS Pricing Calculator guide: share estimate](https://docs.aws.amazon.com/pricing-calculator/latest/userguide/save-share-estimate.html)
 
-**Status:** Architecture quantities and cost drivers reviewed. Final numerical estimate is **blocked pending exact configuration and an exported AWS Pricing Calculator result**. No AWS resources have been deployed.
+**Status:** A partial AWS Pricing Calculator estimate is saved and verified at $1,916.16/month ($22,993.92 annualised). It is **not complete or approved**: ALB usage, DNS, CloudWatch, EFS metered throughput/transfer, VPN transfer, applicable endpoint costs, backups, and migration-period sizing/duration/overlap remain unresolved or unpriced. Keep the migration-period group separate. No AWS resources have been deployed.

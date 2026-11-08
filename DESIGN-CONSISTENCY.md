@@ -8,7 +8,7 @@
 | Migration subnets | Dedicated private MGN staging subnet required in addition to steady-state six; DMS replication subnet group uses private app subnets in two AZs with a dedicated DMS SG; no additional DMS subnet CIDR assumed |\n| DataSync agent | On-premises agent near NFS source; archive source type/agent requirement remains unknown |
 | Application | 2 × 4 vCPU / 16 GiB; `t3.xlarge` is cost proxy only |
 | Source DB | PostgreSQL VM, 8 vCPU / 32 GiB / 500 GB logical data |
-| Target DB | RDS PostgreSQL Multi-AZ DB instance deployment; 500 GB provisioned-storage assumption per instance; primary + standby billed |
+| Target DB | RDS PostgreSQL Multi-AZ DB instance deployment; 500 GB configured gp3 storage input in the Calculator (distinct from source logical-data measurement); Multi-AZ primary + standby pricing applies |
 | Shared files | 1 TB Regional EFS; mount target in each app AZ |
 | Archives | 500 GB S3 Standard via S3 Gateway Endpoint where appropriate |
 | NAT | 2 NAT Gateways; same-AZ app egress |

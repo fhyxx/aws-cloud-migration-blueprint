@@ -30,7 +30,7 @@ The MGN staging subnet is a seventh, migration-only network segment in addition 
 
 - **DMS placement:** create a DMS replication subnet group using the private application subnets in AZ-A and AZ-B. The replication instance/Serverless ENIs use a dedicated DMS security group. DMS initiates TCP 5432 connections to the self-managed PostgreSQL source over the VPN and to the RDS PostgreSQL target. The on-premises source firewall must allow the DMS-originating VPC CIDR/path; the RDS DB security group must allow TCP 5432 from the DMS security group during migration. Keep application-to-database access separate. Remove the temporary DMS ingress rule after migration only when DMS is no longer needed.
 - **MGN:** the source agent requires TCP 1500 to the replication servers in the MGN staging subnet and TCP 443 to the regional MGN API. Staging replication servers require TCP 443 to the regional MGN API. Route source-to-staging traffic over the approved VPN path; provide controlled staging-subnet egress (for example, same-AZ NAT) or a separately validated private endpoint design.
-- **DataSync NFS:** place a Basic or Enhanced mode agent (as appropriate to the selected task mode) close to the on-premises NFS server. Agent-to-NFS TCP ports are 2049 for NFSv4.x and 111 plus 2049 for NFSv3. Agent-to-service and data-plane paths depend on public versus VPC service endpoint selection. DataSync service-to-EFS uses TCP 2049; DataSync accesses S3 on the bucket's behalf. If a VPC service endpoint is selected, implement its documented control/data-plane rules and network interfaces; do not assume the public-endpoint port model applies.
+- **DataSync NFS:** place a Basic or Enhanced mode agent (as appropriate to the selected task mode) close to the on-premises NFS server. Agent-to-NFS TCP ports are 2049 for NFSv4.x and 111 plus 2049 for NFSv3. Agent-to-service and data-plane paths depend on public versus VPC service endpoint selection. DataSync service-to-EFS uses TCP 2049; DataSync accesses S3 on the bucket's behalf. For a public service endpoint, the agent uses HTTPS TCP 443 to the documented activation/control/data-plane endpoints. For a VPC service endpoint, the agent uses TCP 1024–1064 for control-plane traffic and TCP 443 to task data-plane ENIs; add TCP 22 only if the Basic-mode support channel is intentionally enabled. Do not assume the public-endpoint port model applies.
 - **Archive source:** source type and location are unknown. Confirm whether an agent is required and document its actual source-to-agent/service path before approving the archive transfer.
 
 ## Security-group intent
@@ -40,7 +40,7 @@ The MGN staging subnet is a seventh, migration-only network segment in addition 
 | ALB | TCP 443 from approved client ranges | App listener to app SG |
 | App | TCP 8080 from ALB SG (provisional) | TCP 5432 to DB SG; TCP 2049 to EFS mount-target SG; approved HTTPS |
 | DB | TCP 5432 from app SG and approved DBA path | Minimal required |
-| EFS mount target | TCP 2049 from app SG and DataSync service path as required by the selected DataSync EFS location design | Stateful responses |\n| DMS replication | No unsolicited inbound required; outbound TCP 5432 to approved source CIDR and RDS DB SG, plus documented service/logging dependencies | Stateful responses |
+| EFS mount target | TCP 2049 from app SG and the dedicated DataSync task-ENI SG | Stateful responses |\n| DMS replication | No unsolicited inbound required; outbound TCP 5432 to approved source CIDR and RDS DB SG, plus documented service/logging dependencies | Stateful responses |
 | Interface endpoint | TCP 443 from approved private workloads | Stateful responses |
 | MGN staging/replication | TCP 1500 from explicitly approved source-server CIDRs/security groups where supported; no public inbound | TCP 443 to regional MGN API and only required replication/service paths |
 
@@ -69,3 +69,12 @@ Confirm non-overlapping CIDRs, route tables, DB isolation, ALB-only public entry
 N01 AZ IDs; N02 source CIDRs; N03 static/BGP; N04 app port; N05 API allowlisting; N06 endpoint inventory; N07 egress inspection; N08 NACL requirements; N09 IAM boundaries; N10 retention; N11 MGN staging CIDR and network path; N12 DNS zone/certificate ownership.
 
 **Status:** Proposed design; no AWS network/security resources deployed.
+
+
+## AWS service network references
+
+- [AWS DMS replication instance VPC and subnet-group requirements](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.VPC.html)
+- [AWS MGN network requirements](https://docs.aws.amazon.com/pdfs/mgn/latest/ug/user-guide.pdf)
+- [AWS DataSync network requirements](https://docs.aws.amazon.com/datasync/latest/userguide/datasync-network.html)
+- [AWS DataSync network architecture and traffic flows](https://docs.aws.amazon.com/datasync/latest/userguide/networking-datasync.html)
+- [AWS DataSync access to EFS, mount-target subnet and security-group rules](https://docs.aws.amazon.com/datasync/latest/userguide/create-efs-location.html)

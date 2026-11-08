@@ -16,13 +16,13 @@ A cloud migration blueprint for a fictional Nigerian retail/distribution company
 | Database | PostgreSQL to RDS PostgreSQL Multi-AZ DB instance deployment; 500 GB source logical-data assumption and separate 500 GB target gp3 provisioned-storage input; primary and standby billed under Multi-AZ pricing |
 | Shared files | 1 TB Regional EFS, mount target in each application AZ |
 | Archives | 500 GB S3 Standard via Gateway Endpoint where appropriate |
-| Hybrid | 1 dynamic-BGP Site-to-Site VPN to VGW; fictional source `10.50.0.0/16`; ASN 65010/64512; two redundant tunnels (no VGW ECMP) |
+| Hybrid | 1 dynamic-BGP Site-to-Site VPN to VGW; fictional source `10.50.0.0/16`; ASN 65010/64512; two redundant tunnels (no VGW ECMP). Route propagation is limited to dedicated DMS-A/DMS-B and MGN staging route tables. |
 | Entry | Public ALB, HTTPS 443; ACM certificate and DNS required |
 | Business targets | 99.9% availability; RTO 4h; RPO 15m—not demonstrated |
 
 ## Architecture
 
-The canonical master Mermaid source is [architecture/target-architecture.mmd](architecture/target-architecture.mmd); inspect it in the [rendered master view](architecture/target-architecture.md). For clearer review, use the focused [runtime/network view](architecture/runtime-network-view.md) (subnet CIDRs, AZ placement, route intent and security-group boundaries) and [migration data-flow view](architecture/migration-data-flow.md) (separate MGN, DMS and DataSync paths). Editable Mermaid sources are provided beside each rendered page. The master and both focused views were visually confirmed rendering in GitHub. A further runtime-view refinement now depicts an ALB node in each public subnet and DNS resolution to both nodes; this latest rendering update awaits a final visual refresh. All views remain proposed design artifacts; implementation and connectivity validation are pending.
+The canonical master Mermaid source is [architecture/target-architecture.mmd](architecture/target-architecture.mmd); inspect it in the [rendered master view](architecture/target-architecture.md). For clearer review, use the focused [runtime/network view](architecture/runtime-network-view.md) (subnet CIDRs, AZ placement, route intent and security-group boundaries) and [migration data-flow view](architecture/migration-data-flow.md) (separate MGN, DMS and DataSync paths). Editable Mermaid sources are provided beside each rendered page. The master and both focused views were visually confirmed rendering in GitHub. A further runtime-view refinement now depicts an ALB node in each public subnet and DNS resolution to both nodes; this latest rendering update awaits a final visual refresh. All views remain proposed design artifacts; implementation and connectivity validation are pending. The master and migration diagrams now show dedicated DMS migration subnets `10.30.41.0/24` and `10.30.42.0/24`; ordinary application subnets do not receive the on-premises route.
 
 ## Deliverables
 

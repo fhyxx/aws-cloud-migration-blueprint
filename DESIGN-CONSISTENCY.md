@@ -5,7 +5,8 @@
 | Region | `us-east-1` |
 | VPC | `10.30.0.0/16` |
 | Steady-state subnets | 2 AZs; 2 public, 2 app, 2 DB |
-| Migration subnets | Dedicated private MGN staging subnet required in addition to steady-state six; DMS replication subnet group uses private app subnets in two AZs with a dedicated DMS SG; no additional DMS subnet CIDR assumed |\n| DataSync agent | On-premises agent near NFS source; archive source type/agent requirement remains unknown |
+| Migration subnets | Dedicated private MGN staging subnet required in addition to steady-state six; DMS replication subnet group uses private app subnets in two AZs with a dedicated DMS SG; no additional DMS subnet CIDR assumed |
+| DataSync agent | On-premises agent near NFS source; archive source type/agent requirement remains unknown |
 | Application | 2 × 4 vCPU / 16 GiB; `t3.xlarge` is cost proxy only |
 | Source DB | PostgreSQL VM, 8 vCPU / 32 GiB / 500 GB logical data |
 | Target DB | RDS PostgreSQL Multi-AZ DB instance deployment; 500 GB configured gp3 storage input in the Calculator (distinct from source logical-data measurement); Multi-AZ primary + standby pricing applies |

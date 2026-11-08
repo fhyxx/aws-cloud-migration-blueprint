@@ -8,7 +8,7 @@
 
 The blueprint has a coherent two-AZ target pattern and a defensible separation between steady-state cost and migration-period cost. The review identified gaps in migration-service network placement and traffic paths. Those design gaps have been corrected in the canonical diagram and supporting network, architecture, runbook and readiness documents.
 
-The design is **not yet approved for implementation**. The user has visually confirmed the latest master and focused GitHub diagram renderings; that closes the documentation-rendering check only, not live network validation. Source compatibility, live route/tunnel configuration, workload benchmarks, backup policy, monitoring thresholds and recovery tests remain open. The fictional source network, BGP design and VPN failover model are now specified as reference assumptions; no AWS resources or migration services have been deployed. No AWS resources or migration services have been deployed.
+The design is **not yet approved for implementation**. The user confirmed the master and focused GitHub diagram renderings before the latest DMS-subnet isolation revision; the revised master and migration diagrams need a final visual refresh. Rendering confirmation closes only the documentation check, not live network validation. Source compatibility, live route/tunnel configuration, workload benchmarks, backup policy, monitoring thresholds and recovery tests remain open. The fictional source network, BGP design and VPN failover model are now specified as reference assumptions; no AWS resources or migration services have been deployed.
 
 ## Scope reviewed
 

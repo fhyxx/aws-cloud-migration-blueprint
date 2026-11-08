@@ -114,7 +114,7 @@ Security groups are stateful and should reference peer security groups wherever 
 | App SG | Provisional TCP 8080 from ALB SG only; no public or on-premises direct ingress | TCP 5432 to RDS SG; TCP 2049 to EFS mount-target SG; TCP 443 to approved external/service destinations or required interface endpoint SGs; required DNS/time dependencies |
 | RDS SG | TCP 5432 from App SG; temporary TCP 5432 from DMS SG during migration; DBA access only through a separately approved controlled path | Stateful responses; no broad outbound access without a documented database requirement |
 | EFS mount-target SG | TCP 2049 from App SG and dedicated DataSync task-ENI SG | Stateful responses |
-| DMS SG | No unsolicited inbound required | TCP 5432 to approved PostgreSQL source CIDR/path and RDS SG; required DMS service/logging dependencies |
+| DMS SG | No unsolicited inbound required | TCP 5432 to PostgreSQL source subnet `10.50.20.0/24` over VGW and to RDS SG; required DMS service/logging dependencies |
 | DataSync task-ENI SG | No unsolicited inbound required | TCP 2049 to EFS mount-target SG; required DataSync task data-plane dependencies |
 | MGN staging SG | TCP 1500 from explicitly approved source-server CIDRs; no public inbound | TCP 443 to regional MGN service and only documented dependencies |
 | Interface endpoint SG | TCP 443 from only the private workload SGs that need the endpoint | Stateful responses |

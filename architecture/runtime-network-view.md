@@ -12,8 +12,7 @@ flowchart TB
 
   subgraph VPC["VPC 10.30.0.0/16 — us-east-1 — two Availability Zones"]
     IGW["Internet Gateway"]
-    DNS -->|"DNS resolves to ALB DNS name"| ALB_A
-    DNS -->|"DNS resolves to ALB DNS name"| ALB_B
+    DNS -->|"DNS resolves to ALB DNS name"| ALB\n    IGW -->|"Internet ingress via public subnet routes"| ALB\n    ALB -.->|"Subnet mapping / ALB ENI — AZ-A"| ALB_A\n    ALB -.->|"Subnet mapping / ALB ENI — AZ-B"| ALB_B
     VGW["Virtual Private Gateway<br/>Site-to-Site VPN"]
 
     subgraph PUB_A["AZ-A — Public subnet 10.30.1.0/24"]
@@ -46,8 +45,6 @@ flowchart TB
     S3["S3 Standard archive target<br/>500 GB capacity assumption"]
     OPS["Private service access as required<br/>SSM / Secrets Manager / CloudWatch"]
     
-    IGW --> ALB_A
-    IGW --> ALB_B
     ALB_A --> APP_EC2_A
     ALB_A --> APP_EC2_B
     ALB_B --> APP_EC2_A
@@ -83,7 +80,7 @@ flowchart TB
     SG1["ALB SG: inbound HTTPS 443<br/>approved client ranges; egress to App SG listener/health port"]
     SG2["App SG: inbound app port 8080 from ALB SG<br/>port is provisional"]
     SG3["DB SG: TCP 5432 from App SG<br/>and approved DBA path"]
-    SG4["EFS mount-target SG: TCP 2049<br/>from App SG"]
+    SG4["EFS mount-target SG: TCP 2049<br/>from App SG and DataSync task-ENI SG"]
   end
 ```
 

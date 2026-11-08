@@ -14,7 +14,7 @@ S3 requests,Requests and retrieval,0,UNPRICED,request,,,placeholder,Zero placeho
 S3 transfer,Data transfer,0,UNPRICED,GB,,,placeholder,Zero placeholder; transfer remains unpriced
 NAT hourly,Two conventional NAT Gateways,2 x 730,0.045,gateway-hour,65.70,65.70,calculator-verified,Current saved VPC calculator result; same-AZ application egress; regional NAT is not selected
 NAT processing,Processed data,0,UNPRICED,GB,,,placeholder,Zero processed-GB placeholder; replace after workload discovery; transfer charges excluded
-VPN,Standard Site-to-Site VPN connection to VGW,730,0.05,connection-hour,36.50,36.50,calculator-verified,Current saved calculator line item; validate exact connection/tunnel and any applicable public IPv4 treatment
+VPN,Standard Site-to-Site VPN connection to VGW,1 connection; calculator summary shows 22 working days/month,calculator-result,monthly,36.50,36.50,calculator-verified,Current saved calculator result; description states 24 hours/day and 730 hours/month but summary shows 22 working days/month; reconcile period with 730-hour convention; transfer unpriced; validate tunnel and public IPv4 treatment
 VPN IPv4,Tunnel public IPv4 address-hours,2,UNPRICED,IPv4-hour,,,pending,Prior 2-address / 7.30 USD reference is not confirmed in the current calculator line; do not include in subtotal unless current configuration and billing applicability are verified
 VPN transfer,Monthly data transfer,UNCONFIRMED,UNPRICED,GB,,,pending,Transfer remains unpriced; obtain volume by direction and destination
 ALB hourly,One internet-facing Application Load Balancer,730,UNPRICED,hour,,,pending,No ALB price included; retain architecture quantity and obtain calculator result without inventing LCU inputs

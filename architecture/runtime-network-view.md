@@ -16,7 +16,7 @@ flowchart TB
     IGW -->|"Internet ingress via public subnet routes"| ALB
     ALB -.->|"Subnet mapping / ALB ENI — AZ-A"| ALB_A
     ALB -.->|"Subnet mapping / ALB ENI — AZ-B"| ALB_B
-    VGW["Virtual Private Gateway<br/>Site-to-Site VPN"]
+    VGW["Virtual Private Gateway<br/>BGP ASN 64512<br/>Site-to-Site VPN"]
 
     subgraph PUB_A["AZ-A — Public subnet 10.30.1.0/24"]
       ALB_A["ALB node A<br/>HTTPS listener 443"]
@@ -70,13 +70,13 @@ flowchart TB
     NAT_B --> IGW
   end
 
-  ONPREM["On-premises networks<br/>Approved source CIDRs TBD"] ---|"Site-to-Site VPN — VGW<br/>static/BGP decision pending"| VGW
+  ONPREM["Illustrative on-premises<br/>10.50.0.0/16<br/>App 10.50.10.0/24<br/>DB/NFS 10.50.20.0/24"] ---|"IPsec VPN • BGP ASN 65010 ↔ 64512<br/>two tunnels • VGW no ECMP"| VGW
 
   subgraph ROUTING["Route-table intent — proposed, not deployed"]
     R1["Public A/B: default route to IGW"]
-    R2["App A: default route to NAT A<br/>App B: default route to NAT B<br/>Approved on-prem routes to VGW"]
-    R3["DB A/B: VPC-local routes only<br/>No direct internet default route"]
-    R4["S3 prefix-list route via Gateway Endpoint"]
+    R2["App A/B: same-AZ NAT default<br/>BGP 10.50.0.0/16 → VGW<br/>propagation enabled"]
+    R3["DB A/B: VPC-local routes only<br/>No IGW, NAT or VGW propagation"]
+    R4["S3 prefix-list route via Gateway Endpoint<br/>MGN 10.30.31.0/24: BGP source route + controlled NAT"]
   end
 
   subgraph SECURITY["Security-group intent — proposed, not deployed"]

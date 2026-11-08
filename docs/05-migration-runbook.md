@@ -16,7 +16,7 @@ Inventory OS, packages, runtime, ports, services, jobs, database version/extensi
 
 ## Phase 2 — AWS readiness
 
-Validate VPC `10.30.0.0/16`, six steady-state subnets/two AZs, additional private MGN staging subnet, DMS replication subnet group spanning the two private app subnets, IGW, two NAT Gateways, VGW VPN, ALB, ACM certificate, DNS, private EC2, isolated RDS, EFS mount targets in both app AZs, S3 Gateway Endpoint, IAM, Secrets Manager, Systems Manager, endpoints, encryption and CloudWatch. Confirm DMS source/target TCP 5432 paths and the DataSync agent/service/EFS paths. Exit: infrastructure/security approval.
+Validate VPC `10.30.0.0/16`, six steady-state subnets/two AZs, additional private MGN staging subnet, dedicated DMS migration subnets `10.30.41.0/24` and `10.30.42.0/24` across two AZs with route propagation limited to those subnets and MGN staging, IGW, two NAT Gateways, VGW VPN, ALB, ACM certificate, DNS, private EC2, isolated RDS, EFS mount targets in both app AZs, S3 Gateway Endpoint, IAM, Secrets Manager, Systems Manager, endpoints, encryption and CloudWatch. Confirm DMS source/target TCP 5432 paths and the DataSync agent/service/EFS paths. Exit: infrastructure/security approval.
 
 ## Phase 3 — MGN
 
@@ -24,7 +24,7 @@ Check source OS/kernel/disk compatibility; create/identify dedicated staging-are
 
 ## Phase 4 — DMS
 
-Before creating a task, satisfy the DMS gates in [Data Migration Strategy](04-data-migration-strategy.md) and [Migration Readiness Matrix](09-migration-readiness-matrix.md): exact source/target/DMS version compatibility, approved schema/object method, source permissions and logical-WAL readiness, key/replica-identity review, and a benchmark-supported capacity/runtime plan. Create/validate the DMS replication subnet group across two private AZ subnets and dedicated DMS security group; permit source and target TCP 5432 only from the DMS path; prepare encrypted Multi-AZ RDS; configure endpoints and task; run full load; review errors, validation and referential integrity; enable CDC; monitor lag, replication slots and WAL retention; reconcile schema, critical rows, grants and permissions. After CDC stops, reconcile PostgreSQL sequence values because DMS does not synchronize sequence state during ongoing replication. DBA signs off on trigger/foreign-key handling and final sequence state. Exit: DBA sign-off.
+Before creating a task, satisfy the DMS gates in [Data Migration Strategy](04-data-migration-strategy.md) and [Migration Readiness Matrix](09-migration-readiness-matrix.md): exact source/target/DMS version compatibility, approved schema/object method, source permissions and logical-WAL readiness, key/replica-identity review, and a benchmark-supported capacity/runtime plan. Create/validate the DMS replication subnet group using only dedicated DMS-A/DMS-B migration subnets and dedicated DMS security group; propagate the on-premises source route only into those DMS route tables; permit on-premises TCP 5432 only from the DMS subnet CIDRs, and target TCP 5432 only from the DMS security group; prepare encrypted Multi-AZ RDS; configure endpoints and task; run full load; review errors, validation and referential integrity; enable CDC; monitor lag, replication slots and WAL retention; reconcile schema, critical rows, grants and permissions. After CDC stops, reconcile PostgreSQL sequence values because DMS does not synchronize sequence state during ongoing replication. DBA signs off on trigger/foreign-key handling and final sequence state. Exit: DBA sign-off.
 
 ## Phase 5 — DataSync
 

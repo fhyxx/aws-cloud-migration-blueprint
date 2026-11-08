@@ -2,7 +2,8 @@
 
 This page renders the current target architecture in GitHub's Markdown viewer. The source file is [target-architecture.mmd](target-architecture.mmd). Keep this Mermaid block synchronised with the source file when the diagram changes.
 
-```mermaidflowchart TB
+```mermaid
+flowchart TB
   USERS[Approved users] --> DNS[Public DNS<br/>Route 53 if authoritative]
   DNS --> ALB[Internet-facing ALB<br/>HTTPS 443 + ACM certificate]
 
@@ -72,7 +73,7 @@ This page renders the current target architecture in GitHub's Markdown viewer. T
 
   APP_SRC -->|MGN replication stream<br/>TCP 1500 over approved VPN route| MGN_REPL
   APP_SRC -->|MGN service access<br/>TCP 443 via approved egress| MGN_SVC
-  PG_SRC -->|DMS source connection<br/>TCP 5432 over VPN| DMS
+  DMS -->|Initiates PostgreSQL source connection<br/>TCP 5432 over VPN| PG_SRC
   DS_AGENT -->|DataSync service endpoint<br/>public or VPC endpoint| DS
   DS -->|Creates task data-plane ENI| DS_ENI
   DS_ENI -->|NFS TCP 2049| EFS

@@ -36,7 +36,7 @@ The [Migration Readiness Matrix](docs/09-migration-readiness-matrix.md) is the c
 
 ## Review gates
 
-- Architecture and migration flows: master diagram retained; focused runtime/network and migration data-flow views added with editable Mermaid sources. GitHub rendering of the new views and visual consistency review remain pending; no implementation validation.
+- Architecture and migration flows: master diagram retained; focused runtime/network and migration data-flow views added with editable Mermaid sources. GitHub rendering of both focused views was visually confirmed from screenshots. Review caught and corrected the runtime-view ALB placement so it is inside the VPC and explicitly attached to both public subnets. No implementation/connectivity validation.
 - Network/security: proposed controls now include DMS two-AZ subnet group/TCP 5432 paths and DataSync agent/service/EFS flows; no deployed validation.
 - PostgreSQL: DMS prerequisites, schema/object migration, CDC, WAL/slot, constraints/triggers and sequence reconciliation documented; no exact source/target version compatibility test; DMS capacity and runtime remain unpriced pending DBA profiling/benchmark.
 - Pricing: partial AWS Pricing Calculator baseline is saved at $1,930.76/month ($23,169.12 annualised); production suitability validation, unresolved workload inputs, migration costs and final export/reconciliation remain outstanding.

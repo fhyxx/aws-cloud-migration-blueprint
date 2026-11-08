@@ -21,6 +21,14 @@
 
 The architecture diagram, README, design documents, runbook and cost model should use these same baseline quantities. DNS provider/delegation and Route 53 zone count remain undecided; do not infer Route 53 authority from the diagram's icon. Unsaved Route 53 ($0.90 / $4.50 / $41.00) and CloudWatch ($11.57 / $67.95 / $423.15 at 30-day retention) pricing scenarios are illustrative, pending validation and excluded from the saved subtotal. 90/365-day CloudWatch retention extensions are independent calculations, not Calculator results. A partial AWS Pricing Calculator baseline of $1,923.46/month ($23,081.52 annualised) is saved; it is not a complete or approved budget. Remaining usage and migration inputs must be validated in AWS Pricing Calculator. The MGN staging subnet is an additional migration-only subnet, not part of the six steady-state subnets. The 500 GB RDS provisioned-storage assumption is counted for both primary and standby for pricing.
 
+## Current pricing audit notes
+
+The saved subtotal remains **$1,923.46/month ($23,081.52 annualised)** and was not changed in these audits. EFS remains 1,000 GB Regional Standard with mount targets in both application AZs. Unsaved us-east-1 Calculator scenarios using illustrative A-013 read/write values are $304.50/$321.00/$390.00 per month for all-Standard conservative/baseline/high; lifecycle sensitivities are $57.55/month without new tiering and $83.05/month with illustrative 150/800 GB monthly transitions. Cross-AZ EFS bytes and lifecycle policy remain unknown.
+
+The current VPN entry includes its two tunnel public IPv4 addresses. The separate NAT line totals $65.70 for two gateway-hours and displays no NAT IPv4 quantity; two NAT EIPs would cost $7.30/month if not included elsewhere, pending detailed Calculator reconciliation. A-015 all-outbound VPN data-transfer sensitivities are $0/$83.16/$912.60 with account-wide 100 GB allowance available, or $9/$92.16/$921.60 if already consumed; traffic direction remains unconfirmed. S3 Gateway Endpoint is no-charge; interface endpoint count/traffic remains unknown. These calculations are scenario-only and excluded from the saved subtotal.
+
+The separate migration group remains unpriced for MGN staging, DMS class/runtime, temporary network and overlap. DataSync Basic has a derived one-time $18.75 service fee for the unverified 1,500 GB initial quantity; final delta, destination activity and network costs remain separate. No scenario is approved and no AWS estimate change was made.
+
 ## Review gates
 
 - Architecture and migration flows: source reviewed; diagram visual rendering remains pending.

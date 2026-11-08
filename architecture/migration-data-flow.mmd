@@ -19,7 +19,7 @@ flowchart LR
       MGN_REPL -->|"TCP 443"| MGN_EGRESS
     end
 
-    subgraph DMS_SUBNETS["Private application subnets A and B<br/>DMS replication subnet group"]
+    subgraph DMS_SUBNETS["Dedicated private DMS migration subnets<br/>10.30.41.0/24 • AZ-A and 10.30.42.0/24 • AZ-B"]
       DMS["AWS DMS replication<br/>instance or Serverless<br/>dedicated DMS SG"]
     end
 

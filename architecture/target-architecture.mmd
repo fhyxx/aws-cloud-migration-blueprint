@@ -68,7 +68,7 @@ flowchart TB
 
   APP_SRC -->|MGN replication stream<br/>TCP 1500 over approved VPN route| MGN_REPL
   APP_SRC -->|MGN service access<br/>TCP 443 via approved egress| MGN_SVC
-  PG_SRC -->|DMS source connection<br/>TCP 5432 over VPN| DMS
+  DMS -->|Initiates PostgreSQL source connection<br/>TCP 5432 over VPN| PG_SRC
   DS_AGENT -->|DataSync service endpoint<br/>public or VPC endpoint| DS
   DS -->|Creates task data-plane ENI| DS_ENI
   DS_ENI -->|NFS TCP 2049| EFS

@@ -34,6 +34,7 @@ The canonical source diagram is [architecture/target-architecture.mmd](architect
 6. [Validation and rollback](docs/06-validation-rollback-strategy.md)
 7. [Cost estimate and optimisation](docs/07-cost-estimation-optimisation.md)
 8. [Assumptions and decisions register](docs/08-assumptions-decisions-register.md)
+9. [Migration readiness matrix](docs/09-migration-readiness-matrix.md)
 
 Additional assets: `architecture/target-architecture.mmd`, `cost/pricing-assumptions.csv`, `evidence/README.md`, `DESIGN-CONSISTENCY.md`.
 
@@ -47,4 +48,4 @@ No AWS resources have been provisioned; no MGN replication, DMS migration, DataS
 
 ## Suggested review sequence
 
-Read discovery and assumptions, compare architecture with network/security, review migration and runbook, review validation/rollback and the assumptions/decisions register, then resolve network direction, routes, NAT public IPv4 treatment and endpoint dependencies; complete evidence-based migration-period sizing and overlap; and only then complete the AWS Pricing Calculator estimate. Do not describe this as an actual customer migration or deployed system.
+Read discovery and assumptions, compare architecture with network/security, review migration and runbook, review validation/rollback, the assumptions/decisions register and migration readiness matrix, then resolve network direction, routes, NAT public IPv4 treatment and endpoint dependencies; complete evidence-based migration-period sizing and overlap; and only then complete the AWS Pricing Calculator estimate. Do not describe this as an actual customer migration or deployed system.

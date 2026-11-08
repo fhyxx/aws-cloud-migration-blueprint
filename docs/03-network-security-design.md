@@ -1,6 +1,6 @@
 # 03 — Network and Security Design
 
-**ID:** CLI-AWS-NET-003 | **Version:** 1.3 | **Status:** Proposed baseline
+**ID:** CLI-AWS-NET-003 | **Version:** 1.4 | **Status:** Proposed reference design — fictional source network
 
 ## Architecture diagrams
 
@@ -17,9 +17,9 @@ VPC `clafoke-production-vpc`, CIDR `10.30.0.0/16`, `us-east-1`, two AZs, DNS sup
 | Public A/B | `10.30.1.0/24`, `10.30.2.0/24` | Internet-facing ALB and NAT Gateways |
 | App A/B | `10.30.11.0/24`, `10.30.12.0/24` | Private EC2 |
 | DB A/B | `10.30.21.0/24`, `10.30.22.0/24` | Isolated RDS subnet group |
-| MGN staging | Additional private CIDR to allocate | MGN replication servers; migration-only subnet, not in six-subnet steady-state count |
+| MGN staging | `10.30.31.0/24` | MGN replication servers; migration-only subnet, not in six-subnet steady-state count |
 
-The MGN staging subnet is a seventh, migration-only network segment in addition to the six steady-state subnets. Allocate its CIDR after confirming source/VPC CIDR non-overlap and required IP capacity. Record the AZ placement, route table, NAT or VPC endpoint strategy, NACL and security-group rules before enabling replication.
+The MGN staging subnet is a seventh, migration-only network segment in addition to the six steady-state subnets. For this fictional reference design, use `10.30.31.0/24` in AZ-A as the initial staging subnet. It is non-overlapping with the six steady-state subnets and the illustrative on-premises `10.50.0.0/16`. The single-AZ staging choice is a cost-conscious migration assumption, not a production availability recommendation; validate replication-server capacity and recovery objectives before deployment. Record its route table, controlled service egress, NACL and security-group rules.
 
 ## Subnet sizing and Availability Zone placement
 
@@ -38,13 +38,43 @@ AWS reserves five IPv4 addresses in each ordinary subnet. The public /24 subnets
 
 The MGN staging subnet has no CIDR yet and is excluded from the six-row calculation. Select its non-overlapping CIDR and AZ only after confirming the on-premises network ranges, MGN replication-server scale, IP headroom and chosen egress design. Do not infer a subnet size from the current application assumptions.
 
+## Illustrative hybrid network and VPN assumptions
+
+Clafoke is a fictional portfolio case study. The following source network and gateway details are design assumptions created to make the migration architecture testable; they are not facts discovered from a real customer.
+
+| Component | Illustrative design value | Rationale |
+|---|---|---|
+| On-premises aggregate | `10.50.0.0/16` | Private, non-overlapping with AWS VPC `10.30.0.0/16` |
+| Application/source VM subnet | `10.50.10.0/24` | Contains the two illustrative Linux MGN source VMs |
+| Database/NFS subnet | `10.50.20.0/24` | Contains self-managed PostgreSQL and NFS source services |
+| Customer Gateway | BGP-capable edge router or firewall with a static public outside IP | Represents a conventional enterprise VPN edge; vendor/model intentionally unspecified |
+| Customer Gateway BGP ASN | `65010` | Private ASN, distinct from the AWS side |
+| Virtual Private Gateway ASN | `64512` | AWS default ASN for the VGW in this reference design |
+| Routing mode | Dynamic BGP | Selected because the illustrative gateway supports BGP and dynamic route withdrawal assists tunnel failover |
+| VPN tunnel count | Two tunnels in one Site-to-Site VPN connection | Both configured and monitored for redundancy; do not assume ECMP/load sharing on a VGW |
+
+The selected source aggregate `10.50.0.0/16` does not overlap the AWS VPC `10.30.0.0/16`. The more-specific source subnets are planning subdivisions, not separate BGP advertisements in this design. The customer gateway advertises `10.50.0.0/16` to the VGW. The VGW advertises the attached VPC CIDR to the customer gateway; on-premises firewall policy limits which AWS workloads can actually be reached.
+
+### BGP and route propagation
+
+- Create one Customer Gateway resource with the illustrative public outside IP represented as a placeholder (never invent or publish a real address) and customer ASN `65010`.
+- Create and attach a VGW using AWS ASN `64512`, then create one dynamic-routing Site-to-Site VPN connection. AWS supplies two independent IPsec tunnel definitions and tunnel inside addressing/BGP peer details.
+- Configure both customer-side tunnel interfaces and BGP peers from the generated AWS VPN configuration. Do not hard-code tunnel outside IPs, inside CIDRs, pre-shared keys or device commands in this portfolio document.
+- Enable VGW route propagation only on the App-A, App-B and MGN-staging route tables. These are the subnets that need source reachability for DMS and MGN. Do not enable propagation on public or DB route tables.
+- The customer gateway advertises `10.50.0.0/16`; AWS propagates that route to the selected private route tables. The VGW advertises the VPC CIDR to the customer gateway; customer-side firewall/ACL policy must restrict access to the intended DMS and MGN destinations.
+- The database subnets retain only the VPC-local route. RDS is reached from DMS inside the VPC, not directly from the on-premises VPN. This prevents the VPN design from becoming a general database access path.
+- Configure both tunnels for high availability and monitor BGP state, tunnel state and packet metrics. A VGW does not support ECMP; AWS selects a tunnel for egress. Permit asymmetric routing and test failover in both directions. Do not describe this as active-active bandwidth aggregation.
+- Static routing is the documented alternative if the customer gateway cannot speak BGP. It requires explicit on-premises prefixes in the VPN configuration and matching VPC route-table entries; it is not the selected reference design.
+
 ## Routing
 
 - Public default route to IGW.
-- App A to NAT A; App B to NAT B; on-prem routes to VGW as required.
-- DB subnets local route only; no direct internet route.
+- App A to NAT A; App B to NAT B; propagated illustrative on-premises route `10.50.0.0/16 → VGW` on both app route tables.
+- MGN staging `10.30.31.0/24` has `10.50.0.0/16 → VGW` and a controlled same-AZ NAT default route for regional MGN service HTTPS unless a separately validated private service path is selected.
+- DB subnets local route only; no direct internet route and no VGW route propagation.
 - S3 prefix-list route through S3 Gateway Endpoint.
-- Site-to-Site VPN via customer gateway + VGW; static/BGP choice pending source discovery.
+- Site-to-Site VPN uses dynamic BGP with customer ASN `65010`, VGW ASN `64512` and two redundant tunnels; both are configured, but VGW ECMP is not supported.
+
 - MGN source agents must reach the regional MGN service API over TCP 443 and the staging-area replication servers over TCP 1500. Replication servers in the staging subnet must reach the regional MGN service API over TCP 443. Implement only these documented flows plus required DNS/time and management dependencies; do not expose the staging subnet broadly.
 - If private connectivity is not implemented for MGN service access, the staging subnet needs a controlled outbound path (for example, same-AZ NAT) to the regional service endpoint. Confirm current MGN service endpoint and network guidance before deployment. The source-to-replication TCP 1500 path must be routable over the selected VPN or other approved connectivity.
 - Interface endpoints in suitable private subnets; dedicated endpoint subnets optional.
@@ -67,10 +97,10 @@ Use separate route tables where isolation or failure-domain control matters. The
 | App-A — private app subnet `10.30.11.0/24` | `10.30.0.0/16 → local`; `0.0.0.0/0 → NAT-A`; approved on-prem source CIDRs `→ VGW`; S3 regional prefix list `→ S3 Gateway Endpoint` | More-specific on-prem and S3 routes take precedence over the default NAT route. Validate route propagation or explicit route maintenance. |
 | App-B — private app subnet `10.30.12.0/24` | `10.30.0.0/16 → local`; `0.0.0.0/0 → NAT-B`; approved on-prem source CIDRs `→ VGW`; S3 regional prefix list `→ S3 Gateway Endpoint` | Same intent as App-A; DMS replication subnet group reuses these private subnets. |
 | DB-A / DB-B — isolated DB subnets `10.30.21.0/24`, `10.30.22.0/24` | `10.30.0.0/16 → local` | No default route to IGW or NAT. No VGW route is proposed for RDS subnets in this baseline; DMS-to-RDS traffic is VPC-local. Add a specific route only for an approved operational use case. |
-| MGN staging — additional private subnet, CIDR/AZ TBD | `10.30.0.0/16 → local`; approved source CIDRs `→ VGW`; `0.0.0.0/0 → same-AZ NAT` only if public service egress is selected | Migration-only. Select and validate either controlled NAT egress or a supported private endpoint design; do not configure both by assumption. |
+| MGN staging — `10.30.31.0/24`, AZ-A (illustrative) | `10.30.0.0/16 → local`; propagated `10.50.0.0/16 → VGW`; `0.0.0.0/0 → NAT-A` for regional MGN service HTTPS | Migration-only. NAT-A is the selected reference egress path; a private endpoint alternative would require separate service-specific validation. Single-AZ staging is a planning simplification, not an HA claim. |
 | S3 Gateway Endpoint association | S3 prefix-list route automatically added to selected app route tables (and other route tables only if needed) | Endpoint policy, IAM and bucket policy must restrict access. Same-Region S3 traffic uses the endpoint route rather than NAT. |
 
-**VPN route control:** The customer gateway must route approved VPC prefixes back through the VPN. Choose BGP propagation when the customer gateway supports BGP; otherwise configure static VPN routes and matching VPC subnet route-table entries. Do not advertise or install broader address ranges than required. Keep both VPN tunnels and failover behaviour in the operational test plan. Exact on-premises CIDRs, customer-gateway capability and route mode remain open.
+**VPN route control:** For this fictional design, the customer gateway advertises `10.50.0.0/16` using BGP ASN `65010`; the VGW uses ASN `64512` and advertises the attached VPC CIDR. Enable route propagation only in App-A, App-B and MGN-staging route tables. The customer-side router/firewall must accept the AWS VPC route and restrict actual reachability to the approved DMS and MGN paths. Configure both tunnels, permit asymmetric routing and test tunnel failure/recovery. A VGW does not support ECMP, so this is redundant tunnel design, not aggregate active-active throughput. Static routing remains the alternative for a non-BGP customer gateway.
 
 **Route precedence:** More-specific routes for on-premises CIDRs and the S3 prefix list should override the private-subnet default route to NAT. Confirm effective routes on every subnet association; a route in an unassociated route table has no effect.
 
@@ -142,7 +172,7 @@ Confirm non-overlapping CIDRs, route tables, DB isolation, ALB-only public entry
 
 ## Open decisions
 
-N01 AZ IDs; N02 source CIDRs; N03 static/BGP; N04 app port; N05 API allowlisting; N06 endpoint inventory; N07 egress inspection; N08 NACL requirements; N09 IAM boundaries; N10 retention; N11 MGN staging CIDR and network path; N12 DNS zone/certificate ownership.
+N01 AZ IDs; N02 illustrative source CIDR `10.50.0.0/16` and subdivisions; N03 BGP reference choice (ASN 65010/64512) and two-tunnel failover; N04 app port; N05 API allowlisting; N06 endpoint inventory; N07 egress inspection; N08 NACL requirements; N09 IAM boundaries; N10 retention; N11 MGN staging `10.30.31.0/24` in AZ-A; N12 DNS zone/certificate ownership. These are fictional planning assumptions until implementation.
 
 **Status:** Proposed design; no AWS network/security resources deployed.
 

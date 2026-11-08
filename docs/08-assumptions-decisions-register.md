@@ -3,6 +3,7 @@
 **ID:** CLI-AWS-ADR-008 | **Version:** 1.4 | **Status:** Open — workload validation required  
 **Project:** Clafoke Investors Ltd (fictional portfolio case study)  
 **Region:** `us-east-1` | **Currency:** USD | **Planning month:** 730 hours  
+**Migration readiness:** [Migration Readiness Matrix](09-migration-readiness-matrix.md)  
 **Related:** [Discovery assessment](01-discovery-assessment.md), [Target architecture](02-target-architecture.md), [Network and security design](03-network-security-design.md), [Migration strategy](04-data-migration-strategy.md), [Migration runbook](05-migration-runbook.md), [Validation and rollback](06-validation-rollback-strategy.md), [Cost estimation and optimisation](07-cost-estimation-optimisation.md), [pricing assumptions](../cost/pricing-assumptions.csv), [target architecture diagram](../architecture/target-architecture.mmd)
 
 ## Executive summary

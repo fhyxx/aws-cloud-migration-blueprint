@@ -31,6 +31,8 @@ Design a two-AZ AWS target with public entry, private application tier, isolated
 
 VPC endpoints may reside in appropriate private subnets; dedicated endpoint subnets are optional and are not part of the six-subnet baseline.
 
+The subnet route-table matrix, security-group intent and NACL guidance are maintained in the [Network and Security Design](03-network-security-design.md). Use that document as the detailed network control baseline; this page remains the target architecture decision record.
+
 ## Migration-service placement
 
 - **MGN:** use the dedicated private staging-area subnet in the selected AZ. Source agents send replication traffic to staging replication servers over TCP 1500; source agents and staging servers also require their documented regional MGN service connectivity over TCP 443. Give the staging subnet a controlled same-AZ egress path (for example, its same-AZ NAT Gateway) unless a validated private endpoint design is selected. The MGN staging subnet is not an application subnet or a DMS subnet.

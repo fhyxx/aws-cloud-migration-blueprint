@@ -26,6 +26,13 @@ The MGN staging subnet is a seventh, migration-only network segment in addition 
 - If private connectivity is not implemented for MGN service access, the staging subnet needs a controlled outbound path (for example, same-AZ NAT) to the regional service endpoint. Confirm current MGN service endpoint and network guidance before deployment. The source-to-replication TCP 1500 path must be routable over the selected VPN or other approved connectivity.
 - Interface endpoints in suitable private subnets; dedicated endpoint subnets optional.
 
+## Migration-service network paths
+
+- **DMS placement:** create a DMS replication subnet group using the private application subnets in AZ-A and AZ-B. The replication instance/Serverless ENIs use a dedicated DMS security group. DMS initiates TCP 5432 connections to the self-managed PostgreSQL source over the VPN and to the RDS PostgreSQL target. The on-premises source firewall must allow the DMS-originating VPC CIDR/path; the RDS DB security group must allow TCP 5432 from the DMS security group during migration. Keep application-to-database access separate. Remove the temporary DMS ingress rule after migration only when DMS is no longer needed.
+- **MGN:** the source agent requires TCP 1500 to the replication servers in the MGN staging subnet and TCP 443 to the regional MGN API. Staging replication servers require TCP 443 to the regional MGN API. Route source-to-staging traffic over the approved VPN path; provide controlled staging-subnet egress (for example, same-AZ NAT) or a separately validated private endpoint design.
+- **DataSync NFS:** place a Basic or Enhanced mode agent (as appropriate to the selected task mode) close to the on-premises NFS server. Agent-to-NFS TCP ports are 2049 for NFSv4.x and 111 plus 2049 for NFSv3. Agent-to-service and data-plane paths depend on public versus VPC service endpoint selection. DataSync service-to-EFS uses TCP 2049; DataSync accesses S3 on the bucket's behalf. If a VPC service endpoint is selected, implement its documented control/data-plane rules and network interfaces; do not assume the public-endpoint port model applies.
+- **Archive source:** source type and location are unknown. Confirm whether an agent is required and document its actual source-to-agent/service path before approving the archive transfer.
+
 ## Security-group intent
 
 | Group | Inbound | Outbound |
@@ -33,7 +40,7 @@ The MGN staging subnet is a seventh, migration-only network segment in addition 
 | ALB | TCP 443 from approved client ranges | App listener to app SG |
 | App | TCP 8080 from ALB SG (provisional) | TCP 5432 to DB SG; TCP 2049 to EFS mount-target SG; approved HTTPS |
 | DB | TCP 5432 from app SG and approved DBA path | Minimal required |
-| EFS mount target | TCP 2049 from app SG | Stateful responses |
+| EFS mount target | TCP 2049 from app SG and DataSync service path as required by the selected DataSync EFS location design | Stateful responses |\n| DMS replication | No unsolicited inbound required; outbound TCP 5432 to approved source CIDR and RDS DB SG, plus documented service/logging dependencies | Stateful responses |
 | Interface endpoint | TCP 443 from approved private workloads | Stateful responses |
 | MGN staging/replication | TCP 1500 from explicitly approved source-server CIDRs/security groups where supported; no public inbound | TCP 443 to regional MGN API and only required replication/service paths |
 
@@ -55,7 +62,7 @@ Candidate endpoints: S3 Gateway; Systems Manager (`ssm`, `ssmmessages`, and `ec2
 
 ## Validation
 
-Confirm non-overlapping CIDRs, route tables, DB isolation, ALB-only public entry, restricted app/DB/EFS paths, VPN health, endpoint connectivity, MGN agent-to-service TCP 443, source-to-replication TCP 1500, replication-server-to-service TCP 443, encryption, IAM and audit logs.
+Confirm non-overlapping CIDRs, route tables, DB isolation, ALB-only public entry, restricted app/DB/EFS paths, VPN health, DMS subnet-group placement across two AZs and TCP 5432 reachability to source/target, MGN agent-to-service TCP 443, source-to-replication TCP 1500, replication-server-to-service TCP 443, DataSync agent-to-NFS ports and selected service-endpoint paths, encryption, IAM and audit logs.
 
 ## Open decisions
 

@@ -23,6 +23,12 @@ Design a two-AZ AWS target with public entry, private application tier, isolated
 
 VPC endpoints may reside in appropriate private subnets; dedicated endpoint subnets are optional and are not part of the six-subnet baseline.
 
+## Migration-service placement
+
+- **MGN:** use the dedicated private staging-area subnet in the selected AZ. Source agents send replication traffic to staging replication servers over TCP 1500; source agents and staging servers also require their documented regional MGN service connectivity over TCP 443. Give the staging subnet a controlled same-AZ egress path (for example, its same-AZ NAT Gateway) unless a validated private endpoint design is selected. The MGN staging subnet is not an application subnet or a DMS subnet.
+- **DMS:** place the replication instance or Serverless replication in this VPC, using a replication subnet group that spans private subnets in at least two AZs. The current baseline uses the two private application subnets for that subnet group, with a dedicated DMS security group and explicit database-port rules. This reuses existing CIDRs; it does not create an eighth subnet. Confirm that the selected subnet/route design and DMS endpoint connectivity pass before migration.
+- **DataSync:** for the on-premises NFS source, deploy a supported DataSync agent VM close to the source storage. The agent mounts NFS using the required NFS ports and connects to a selected public or VPC service endpoint. DataSync service-side connectivity to EFS uses TCP 2049; S3 access is service-side. The archive source location/type remains unknown, so its agent requirement and flow must be confirmed separately.
+
 ## Compute and application
 
 Two EC2 application instances, one per AZ, are managed by an Auto Scaling Group spanning both private app subnets (initial desired/minimum capacity 2; scaling policy and maximum capacity set after workload discovery). `t3.xlarge` is a pricing proxy, not a final production recommendation; T3 is burstable and sustained CPU may require another family. Instances are private. Public entry is through an internet-facing ALB in at least two public subnets on HTTPS 443. Provision an ACM certificate and Route 53 alias (if Route 53 hosts the zone); DNS and certificate are implementation requirements omitted from the cost baseline. App listener TCP 8080 is provisional and must be discovered. Configure ALB health checks against an application readiness endpoint; do not rely solely on EC2 instance status. No public SSH; use Systems Manager where supported.

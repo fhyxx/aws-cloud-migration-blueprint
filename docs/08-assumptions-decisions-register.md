@@ -9,7 +9,7 @@
 
 This register distinguishes repository statements from architectural deductions, illustrative planning scenarios and information still requiring validation. The project is fictional and design-only: no production measurements, AWS deployment, migration or load test has occurred. None of the illustrative usage scenarios below is an approved client requirement.
 
-The existing saved AWS Pricing Calculator subtotal is **$1,916.16/month**, including two conventional NAT Gateways. This document does not change the calculator or convert that subtotal into a complete operating budget. The earlier $2,214–$2,702/month worksheet is withdrawn as a budget.
+The existing saved AWS Pricing Calculator subtotal is **$1,923.46/month**, including two conventional NAT Gateways and the audited Site-to-Site VPN plus public IPv4 tunnel charges. This document does not change the calculator or convert that subtotal into a complete operating budget. The earlier $2,214–$2,702/month worksheet is withdrawn as a budget.
 
 Priority decisions are: (1) ALB traffic and LCU dimensions; (2) Route 53 zone ownership and query volume; (3) CloudWatch metrics, alarms, log ingestion/retention and Flow Logs; (4) EFS capacity, throughput, lifecycle and cross-AZ use; (5) VPN traffic and tunnel/public IPv4 treatment; and (6) migration source sizing, MGN/DMS/DataSync profiles, temporary network and overlap duration.
 
@@ -40,7 +40,7 @@ Owners are roles from the project runbook, not named people. Technical owners su
 | Migration methods | MGN for Linux application servers; DMS full load plus CDC for PostgreSQL data; DataSync for NFS→EFS and archives→S3 | Documented |
 | DNS and certificate | ACM certificate and Route 53 alias are implementation requirements; Route 53 zone ownership is conditional/unresolved | Documented |
 | Business goals | 99.9% availability, RTO 4h, RPO 15m are targets only; not demonstrated | Documented |
-| Calculator checkpoint | Existing saved estimate subtotal $1,916.16/month, verified in calculator; includes two conventional NAT Gateways | Documented |
+| Calculator checkpoint | Existing saved estimate subtotal $1,923.46/month, verified in calculator; includes two conventional NAT Gateways and $7.30/month for two VPN tunnel public IPv4 addresses | Documented |
 | Known cost gaps | ALB LCU, DNS usage, monitoring usage, EFS workload/transfer, VPN transfer, and migration-period costs/overlap are not fully priced | Documented |
 
 ## Assumptions and decisions register

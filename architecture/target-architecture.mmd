@@ -7,9 +7,9 @@ flowchart TB
     PG_SRC[(Self-managed PostgreSQL source)]
     NFS_SRC[(NFS file server)]
     ARCH_SRC[Archive source<br/>location and type TBD]
-    DS_AGENT[DataSync agent VM<br/>deployed near NFS source]
+    DS_AGENT[DataSync agent VM(s)<br/>as required by source/task mode]
     NFS_SRC -->|NFS TCP 2049 or 111 + 2049| DS_AGENT
-    ARCH_SRC -.->|agent or source connection<br/>depends on source type| DS_AGENT
+    ARCH_SRC -.->|archive source/agent path TBD| DS_AGENT
   end
 
   MGN_SVC[AWS MGN regional service API]

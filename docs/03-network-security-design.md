@@ -2,6 +2,12 @@
 
 **ID:** CLI-AWS-NET-003 | **Version:** 1.2 | **Status:** Proposed baseline
 
+## Architecture diagrams
+
+- [Focused runtime and network view](../architecture/runtime-network-view.md)
+- [Focused migration data-flow view](../architecture/migration-data-flow.md)
+- [Canonical master architecture](../architecture/target-architecture.md)
+
 ## Network
 
 VPC `clafoke-production-vpc`, CIDR `10.30.0.0/16`, `us-east-1`, two AZs, DNS support/hostnames enabled, IGW attached, IPv6 omitted.

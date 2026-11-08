@@ -1,13 +1,13 @@
 # 07 — AWS Cost Estimation and Optimisation
 
-**ID:** CLI-AWS-COST-007 | **Version:** 1.7 | **Status:** Partial calculator baseline saved — usage scenario review open  
+**ID:** CLI-AWS-COST-007 | **Version:** 1.8 | **Status:** Partial calculator baseline saved — usage scenario review open  
 **Region:** `us-east-1` | **Currency:** USD | **Planning month:** 730 hours
 
 ## Executive decision
 
 The earlier **$2,214–$2,702/month** range is retained only as a historical, illustrative worksheet result. **Do not use it as a budget, quotation, expected bill or customer commitment.** The earlier worksheet used unverified RDS compute/storage rates and a VPN hourly example from a different Region and connection design. Those values do not support a defensible current total.
 
-A partial estimate is saved in AWS Pricing Calculator. Its currently verified subtotal is **$1,923.46/month** and **$23,081.52 annualised**. This is a calculator result for the entered configurations, not a complete operating budget, approved budget or proof of production workload suitability. Material usage-dependent items and migration costs remain unpriced. The saved RDS configuration is a sizing proxy pending PostgreSQL version, workload and compatibility validation. See [the Assumptions and Decisions Register](08-assumptions-decisions-register.md).
+A partial estimate is saved in AWS Pricing Calculator. Its currently verified subtotal is **$1,930.76/month** and **$23,169.12 annualised**. This is a calculator result for the entered configurations, not a complete operating budget, approved budget or proof of production workload suitability. Material usage-dependent items and migration costs remain unpriced. The saved RDS configuration is a sizing proxy pending PostgreSQL version, workload and compatibility validation. See [the Assumptions and Decisions Register](08-assumptions-decisions-register.md).
 
 ## Architecture quantities to price
 
@@ -19,7 +19,7 @@ A partial estimate is saved in AWS Pricing Calculator. Its currently verified su
 | RDS backups | Usage-dependent | Calculate retention, changed-data volume and snapshot needs; avoid a flat unsupported allowance. |
 | EFS | 1,000 GB Regional Standard; two app-AZ mount targets; Elastic throughput provisional | **$300.00/month, calculator result** for Standard storage only. Unsaved Calculator scenarios using A-013 read/write quantities produce $304.50 / $321.00 / $390.00 per month (conservative / baseline / high), excluding cross-AZ transfer and unvalidated lifecycle activity. |
 | S3 | Standard, 500 GB | **$11.50/month, calculator result.** Requests, retrieval and transfer remain zero placeholders; validate lifecycle and retention requirements. |
-| NAT Gateway | 2 conventional gateways, same-AZ app egress, 730 hours each | **$65.70/month, calculator result.** Processed data remains a zero placeholder; replace with workload evidence. Cross-AZ transfer, if any, is not included. |
+| NAT Gateway | 2 conventional public gateways, same-AZ app egress, 730 hours each, 2 public IPv4 addresses | **$73.00/month, calculator result** ($65.70 gateway hours + $7.30 IPv4). Processed data remains a zero placeholder; internet egress and cross-AZ transfer are not included. |
 | ALB | 1 internet-facing ALB, HTTPS 443 | Not included in the saved calculator subtotal. Unsaved AWS Pricing Calculator scenario results from the register are $19.35 / $28.11 / $74.83 per month (conservative / baseline / high), including 730 ALB hours and scenario LCU use. These are illustrative, not measured or approved client requirements, and are excluded from the saved subtotal; validate workload before adopting. |
 | Site-to-Site VPN | 1 standard connection to VGW, public IPv4 tunnel endpoints | **$43.80/month combined in the saved VPC entry:** $36.50 connection-hours plus $7.30 for two in-use public IPv4 address-hours. VPN transfer is unpriced. The 22 working days/month summary field belongs to the unselected Client VPN section; it does not affect the Site-to-Site calculation (1 × 730 h × $0.05/h = $36.50). |
 | Interface endpoints | Count and AZ coverage not final | Inventory each endpoint and AZ; price endpoint-hours and data processing. S3 Gateway Endpoint has no hourly endpoint charge. |
@@ -41,7 +41,7 @@ AWS references:
 
 ## ALB workload sensitivity (independent calculation)
 
-The assumptions register's conservative, baseline and high cases are illustrative scenarios, not measured traffic or approved client requirements. They were entered separately in the AWS Pricing Calculator's `us-east-1` ELB form and each displayed calculation was verified; the draft was canceled without saving an ALB entry. These are calculator scenario results, not independent calculations, and are excluded from the $1,923.46 saved subtotal.
+The assumptions register's conservative, baseline and high cases are illustrative scenarios, not measured traffic or approved client requirements. They were entered separately in the AWS Pricing Calculator's `us-east-1` ELB form and each displayed calculation was verified; the draft was canceled without saving an ALB entry. These are calculator scenario results, not independent calculations, and are excluded from the $1,930.76 saved subtotal.
 
 AWS's ELB pricing page describes the hourly ALB charge ($0.0225/hour) and LCU charge ($0.008/LCU-hour) in `us-east-1`. For EC2 targets, one LCU covers up to 25 new connections/second, 3,000 active connections/minute, 1 GB processed/hour, or 1,000 rule evaluations/second after the first 10 rules per request. Applying the register's scenarios and taking the largest dimension gives:
 
@@ -128,7 +128,7 @@ The current AWS EFS pricing page recommends Elastic Throughput for most workload
 | Baseline | 500 / 100 | $300.00 | $15.00 + $6.00 = $21.00 | Unpriced; measured share unknown | $0 in this all-Standard/no-lifecycle model; actual unknown | **$321.00** |
 | High | 2,000 / 500 | $300.00 | $60.00 + $30.00 = $90.00 | Unpriced; measured share unknown | $0 in this all-Standard/no-lifecycle model; actual unknown | **$390.00** |
 
-The totals are **modeled EFS service subtotals**, not actual client bills, and exclude cross-AZ data transfer, lifecycle transitions/retrieval, backup, taxes and other unmodeled features. The traffic quantities are illustrative A-013 values, not measurements or approved requirements. They do not change the saved estimate or its $1,923.46/month subtotal. At 730 hours and 1,024 MiB/GB, the read-plus-write sustained averages implied by these monthly totals are about 0.0487 / 0.2336 / 0.9740 MiB/s; A-013's 5 / 25 / 100 MiB/s figures are separate illustrative peaks, not sustained billing quantities.
+The totals are **modeled EFS service subtotals**, not actual client bills, and exclude cross-AZ data transfer, lifecycle transitions/retrieval, backup, taxes and other unmodeled features. The traffic quantities are illustrative A-013 values, not measurements or approved requirements. They do not change the saved estimate or its $1,930.76/month subtotal. At 730 hours and 1,024 MiB/GB, the read-plus-write sustained averages implied by these monthly totals are about 0.0487 / 0.2336 / 0.9740 MiB/s; A-013's 5 / 25 / 100 MiB/s figures are separate illustrative peaks, not sustained billing quantities.
 
 AWS bills applicable cross-AZ EFS access at the EC2 cross-AZ transfer rates: $0.01/GB transferred into an AZ and $0.01/GB out of an AZ. Same-AZ access to a mount target is not charged that cross-AZ rate. Consequently two AZ mount targets support local access but do not prove all clients resolve/use their same-AZ target. No A-014 quantity is approved, so cross-AZ charges are excluded and remain unpriced; price with client/mount-target AZ telemetry and the actual bytes in each direction.
 
@@ -170,13 +170,71 @@ These are independent calculations against AWS pricing, not Calculator results, 
 
 ### NAT Gateways and VPC endpoints
 
-The saved NAT entry is $65.70/month (= 2 × 730 hours × $0.045/hour), with 0 processed GB. The saved entry's configuration summary lists two conventional NAT Gateways but no public IPv4 count. AWS VPC pricing charges $0.005 per in-use public IPv4 address-hour; two NAT gateway EIPs would be another **$7.30/month** (2 × 730 × $0.005) if not already included elsewhere. The currently displayed $65.70 matches NAT hours alone, so treat the NAT IPv4 amount as a likely omitted charge pending a detailed Calculator review. Do not alter the saved subtotal in this audit. The two VPN tunnel IPv4 addresses are already included in the separate $43.80 VPN entry; do not count those again.
+The NAT public IPv4 audit subsequently confirmed the Public IPv4 feature was disabled in the saved NAT entry; $65.70 represented two gateway-hours only. The entry now includes exactly two in-use NAT public IPv4 addresses and totals $73.00/month. The separate VPN entry's two tunnel IPv4 addresses remain included in its $43.80 total. NAT processed data is still a 0 GB placeholder.
 
 NAT data processing is separately $0.045/GB. There is no documented NAT-processed quantity. If (for arithmetic only, not as an assumption that VPN bytes also traverse NAT) the existing A-015 volume points were processed through NAT, the processing charges would be $4.50 / $46.08 / $460.80 for 100 / 1,024 / 10,240 GB. Add standard internet data-out charges where applicable; the NAT fee is not a substitute for egress billing. Same-AZ NAT routing is documented and should avoid inter-AZ traffic to NAT; validate actual route tables and bytes.
 
 The S3 Gateway Endpoint in the architecture has no hourly or data-processing charge; S3 requests, storage and applicable data transfer still apply. No interface endpoints are currently assumed. In us-east-1, interface endpoints are $0.01 per endpoint ENI-AZ-hour and $0.01/GB processed in the first tier. Thus one endpoint enabled in both app AZs would be $14.60/month fixed (2 × 730 × $0.01), before data processing; this is only a unit illustration, not an endpoint-count assumption. Endpoint cost is quantity × enabled AZs × 730 × hourly rate, plus actual bytes × processing rate. Add endpoints only after a service-by-service dependency/route decision; the use of same-AZ NAT means private AWS service access does not by itself prove that an endpoint is required.
 
-### Migration-period pricing work (kept separate)
+
+## Network cost reconciliation — NAT, VPN, endpoints and AZ paths
+
+### NAT public IPv4 and processing
+
+Inspection confirmed the saved VPC calculator entry had two conventional NAT Gateways, 0 GB processed, Public IPv4 Address disabled, and $65.70 total—the exact 2 × 730 × $0.045 gateway-hour amount. Public NAT requires an Elastic IP. At AWS's $0.005/address-hour rate, two NAT IPv4 addresses add 2 × 730 × $0.005 = $7.30/month. I enabled the calculator Public IPv4 feature for exactly two in-use addresses. The NAT entry now verifies at $73.00/month; the estimate changed from $1,923.46 to $1,930.76/month ($23,169.12 annualised). The VPN entry separately retains its own two tunnel addresses ($7.30); they are distinct and are not duplicated. NAT processed GB remains a zero placeholder. [VPC pricing](https://aws.amazon.com/vpc/pricing/), [public NAT requirements](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html), [AWS two-NAT pricing example](https://aws.amazon.com/blogs/networking-and-content-delivery/identify-and-optimize-public-ipv4-address-usage-on-aws/).
+
+The us-east-1 NAT data-processing rate is $0.045/GB. Independent sensitivity only (not saved): 100 × $0.045 = $4.50; 1,024 × $0.045 = $46.08; 10,240 × $0.045 = $460.80/month. These conservative/baseline/high traffic points are illustrative, not observed or approved. NAT processing is separate from standard internet data-out and cross-AZ transfer. S3 routed through its Gateway Endpoint avoids NAT processing for that path. [Amazon VPC pricing](https://aws.amazon.com/vpc/pricing/).
+
+### VPN transfer direction
+
+On-premises-to-AWS replication/application requests are inbound and do not incur standard AWS transfer-out charges. AWS-to-on-premises DB responses, file reads and app responses may count as AWS transfer-out. The first 100 GB/month free allowance is account-wide across eligible services and Regions; it is not reserved for VPN. Use it only after checking aggregate account egress. A-015 directional sensitivities remain illustrative, outside the estimate. VPN connection and tunnel IPv4 remain $43.80/month. [EC2 transfer pricing](https://aws.amazon.com/ec2/pricing/on-demand/), [VPN pricing](https://aws.amazon.com/vpn/pricing/).
+
+### Endpoint inventory
+
+The app subnets already have same-AZ NAT routes; the S3 Gateway Endpoint is documented. Interface endpoints are conditional choices, not defaults. First-tier PrivateLink price is $0.01 per endpoint ENI-AZ-hour plus $0.01/GB; 730 hours is $7.30 per endpoint per AZ-month or $14.60 for one service in both app AZs, before data processing. S3 Gateway Endpoint is $0 hourly and $0 processing. No interface endpoint has been added to the estimate. [PrivateLink pricing](https://aws.amazon.com/privatelink/pricing/), [VPC endpoint guidance](https://docs.aws.amazon.com/vpc/latest/privatelink/privatelink-access-aws-services.html).
+
+| Endpoint | Type, purpose and need | AZ/hourly basis | Processing | SG / policy | NAT alternative and phase |
+|---|---|---|---|---|---|
+| S3 | Gateway; documented app archives; may be associated with staging route table | Both app route tables; $0 | $0 endpoint processing; S3 requests/storage still apply | No SG; route table, endpoint/bucket policies and IAM | Avoids NAT for S3; steady state and reusable in migration |
+| Systems Manager (ssm, ssmmessages, ec2messages if needed) | Interface; conditional on selected SSM management features and private egress | Each service × AZ × $7.30/month | $0.01/GB | TCP 443 from app/staging SG; IAM/policies | NAT HTTPS alternative; steady state/staging only if required |
+| CloudWatch Logs and Monitoring | Interface; conditional on private log/metric API path | Each selected service × AZ × $7.30/month | $0.01/GB | TCP 443 from approved client SG; IAM | NAT alternative; only if private path selected |
+| Secrets Manager | Interface; secret service documented, endpoint only if runtime API must remain private or NAT prohibited | Each AZ × $7.30/month | $0.01/GB | TCP 443 from app SG; least-privilege IAM | NAT alternative; conditional steady state |
+| MGN | Interface, migration-only private control plane for agents/staging | Chosen staging/source reachability AZs × $7.30/AZ-month | $0.01/GB | TCP 443 from approved source/staging paths; endpoint policy | NAT/public endpoint alternative; private topology only |
+| EC2 API | Interface, migration-only; included in AWS restricted MGN guidance for staging calls | Chosen staging AZs × $7.30/AZ-month | $0.01/GB | TCP 443 from staging SG; endpoint policy/IAM | NAT/public alternative |
+| S3 for MGN agents | Interface, migration-only private installer/service bucket access; distinct from S3 Gateway | Actual source/staging AZ path × $7.30/AZ-month | $0.01/GB | TCP 443 from approved source CIDRs; S3/endpoint policy | Avoids public S3 path for that flow |
+| DataSync | Interface, migration-only optional VPC service endpoint for an on-prem agent over VPN | AWS supports one endpoint across agents/subnets; chosen AZs × $7.30 | $0.01/GB | DataSync control TCP 1024–1064; task ENI path TCP 443; restrict SGs | Avoids public service path |
+| DMS customer API | None proposed; current data-plane flow does not justify customer interface endpoint | None | None | N/A | Do not add without an evidenced dependency |
+
+MGN private-network guidance lists MGN/EC2 interface endpoints and S3 interface plus gateway endpoints for restricted designs; DataSync supports public or VPC service endpoints. SSM/CloudWatch/Secrets Manager endpoints depend on workload APIs and egress policy. Endpoint counts and AZs remain unresolved. Restrict interface SG ingress to approved clients (usually TCP 443; DataSync control ports differ), and also scope IAM, endpoint and bucket policies. [MGN private guidance](https://docs.aws.amazon.com/prescriptive-guidance/latest/rehost-servers-over-private-networks-mgn/configuration.html), [MGN network requirements](https://docs.aws.amazon.com/mgn/latest/ug/preparing-environments.html), [DataSync endpoint choices](https://docs.aws.amazon.com/datasync/latest/userguide/choose-service-endpoint.html), [SSM PrivateLink](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started-privatelink.html).
+
+### Cross-AZ paths
+
+| Path | Documented design and potential charge |
+|---|---|
+| EC2–EFS | App nodes and Regional mount targets exist in both AZs. Same-AZ access is free; access to another AZ mount target incurs $0.01/GB for transfer in and out of the AZ. Actual DNS/mount target use and GB unknown. |
+| App–NAT | App A→NAT A and B→B are documented. Same-AZ path avoids cross-AZ NAT; route drift to another AZ can add cross-AZ transfer, alongside NAT processing and possible internet egress. |
+| ALB–EC2 | ALB and targets span two AZs. EC2↔ALB private-IP transfer in the same VPC is free; processed bytes still affect ALB LCU. |
+| App–RDS | Same-AZ EC2-RDS transfer is free; app traffic reaching a writer in another AZ incurs EC2-side cross-AZ transfer. Multi-AZ replication itself is free. Placement and traffic unknown. |
+| VPN | On-prem→AWS is inbound; AWS→on-prem responses may be transfer-out. VPN traffic is not automatically NAT traffic. |
+| Migration | MGN, DMS and DataSync paths are temporary; direction, AZ placement and bytes can affect transfer-out, NAT processing and cross-AZ costs. All remain unpriced. |
+
+These rules are exposure, not usage estimates. [EFS pricing](https://aws.amazon.com/efs/pricing/), [EC2 transfer](https://aws.amazon.com/ec2/pricing/on-demand/), [RDS transfer](https://aws.amazon.com/rds/pricing/).
+
+### Migration-period pricing model
+
+No migration-period calculator entries have been added. Populate only after evidence and calendar approval. The steady-state total is the target platform's separate monthly run cost; do not duplicate it within incremental migration charges. On-premises source costs are outside AWS pricing unless source resources are AWS-hosted.
+
+| Duration case | Time | MGN free service-hours per each of two sources | MGN staging EC2/EBS | DMS | DataSync Basic | Temporary network / overlap |
+|---|---:|---|---|---|---:|---|
+| Short (illustrative 1 week) | 168 h | Below 2,160 active hours | Unpriced: disks, changed blocks, staging profile/resource hours, snapshots and test hours unknown | Unpriced: class/DCU, storage, AZ mode and runtime unknown | $18.75 derived initial 1,500 GB; $0.19/$0.94/$3.75 illustrative 1%/5%/20% deltas, one-time | Unpriced: routes, endpoints/NAT/VPN/transfer and overlap unknown |
+| Medium (illustrative 1 month) | 730 h | Below 2,160 active hours | Same evidence gaps; use actual resource hours | Same evidence gaps; use measured full-load/CDC profile | Same arithmetic only if bytes validated | Actual temporary hours and bytes only |
+| Long (illustrative 3 months) | 2,190 h | 30 h beyond 2,160 per source if continuously replicating; stopped time excluded | Same gaps; test/cutover EC2/EBS extra | Same gaps; CDC may extend through parallel run | Same arithmetic; each actual copied byte is charged | Signed schedule and evidenced paths only |
+
+DataSync arithmetic: 1,500 GB × $0.0125/GB = $18.75 one-time. Deltas 15/75/300 GB cost $0.1875/$0.9375/$3.75 (rounded $0.19/$0.94/$3.75). If the 1,000 GB initial EFS portion and those deltas are written under EFS Elastic Throughput at $0.06/GB, conditional write activity is $60 initial and $0.90/$4.50/$18 for deltas. These are separate from DataSync fee, S3 requests, destination storage and ongoing app EFS access. MGN is free for 2,160 active replication hours per source; replication EC2/EBS and test/cutover resources are chargeable during that period. DMS is documented full load + CDC but capacity and runtime need DBA sizing. Do not invent any remaining input. [MGN pricing](https://aws.amazon.com/application-migration-service/pricing/), [MGN cost planning](https://docs.aws.amazon.com/mgn/latest/ug/migration_at_scale.html), [DMS pricing](https://aws.amazon.com/dms/pricing/), [DataSync pricing](https://aws.amazon.com/datasync/pricing/).
+
+Evidence to complete this separate group: source disks/used bytes/change rates; MGN staging recommendations and active/paused/test/cutover hours; PostgreSQL version/size/write/WAL profile and DMS sizing; NFS/S3 bytes/file/object inventory and sync deltas; migration path matrix (source, destination, direction, GB, AZ, route and duration); subnet/endpoint-versus-NAT decision; signed cutover, rollback, parallel-running and source-retirement schedule. Model one-time, hourly-during-window and recurring charges separately.
+
+
 
 The saved estimate still has a separate empty **Migration period — temporary** group; no migration costs were added. A-019's derived 1,500 GB initial transfer at DataSync Basic's current $0.0125/GB is **$18.75 one-time**; the 15 / 75 / 300 GB final-delta scenarios cost $0.19 / $0.94 / $3.75 one-time. This prices only DataSync's volume fee, not the source inventory, file-operation request charges, EFS/S3 destination activity or temporary network path. Conditional EFS destination write activity is separately documented in the EFS section.
 
@@ -206,7 +264,7 @@ AWS explains that the calculator uses service configuration and Region inputs, c
 
 ## Exclusions / separate estimates
 
-Taxes, support plan, engineering labour, customer gateway and on-premises internet costs, migration staging/overlap, MGN/DMS/DataSync execution, unknown transfer, optional security services, detailed backup, EFS cross-AZ transfer and workload-confirmed lifecycle/throughput, likely NAT public IPv4 omission ($7.30/month pending Calculator verification), VPN/NAT traffic, endpoint inventory, S3 requests/retrieval and unmodelled usage require separate inputs or estimates.
+Taxes, support plan, engineering labour, customer gateway and on-premises internet costs, migration staging/overlap, MGN/DMS/DataSync execution, unknown transfer, optional security services, detailed backup, EFS cross-AZ transfer and workload-confirmed lifecycle/throughput, NAT public IPv4 charges (now included; processed GB remains unknown), VPN/NAT traffic, endpoint inventory, S3 requests/retrieval and unmodelled usage require separate inputs or estimates.
 
 ## Public pricing references
 
@@ -224,4 +282,4 @@ Taxes, support plan, engineering labour, customer gateway and on-premises intern
 - [AWS Pricing Calculator guide: export estimate](https://docs.aws.amazon.com/pricing-calculator/latest/userguide/export-estimate.html)
 - [AWS Pricing Calculator guide: share estimate](https://docs.aws.amazon.com/pricing-calculator/latest/userguide/save-share-estimate.html)
 
-**Status:** A partial AWS Pricing Calculator estimate is saved and verified at $1,923.46/month ($23,081.52 annualised). It is **not complete or approved**: ALB usage remains unresolved (scenario sensitivity only; no ALB calculator entry saved); DNS authority and billable query use plus monitoring workload remain unresolved; Route 53 and CloudWatch sensitivity scenarios were verified in the calculator but canceled unsaved and remain excluded. EFS read/write, lifecycle/retrieval and cross-AZ volumes remain unresolved; unsaved EFS Calculator all-Standard scenarios are $304.50/$321.00/$390.00 monthly and excluded. VPN egress depends on direction. The saved NAT row is $65.70 gateway-hours with no IPv4 quantity visible; two NAT public IPv4 charges would be $7.30/month if absent, pending Calculator reconciliation. Endpoint inventory/data volumes, backups, migration MGN staging/DMS runtime/network/duration/overlap remain unresolved. DataSync service sensitivity is $18.75 one-time for derived 1,500 GB, before destination and network costs. Keep migration-period group separate. No AWS resources have been deployed.
+**Status:** A partial AWS Pricing Calculator estimate is saved and verified at $1,930.76/month ($23,169.12 annualised). It is **not complete or approved**: ALB usage remains unresolved (scenario sensitivity only; no ALB calculator entry saved); DNS authority and billable query use plus monitoring workload remain unresolved; Route 53 and CloudWatch sensitivity scenarios were verified in the calculator but canceled unsaved and remain excluded. EFS read/write, lifecycle/retrieval and cross-AZ volumes remain unresolved; unsaved EFS Calculator all-Standard scenarios are $304.50/$321.00/$390.00 monthly and excluded. VPN egress depends on direction. The saved NAT entry is $73.00/month: $65.70 for two conventional gateway-hours plus $7.30 for two public IPv4 address-hours. The NAT public IPv4 setting was verified absent, added as quantity 2, and the VPC line recalculated; two VPN tunnel addresses remain in the separate $43.80 entry. Endpoint inventory/data volumes, backups, migration MGN staging/DMS runtime/network/duration/overlap remain unresolved. DataSync service sensitivity is $18.75 one-time for derived 1,500 GB, before destination and network costs. Keep migration-period group separate. No AWS resources have been deployed.

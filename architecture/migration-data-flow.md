@@ -9,20 +9,20 @@ This focused view separates MGN, DMS and DataSync paths so their distinct source
 ```mermaid
 flowchart LR
   subgraph SOURCE["On-premises source environment"]
-    APP_SRC["Two Linux application VMs<br/>MGN sources"]
-    PG_SRC[("Self-managed PostgreSQL source")]
-    NFS_SRC[("NFS file server")]
+    APP_SRC["Two Linux application VMs<br/>10.50.10.0/24 • MGN sources"]
+    PG_SRC[("Self-managed PostgreSQL source<br/>10.50.20.0/24")]
+    NFS_SRC[("NFS file server<br/>10.50.20.0/24")]
     ARCH_SRC["Archive source<br/>type and location TBD"]
     DS_AGENT["DataSync agent VM<br/>near NFS source"]
     NFS_SRC -->|"NFSv4.x TCP 2049<br/>or NFSv3 TCP 111 + 2049"| DS_AGENT
     ARCH_SRC -.->|"Agent and protocol path TBD"| DS_AGENT
   end
 
-  VPN["Approved Site-to-Site VPN path"]
-  VGW["Virtual Private Gateway"]
+  VPN["Illustrative Site-to-Site VPN<br/>BGP ASN 65010 ↔ 64512<br/>two redundant tunnels • no VGW ECMP"]
+  VGW["Virtual Private Gateway<br/>ASN 64512 • BGP"]
 
   subgraph AWS["AWS VPC 10.30.0.0/16 — us-east-1"]
-    subgraph MGN_SUBNET["Dedicated private MGN staging subnet<br/>additional migration-only subnet — CIDR/AZ TBD"]
+    subgraph MGN_SUBNET["Dedicated private MGN staging subnet<br/>10.30.31.0/24 • AZ-A • migration-only"]
       MGN_REPL["MGN replication servers"]
       MGN_EGRESS["Controlled service egress<br/>same-AZ NAT or validated private endpoint"]
       MGN_REPL -->|"TCP 443"| MGN_EGRESS

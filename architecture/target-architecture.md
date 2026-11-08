@@ -24,7 +24,7 @@ flowchart TB
     IGW[Internet Gateway]
     VGW[Virtual Private Gateway]
     subgraph PUB["Public subnets A/B"]
-      ALB
+      ALB[Internet-facing ALB nodes in public subnets A/B<br/>HTTPS 443 + ACM]
       NAT_A[NAT Gateway A]
       NAT_B[NAT Gateway B]
     end
@@ -78,8 +78,7 @@ flowchart TB
   DS -->|Creates task data-plane ENI| DS_ENI
   DS_ENI -->|NFS TCP 2049| EFS
   DS -->|S3 service-side transfer| S3
-  VGW ---|Approved source routes| APP
-  VGW ---|Source database route| DB
+  VGW ---|Approved source CIDRs for app/DMS paths| APP
   VGW ---|TCP 1500 source-to-staging route| MGN_STAGING
 ```
 

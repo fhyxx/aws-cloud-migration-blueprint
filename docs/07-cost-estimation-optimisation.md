@@ -1,13 +1,13 @@
 # 07 — AWS Cost Estimation and Optimisation
 
-**ID:** CLI-AWS-COST-007 | **Version:** 1.9 | **Status:** Partial calculator baseline saved — usage scenario review open  
+**ID:** CLI-AWS-COST-007 | **Version:** 2.0 | **Status:** Partial calculator baseline saved — usage scenario review open  
 **Region:** `us-east-1` | **Currency:** USD | **Planning month:** 730 hours
 
 ## Executive decision
 
 The earlier **$2,214–$2,702/month** range is retained only as a historical, illustrative worksheet result. **Do not use it as a budget, quotation, expected bill or customer commitment.** The earlier worksheet used unverified RDS compute/storage rates and a VPN hourly example from a different Region and connection design. Those values do not support a defensible current total.
 
-A partial estimate is saved in AWS Pricing Calculator. Its currently verified subtotal is **$1,930.76/month** and **$23,169.12 annualised**. This is a calculator result for the entered configurations, not a complete operating budget, approved budget or proof of production workload suitability. Material usage-dependent items and migration costs remain unpriced. The saved RDS configuration is a sizing proxy pending PostgreSQL version, workload and compatibility validation. See [the Assumptions and Decisions Register](08-assumptions-decisions-register.md).
+A partial estimate is saved in AWS Pricing Calculator. Its currently verified subtotal is **$1,930.76/month** and **$23,169.12 annualised**. This is a calculator result for the entered configurations, not a complete operating budget, approved budget or proof of production workload suitability. Material usage-dependent items and migration costs remain unpriced. The saved RDS configuration is a sizing proxy pending PostgreSQL version, workload and compatibility validation. See [the Assumptions and Decisions Register](08-assumptions-decisions-register.md) and [Migration Readiness Matrix](09-migration-readiness-matrix.md).
 
 ## Architecture quantities to price
 

@@ -37,7 +37,7 @@ Owners are roles from the project runbook, not named people. Technical owners su
 | Archive storage | 500 GB S3 Standard planning assumption; private access through S3 Gateway Endpoint where appropriate | Documented |
 | Network | VPC `10.30.0.0/16`, two AZs, two public/two app/two DB subnets, plus separate private MGN staging subnet | Documented |
 | Network entry and egress | One internet-facing ALB, HTTPS 443, public subnets; two NAT Gateways with same-AZ application egress | Documented |
-| Hybrid connectivity | One standard Site-to-Site VPN to VGW; transfer/routing/rate details open | Documented |
+| Hybrid connectivity | Fictional reference uses BGP Site-to-Site VPN to VGW; source `10.50.0.0/16`, customer ASN 65010, VGW ASN 64512, two redundant tunnels; traffic volume/rates remain open | Documented |
 | Migration methods | MGN for Linux application servers; DMS full load plus CDC for PostgreSQL data; DataSync for NFS→EFS and archives→S3 | Documented |
 | DNS and certificate | ACM certificate and Route 53 alias are implementation requirements; Route 53 zone ownership is conditional/unresolved | Documented |
 | Business goals | 99.9% availability, RTO 4h, RPO 15m are targets only; not demonstrated | Documented |

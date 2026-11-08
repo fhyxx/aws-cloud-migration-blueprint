@@ -1,6 +1,6 @@
 # 10 — Technical Architecture Audit
 
-**ID:** CLI-AWS-AUD-010 | **Version:** 1.1 | **Status:** In progress — diagram rendering visually checked; implementation and operational validation pending  
+**ID:** CLI-AWS-AUD-010 | **Version:** 1.2 | **Status:** In progress — diagram rendering and network design review updated; implementation validation pending  
 **Project:** Clafoke Investors Ltd (fictional, design-only)  
 **Audit date:** 2026-11-08
 
@@ -27,7 +27,10 @@ The design is **not yet approved for implementation**. Source compatibility, net
 | AUD-04 | MGN staging server service egress was not explicit in the diagram. | Diagram and network design now show controlled TCP 443 egress from staging to the regional MGN service; source-to-staging TCP 1500 remains a separate VPN path. | Confirm AZ, route table, same-AZ NAT/private endpoint design and source CIDRs. |
 | AUD-05 | Source logical database size and target RDS provisioned storage could be read as the same measured quantity. | README and architecture register now distinguish the 500 GB source logical-data assumption from the separate 500 GB target gp3 Calculator input. | Measure source used bytes, growth and required storage headroom. |
 | AUD-06 | Monitoring, health-check, scaling and recovery targets lacked measurable acceptance criteria. | Provisional monitoring/health/scaling and timed recovery acceptance criteria are now specified in [Validation and Rollback](06-validation-rollback-strategy.md). | Confirm app readiness path, load-test thresholds, backup policy and execute recovery tests. |
-| AUD-07 | Saved monthly estimate could be mistaken for a complete architecture cost. | README and cost guide explicitly call $1,930.76/month a partial calculator subtotal, not an approved budget. | Add/verify ALB, monitoring, DNS, data transfer, backup, endpoints and migration-period costs after inputs are known. |\n| AUD-08 | The first focused runtime diagram placed the ALB node outside the VPC boundary, which could imply incorrect network placement. | Corrected the rendered and source Mermaid so the ALB is inside the VPC and explicitly attached to both public subnets. Both focused diagrams were visually confirmed rendering in GitHub. | Recheck the corrected runtime rendering; implementation subnet associations, routes and security groups remain untested. |
+| AUD-07 | Saved monthly estimate could be mistaken for a complete architecture cost. | README and cost guide explicitly call $1,930.76/month a partial calculator subtotal, not an approved budget. | Add/verify ALB, monitoring, DNS, data transfer, backup, endpoints and migration-period costs after inputs are known. |
+| AUD-08 | The first focused runtime diagram placed the ALB node outside the VPC boundary, which could imply incorrect network placement. | Corrected the rendered and source Mermaid so the ALB is inside the VPC and explicitly attached to both public subnets. Both focused diagrams were visually confirmed rendering in GitHub. | Recheck the corrected runtime rendering; implementation subnet associations, routes and security groups remain untested. |
+| AUD-09 | Route-table intent was described narratively but not specified per subnet, and the master diagram implied a VGW route to isolated DB subnets. | Added a route-table baseline for public, app, DB, MGN staging and S3 endpoint associations; removed the unsupported baseline VGW-to-DB route; clarified specific on-premises routes and return routing. | Confirm actual subnet associations, on-premises CIDRs, route propagation/static route mode, customer-gateway return routes and MGN staging CIDR/AZ. |
+| AUD-10 | Security-group direction and subnet-level return-path controls were too broad to validate consistently. | Added source/destination SG intent, health-check dependency, DMS temporary ingress, DataSync task-ENI/EFS path and stateful SG versus stateless NACL guidance. | Validate exact app/health-check port, DBA access path, egress dependencies and any custom NACL ephemeral-port rules. |
 
 ## RDS calculator reconciliation
 
@@ -58,7 +61,8 @@ The proposed starting thresholds and recovery tests are documented in `docs/06-v
 6. Confirm application readiness endpoint, health-check behaviour, EC2 family, ASG maximum/scaling, RDS performance, backup retention and log retention.
 7. Execute load, AZ/failover, database restore, EFS restore, S3 recovery and end-to-end application tests; retain dated evidence.
 8. Complete migration-period cost modelling from measured source profiles, benchmarks, network flows and approved dates.
-9. GitHub rendering of the master and both focused diagrams has been visually confirmed from user screenshots. The runtime ALB boundary issue found during review was corrected in source and rendered Markdown; inspect the corrected runtime page once more. Reconcile implementation separately.
+9. GitHub rendering of the master and both focused diagrams has been visually confirmed from user screenshots. The runtime view now depicts ALB nodes in both public subnets. Review the updated diagram rendering after the latest subnet-node change.
+10. Validate route-table associations, source/return VPN routes, SG rule directions, NACL return traffic, S3 endpoint association and IP capacity before implementation.
 
 ## AWS service references
 
@@ -67,6 +71,13 @@ The proposed starting thresholds and recovery tests are documented in `docs/06-v
 - [AWS Application Migration Service network requirements](https://docs.aws.amazon.com/pdfs/mgn/latest/ug/user-guide.pdf)
 - [AWS DataSync network requirements](https://docs.aws.amazon.com/datasync/latest/userguide/datasync-network.html)
 - [AWS DataSync access to EFS and task network interfaces](https://docs.aws.amazon.com/datasync/latest/userguide/create-efs-location.html)
+- [VPC subnet sizing](https://docs.aws.amazon.com/vpc/latest/userguide/subnet-sizing.html)
+- [Application Load Balancer subnet requirements](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancers.html)
+- [VPC route tables](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html)
+- [Site-to-Site VPN routing](https://docs.aws.amazon.com/vpn/latest/s2svpn/SetUpVPNConnections.html)
+- [Security groups](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html)
+- [Network ACLs](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html)
+- [S3 Gateway Endpoint routing](https://docs.aws.amazon.com/vpc/latest/privatelink/gateway-endpoints.html)
 
 ## Audit decision
 

@@ -1,6 +1,6 @@
 # 07 — AWS Cost Estimation and Optimisation
 
-**ID:** CLI-AWS-COST-007 | **Version:** 2.0 | **Status:** Partial calculator baseline saved — usage scenario review open  
+**ID:** CLI-AWS-COST-007 | **Version:** 2.1 | **Status:** Partial calculator baseline saved — usage scenario review open  
 **Region:** `us-east-1` | **Currency:** USD | **Planning month:** 730 hours
 
 ## Executive decision
@@ -22,7 +22,7 @@ A partial estimate is saved in AWS Pricing Calculator. Its currently verified su
 | NAT Gateway | 2 conventional public gateways, same-AZ app egress, 730 hours each, 2 public IPv4 addresses | **$73.00/month, calculator result** ($65.70 gateway hours + $7.30 IPv4). Processed data remains a zero placeholder; internet egress and cross-AZ transfer are not included. |
 | ALB | 1 internet-facing ALB, HTTPS 443 | Not included in the saved calculator subtotal. Unsaved AWS Pricing Calculator scenario results from the register are $19.35 / $28.11 / $74.83 per month (conservative / baseline / high), including 730 ALB hours and scenario LCU use. These are illustrative, not measured or approved client requirements, and are excluded from the saved subtotal; validate workload before adopting. |
 | Site-to-Site VPN | 1 standard connection to VGW, public IPv4 tunnel endpoints | **$43.80/month combined in the saved VPC entry:** $36.50 connection-hours plus $7.30 for two in-use public IPv4 address-hours. VPN transfer is unpriced. The 22 working days/month summary field belongs to the unselected Client VPN section; it does not affect the Site-to-Site calculation (1 × 730 h × $0.05/h = $36.50). |
-| Interface endpoints | Count and AZ coverage not final | Inventory each endpoint and AZ; price endpoint-hours and data processing. S3 Gateway Endpoint has no hourly endpoint charge. |
+| Interface endpoints | Workload-driven candidate inventory now documented in [Network and Security Design](03-network-security-design.md); count and AZ coverage not approved | Interface endpoint monthly estimate = sum of (endpoint count × enabled AZs × 730 hours × current per-AZ hourly rate) + measured data-processing GB × current per-GB rate. S3 Gateway Endpoint has no hourly endpoint charge. Compare endpoint design against NAT hours/processing; do not add an endpoint until its workload dependency is confirmed. |
 | CloudWatch | Logs, metrics, alarms and Flow Logs | Unsaved illustrative Calculator sensitivities: **$11.57 / $67.95 / $423.15 per month** at 30-day retention (conservative / baseline / high). At 90-day retention, independent storage-adjusted totals are $11.70 / $68.85 / $429.45; at 365 days, $12.32 / $72.98 / $458.33. Inputs remain provisional and are excluded from saved subtotal. |
 | Internet/data transfer | 100 GB was a placeholder | Replace with direction, destination, monthly volume and applicable free tiers. |
 | ACM / Route 53 | Public ALB certificate and DNS record | **Route 53 excluded from saved subtotal pending DNS authority decision.** Unsaved Route 53 sensitivities for the register’s 1/1/2 zones and 1/10/100 million standard-query examples are $0.90 / $4.50 / $41.00 monthly, if every query is billable non-alias traffic. A Route 53 ALB alias has no query charge; an authoritative public zone remains $0.50/month per zone. DNS owner, actual billable query volume and certificate validation method remain unresolved. |
@@ -322,7 +322,7 @@ The prior combined arithmetic using a $18.75 DataSync fee has been withdrawn bec
 1. Open the existing saved estimate in [AWS Pricing Calculator](https://calculator.aws/); preserve its current service configurations.
 2. Treat the current subtotal as partial and keep usage-dependent or unresolved components clearly excluded.
 3. Add EC2, EBS, RDS for PostgreSQL, EFS, S3, VPC/NAT, ALB, Site-to-Site VPN, CloudWatch and Route 53 as applicable.
-4. Use 730 hours/month. Record selected calculator configurations and remaining decisions, including PostgreSQL version/workload validation, backup retention, NAT processed GB, ALB LCU inputs, VPN transfer, endpoint count/AZs, logs and transfer.
+4. Use 730 hours/month. Record selected calculator configurations and remaining decisions, including PostgreSQL version/workload validation, backup retention, NAT processed GB, ALB LCU inputs, VPN transfer, endpoint count/AZs and data processing from the [endpoint decision inventory](03-network-security-design.md), logs and transfer.
 5. Create a separate migration-period group for MGN staging, DMS, DataSync, temporary instances, transfer and overlap duration.
 6. Export the estimate as CSV and PDF and retain the public share URL. Record the estimate date and pricing assumptions.
 7. Reconcile the exported service totals with this document and `cost/pricing-assumptions.csv`. Do not approve a budget until missing inputs are resolved.

@@ -1,6 +1,6 @@
 # 10 — Technical Architecture Audit
 
-**ID:** CLI-AWS-AUD-010 | **Version:** 1.4 | **Status:** In progress — illustrative BGP hybrid design documented; implementation validation pending  
+**ID:** CLI-AWS-AUD-010 | **Version:** 1.5 | **Status:** In progress — BGP hybrid and DMS flow corrections published; implementation validation pending  
 **Project:** Clafoke Investors Ltd (fictional, design-only)  
 **Audit date:** 2026-11-08
 

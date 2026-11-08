@@ -1,6 +1,6 @@
 # 07 — AWS Cost Estimation and Optimisation
 
-**ID:** CLI-AWS-COST-007 | **Version:** 1.5 | **Status:** Partial calculator baseline saved — usage scenario review open  
+**ID:** CLI-AWS-COST-007 | **Version:** 1.6 | **Status:** Partial calculator baseline saved — usage scenario review open  
 **Region:** `us-east-1` | **Currency:** USD | **Planning month:** 730 hours
 
 ## Executive decision
@@ -17,7 +17,7 @@ A partial estimate is saved in AWS Pricing Calculator. Its currently verified su
 | EBS | 2 × 100 GB gp3 (200 GB total), represented in the saved EC2 estimate | Included in the $274.94/month EC2 calculator entry; do not add it again. Validate workload performance needs. |
 | RDS PostgreSQL | `db.m6i.2xlarge`, Multi-AZ DB instance deployment, 500 GB gp3 input, 12,000 IOPS, 500 MiB/s throughput | **$1,227.52/month, calculator result.** The current entry uses one configured logical DB with Multi-AZ selected. PostgreSQL version, compatibility and workload suitability remain unresolved; backup usage remains unpriced. |
 | RDS backups | Usage-dependent | Calculate retention, changed-data volume and snapshot needs; avoid a flat unsupported allowance. |
-| EFS | Regional Standard, 1,000 GB, mount targets in both app AZs; Elastic throughput is provisional | **$300.00/month, calculator result.** Throughput mode and metered read/write workload remain provisional/unresolved; current metered throughput input is zero. |
+| EFS | 1,000 GB Regional Standard; two app-AZ mount targets; Elastic throughput provisional | **$300.00/month, calculator result** for Standard storage only. Unsaved Calculator scenarios using A-013 read/write quantities produce $304.50 / $321.00 / $390.00 per month (conservative / baseline / high), excluding cross-AZ transfer and unvalidated lifecycle activity. |
 | S3 | Standard, 500 GB | **$11.50/month, calculator result.** Requests, retrieval and transfer remain zero placeholders; validate lifecycle and retention requirements. |
 | NAT Gateway | 2 conventional gateways, same-AZ app egress, 730 hours each | **$65.70/month, calculator result.** Processed data remains a zero placeholder; replace with workload evidence. Cross-AZ transfer, if any, is not included. |
 | ALB | 1 internet-facing ALB, HTTPS 443 | Not included in the saved calculator subtotal. Unsaved AWS Pricing Calculator scenario results from the register are $19.35 / $28.11 / $74.83 per month (conservative / baseline / high), including 730 ALB hours and scenario LCU use. These are illustrative, not measured or approved client requirements, and are excluded from the saved subtotal; validate workload before adopting. |
@@ -112,6 +112,38 @@ These totals exclude possible account free-tier benefits, dashboards, alarm quer
 
 AWS references: [CloudWatch pricing (including N. Virginia rates, logs, metrics and alarms)](https://aws.amazon.com/cloudwatch/pricing/), [VPC Flow Logs destinations and vended-log charging](https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html).
 
+## EFS storage, throughput, lifecycle and transfer audit
+
+The documented design remains **1,000 GB Regional EFS Standard** with one mount target in each application Availability Zone. The saved estimate's $300.00/month EFS line is the calculator result for 1,000 GB Standard storage in us-east-1; it does not include the presently zero throughput, lifecycle, retrieval or client-transfer quantities. Regional Standard storage is billed by average stored GB-month. AWS pricing currently shows $0.30/GB-month in this Calculator entry. The two mount targets are topology, not two separately priced file systems; no mount-target line item appeared in the Calculator.
+
+### Elastic and Provisioned Throughput
+
+The current AWS EFS pricing page recommends Elastic Throughput for most workloads. Elastic charges the read and write bytes transferred, at the Calculator's current us-east-1 rates of $0.03/GB read and $0.06/GB write. Provisioned Throughput charges $6 per MB/s-month above the Standard-storage included baseline (50 KB/s per GB; 1,000 GB therefore supplies 50 MB/s baseline). The calculator validation showed requested provisioned rates of 5 and 25 MB/s incur $0 additional throughput charge, while 100 MB/s incurs $300/month (50 billable MB/s × $6); with Standard storage, those scenario totals are $300 / $300 / $600 monthly. This is a capacity-price comparison, not evidence that the workload needs provisioned throughput. Peak and sustained measurements are required.
+
+### A-013 Elastic Throughput scenarios (unsaved Calculator validation)
+
+| Scenario | Read / write GB-month | Storage | Elastic throughput | Cross-AZ transfer | Lifecycle / retrieval | Priced monthly scenario total |
+|---|---:|---:|---:|---|---|---:|
+| Conservative | 100 / 25 | $300.00 | $3.00 + $1.50 = $4.50 | Unpriced; measured share unknown | $0 in this all-Standard/no-lifecycle model; actual unknown | **$304.50** |
+| Baseline | 500 / 100 | $300.00 | $15.00 + $6.00 = $21.00 | Unpriced; measured share unknown | $0 in this all-Standard/no-lifecycle model; actual unknown | **$321.00** |
+| High | 2,000 / 500 | $300.00 | $60.00 + $30.00 = $90.00 | Unpriced; measured share unknown | $0 in this all-Standard/no-lifecycle model; actual unknown | **$390.00** |
+
+The totals are **modeled EFS service subtotals**, not actual client bills, and exclude cross-AZ data transfer, lifecycle transitions/retrieval, backup, taxes and other unmodeled features. The traffic quantities are illustrative A-013 values, not measurements or approved requirements. They do not change the saved estimate or its $1,923.46/month subtotal. At 730 hours and 1,024 MiB/GB, the read-plus-write sustained averages implied by these monthly totals are about 0.0487 / 0.2336 / 0.9740 MiB/s; A-013's 5 / 25 / 100 MiB/s figures are separate illustrative peaks, not sustained billing quantities.
+
+AWS bills applicable cross-AZ EFS access at the EC2 cross-AZ transfer rates: $0.01/GB transferred into an AZ and $0.01/GB out of an AZ. Same-AZ access to a mount target is not charged that cross-AZ rate. Consequently two AZ mount targets support local access but do not prove all clients resolve/use their same-AZ target. No A-014 quantity is approved, so cross-AZ charges are excluded and remain unpriced; price with client/mount-target AZ telemetry and the actual bytes in each direction.
+
+### Lifecycle sensitivity (not a client requirement)
+
+For an additional Calculator sensitivity only, the Calculator's industry-average hint was entered as 5% Standard / 15% IA / 80% Archive on 1,000 GB: storage is $15.00 + $2.40 + $6.40 = **$23.80/month**. Applying baseline EFS Elastic Throughput (500 GB read, 100 GB write = $21.00), 75 GB/month of IA reads ($0.75) and 400 GB/month of Archive reads ($12.00), with **no new monthly tiering volume**, gives access/retrieval of $12.75 and **$57.55/month total**. These percentages and retrieval quantities are provisional sensitivity inputs; Archive is available only with Regional Elastic Throughput in the configured Calculator path.
+
+If 150 GB/month transitions to IA and 800 GB/month transitions to Archive, the Calculator adds $1.50 and $24.00 transition charges. With the same storage, reads and throughput, the result is **$83.05/month**. That is a recurring monthly transition scenario, not a one-time migration amount. A single one-time transition of those same quantities would total $25.50 under the displayed rates; actual transition volumes, IA/Archive minimum-duration and minimum-size effects, retrieval profile and lifecycle policy must be established from file inventory. Do not use the calculator's suggested 5/15/80 mix as a business requirement.
+
+### DataSync migration is separate
+
+AWS DataSync Basic pricing is currently $0.0125 per GB copied. The register's derived initial transfer of 1,500 GB (1,000 GB EFS target + 500 GB S3 archive target, still unverified) yields **$18.75 one-time DataSync service usage**. Final-delta examples of 15 / 75 / 300 GB (1% / 5% / 20% of 1,500 GB) cost **$0.19 / $0.94 / $3.75 one-time** when rounded to cents. DataSync pricing excludes destination storage/request/transfer charges. DataSync copying to EFS can additionally create destination EFS write-throughput activity; at $0.06/GB, the 1,000 GB EFS portion would be $60.00 and the delta examples would be $0.90 / $4.50 / $18.00 **if** those bytes are written to EFS under Elastic Throughput. This is a migration-period destination-service sensitivity, not recurring application access. The 500 GB archive portion's S3 PUT/request costs remain unpriced because object counts and request patterns are unknown. VPN/NAT/endpoint/transfer path costs are separate and remain unresolved.
+
+The Calculator service scenarios above were configured unsaved and canceled; no estimate item was added. Sources: [AWS EFS pricing](https://aws.amazon.com/efs/pricing/), [EFS performance and throughput guidance](https://docs.aws.amazon.com/efs/latest/ug/performance.html), [how EFS mount targets work](https://docs.aws.amazon.com/efs/latest/ug/how-it-works.html), [EFS lifecycle management](https://docs.aws.amazon.com/efs/latest/ug/enable-lifecycle-management.html), and [AWS DataSync pricing](https://aws.amazon.com/datasync/pricing/).
+
 ## RDS billing treatment
 
 The design is specifically a **Multi-AZ DB instance deployment with one standby**, not a Multi-AZ DB cluster. AWS bills primary and standby instance-hours and provisioned storage for both copies. In the current saved calculator entry, the UI shows one configured logical DB, Multi-AZ selected, and 500 GB gp3 input; the resulting line item is $1,227.52/month. Its displayed calculation is $1,039.52 compute ($1.424/hour × 730), $115.00 storage (500 GB × $0.23/GB-month at the calculator's displayed Multi-AZ rate), and $73.00 Database Insights. The calculator entry applies its Multi-AZ rates to the configured quantity; **do not manually double the 500 GB input or the $1,227.52 result**. This verifies only what the calculator currently calculates. It is not independent proof that `db.m6i.2xlarge`, the PostgreSQL version, IOPS/throughput or performance is suitable for production. Confirm those through version/compatibility review and workload measurement.
@@ -144,7 +176,7 @@ AWS explains that the calculator uses service configuration and Region inputs, c
 
 ## Exclusions / separate estimates
 
-Taxes, support plan, engineering labour, customer gateway and on-premises internet costs, migration staging/overlap, MGN/DMS/DataSync execution, unknown transfer, optional security services, detailed backup, EFS throughput, S3 requests/retrieval and unmodelled usage require separate inputs or estimates.
+Taxes, support plan, engineering labour, customer gateway and on-premises internet costs, migration staging/overlap, MGN/DMS/DataSync execution, unknown transfer, optional security services, detailed backup, EFS cross-AZ transfer and workload-confirmed lifecycle/throughput, S3 requests/retrieval and unmodelled usage require separate inputs or estimates.
 
 ## Public pricing references
 

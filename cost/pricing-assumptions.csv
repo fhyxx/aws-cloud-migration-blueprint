@@ -16,7 +16,7 @@ NAT hourly,Two conventional NAT Gateways,2 x 730,0.045,gateway-hour,65.70,65.70,
 NAT processing,Processed data,0,UNPRICED,GB,,,placeholder,Zero processed-GB placeholder; replace after workload discovery; transfer charges excluded
 VPN,Standard Site-to-Site VPN connection to VGW,730,0.05,connection-hour,36.50,36.50,calculator-verified,Current saved calculator line item; validate exact connection/tunnel and any applicable public IPv4 treatment
 VPN IPv4,Tunnel public IPv4 address-hours,2,UNPRICED,IPv4-hour,,,pending,Prior 2-address / 7.30 USD reference is not confirmed in the current calculator line; do not include in subtotal unless current configuration and billing applicability are verified
-VPN transfer,Monthly data transfer,UNCONFIRMED,UNPRICED,GB,,,pending,Transfer remains unpriced; obtain volume, direction and destination
+VPN transfer,Monthly data transfer,UNCONFIRMED,UNPRICED,GB,,,pending,Transfer remains unpriced; obtain volume by direction and destination
 ALB hourly,One internet-facing Application Load Balancer,730,UNPRICED,hour,,,pending,No ALB price included; retain architecture quantity and obtain calculator result without inventing LCU inputs
 ALB LCU,Load balancer capacity units,UNCONFIRMED,UNPRICED,LCU-hour,,,pending,New connections active connections processed bytes and rule evaluations require workload evidence; no ALB total in current subtotal
 CloudWatch,Logs metrics alarms and Flow Logs,UNCONFIRMED,UNPRICED,monthly,,,pending,Estimate ingestion retention metrics alarms and Flow Log destination/scope; excluded from current subtotal

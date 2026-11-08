@@ -48,7 +48,7 @@ Do not size DMS from the source VM's 8 vCPU / 32 GiB or the 500 GB logical-data 
 
 DMS exit evidence: source/target/DMS version compatibility; object and extension assessment; approved schema method; WAL/slot/permission readiness; table key/replica-identity report; representative full-load plus CDC benchmark; acceptable lag and full-load completion; validation/reconciliation results; and approved cutover/rollback criteria.
 
-[ DMS PostgreSQL source requirements ](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html) · [ DMS source-version matrix ](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Introduction.Sources.html) · [ DMS PostgreSQL target limitations ](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.PostgreSQL.html) · [ DMS replication-instance sizing ](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_BestPractices.SizingReplicationInstance.html) · [ DMS Serverless settings ](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Serverless.html)
+[DMS PostgreSQL source requirements](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html) · [DMS source-version matrix](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Introduction.Sources.html) · [DMS PostgreSQL target limitations](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.PostgreSQL.html) · [DMS replication-instance sizing](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_BestPractices.SizingReplicationInstance.html) · [DMS Serverless settings](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Serverless.html)
 
 ## NFS to EFS
 

@@ -9,10 +9,11 @@ This focused view isolates the steady-state customer-facing workload, AZ/subnet 
 ```mermaid
 flowchart TB
   USERS["Approved users"] --> DNS["Public DNS<br/>Authoritative provider TBD"]
-  DNS --> ALB["Internet-facing Application Load Balancer<br/>HTTPS 443 / ACM certificate"]
 
   subgraph VPC["VPC 10.30.0.0/16 — us-east-1 — two Availability Zones"]
+    ALB["Internet-facing ALB<br/>HTTPS 443 / ACM certificate<br/>attached to both public subnets"]
     IGW["Internet Gateway"]
+    DNS --> ALB
     VGW["Virtual Private Gateway<br/>Site-to-Site VPN"]
 
     subgraph PUB_A["AZ-A — Public subnet 10.30.1.0/24"]

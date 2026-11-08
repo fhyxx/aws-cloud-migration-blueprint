@@ -1,6 +1,6 @@
 # 10 — Technical Architecture Audit
 
-**ID:** CLI-AWS-AUD-010 | **Version:** 1.2 | **Status:** In progress — diagram rendering and network design review updated; implementation validation pending  
+**ID:** CLI-AWS-AUD-010 | **Version:** 1.3 | **Status:** In progress — endpoint decision inventory documented; implementation validation pending  
 **Project:** Clafoke Investors Ltd (fictional, design-only)  
 **Audit date:** 2026-11-08
 
@@ -31,6 +31,7 @@ The design is **not yet approved for implementation**. Source compatibility, net
 | AUD-08 | The first focused runtime diagram placed the ALB node outside the VPC boundary, which could imply incorrect network placement. | Corrected the rendered and source Mermaid so the ALB is inside the VPC and explicitly attached to both public subnets. Both focused diagrams were visually confirmed rendering in GitHub. | Recheck the corrected runtime rendering; implementation subnet associations, routes and security groups remain untested. |
 | AUD-09 | Route-table intent was described narratively but not specified per subnet, and the master diagram implied a VGW route to isolated DB subnets. | Added a route-table baseline for public, app, DB, MGN staging and S3 endpoint associations; removed the unsupported baseline VGW-to-DB route; clarified specific on-premises routes and return routing. | Confirm actual subnet associations, on-premises CIDRs, route propagation/static route mode, customer-gateway return routes and MGN staging CIDR/AZ. |
 | AUD-10 | Security-group direction and subnet-level return-path controls were too broad to validate consistently. | Added source/destination SG intent, health-check dependency, DMS temporary ingress, DataSync task-ENI/EFS path and stateful SG versus stateless NACL guidance. | Validate exact app/health-check port, DBA access path, egress dependencies and any custom NACL ephemeral-port rules. |
+| AUD-11 | Private service access was listed as a generic endpoint candidate set without a workload-by-workload decision, risking unnecessary endpoints and missing endpoint dependencies. | Added a conditional VPC endpoint inventory separating S3 Gateway, SSM/ssmmessages, Secrets Manager, CloudWatch Logs/Monitoring and future ECR/KMS/STS use cases. Clarified endpoint AZ coverage, SG, private DNS, policy and pricing requirements. | Confirm workload API calls, SSM Agent version, NAT-vs-PrivateLink decision, endpoint subnet/AZ count, endpoint policies, DNS resolution and reachability; update cost model only after scope is approved. |
 
 ## RDS calculator reconciliation
 
@@ -57,7 +58,7 @@ The proposed starting thresholds and recovery tests are documented in `docs/06-v
 2. Capture PostgreSQL source version/patch, choose exact RDS target version and DMS engine, then validate the live DMS compatibility matrix.
 3. Approve DMS source permissions, WAL/slot/sender headroom, primary-key/replica-identity handling, schema/object migration method and benchmark.
 4. Inventory NFS used bytes/file counts and archive source bytes/object counts; choose DataSync mode, agent and endpoint design.
-5. Approve VPN CIDRs/routes, MGN staging AZ/egress, DMS routes/SGs, DataSync task-ENI subnet/SG, DNS ownership and API allowlists.
+5. Approve VPN CIDRs/routes, MGN staging AZ/egress, DMS routes/SGs, DataSync task-ENI subnet/SG, workload-driven VPC endpoint inventory, DNS ownership and API allowlists.
 6. Confirm application readiness endpoint, health-check behaviour, EC2 family, ASG maximum/scaling, RDS performance, backup retention and log retention.
 7. Execute load, AZ/failover, database restore, EFS restore, S3 recovery and end-to-end application tests; retain dated evidence.
 8. Complete migration-period cost modelling from measured source profiles, benchmarks, network flows and approved dates.
@@ -78,6 +79,12 @@ The proposed starting thresholds and recovery tests are documented in `docs/06-v
 - [Security groups](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html)
 - [Network ACLs](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html)
 - [S3 Gateway Endpoint routing](https://docs.aws.amazon.com/vpc/latest/privatelink/gateway-endpoints.html)
+- [Systems Manager endpoint and agent messaging requirements](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up-messageAPIs.html)
+- [Systems Manager VPC endpoint troubleshooting](https://docs.aws.amazon.com/systems-manager/latest/userguide/troubleshooting-ssm-agent.html)
+- [Secrets Manager VPC endpoint](https://docs.aws.amazon.com/secretsmanager/latest/userguide/vpc-endpoint-overview.html)
+- [CloudWatch Monitoring VPC endpoint](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch-and-interface-VPC.html)
+- [CloudWatch Logs VPC endpoint](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/cloudwatch-logs-and-interface-VPC.html)
+- [ECR VPC endpoints and S3 image-layer access](https://docs.aws.amazon.com/AmazonECR/latest/userguide/vpc-endpoints.html)
 
 ## Audit decision
 

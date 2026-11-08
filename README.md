@@ -22,7 +22,7 @@ A cloud migration blueprint for a fictional Nigerian retail/distribution company
 
 ## Architecture
 
-The canonical master Mermaid source is [architecture/target-architecture.mmd](architecture/target-architecture.mmd); inspect it in the [rendered master view](architecture/target-architecture.md). For clearer review, use the focused [runtime/network view](architecture/runtime-network-view.md) (subnet CIDRs, AZ placement, route intent and security-group boundaries) and [migration data-flow view](architecture/migration-data-flow.md) (separate MGN, DMS and DataSync paths). Editable Mermaid sources are provided beside each rendered page. All views are proposed design artifacts; visual review and implementation validation remain pending.
+The canonical master Mermaid source is [architecture/target-architecture.mmd](architecture/target-architecture.mmd); inspect it in the [rendered master view](architecture/target-architecture.md). For clearer review, use the focused [runtime/network view](architecture/runtime-network-view.md) (subnet CIDRs, AZ placement, route intent and security-group boundaries) and [migration data-flow view](architecture/migration-data-flow.md) (separate MGN, DMS and DataSync paths). Editable Mermaid sources are provided beside each rendered page. The master and both focused views have been visually confirmed rendering in GitHub. The runtime view's ALB placement was corrected to sit inside the VPC and explicitly span both public subnets. These remain proposed design artifacts; implementation and connectivity validation are still pending.
 
 ## Deliverables
 

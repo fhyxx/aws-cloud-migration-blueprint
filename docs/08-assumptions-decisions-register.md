@@ -2,7 +2,7 @@
 
 **ID:** CLI-AWS-ADR-008 | **Version:** 1.0 | **Status:** Open — workload validation required  
 **Project:** Clafoke Investors Ltd (fictional portfolio case study)  
-**Region:** \`us-east-1\` | **Currency:** USD | **Planning month:** 730 hours  
+**Region:** `us-east-1` | **Currency:** USD | **Planning month:** 730 hours  
 **Related:** [Discovery assessment](01-discovery-assessment.md), [Target architecture](02-target-architecture.md), [Network and security design](03-network-security-design.md), [Migration strategy](04-data-migration-strategy.md), [Migration runbook](05-migration-runbook.md), [Validation and rollback](06-validation-rollback-strategy.md), [Cost estimation and optimisation](07-cost-estimation-optimisation.md), [pricing assumptions](../cost/pricing-assumptions.csv), [target architecture diagram](../architecture/target-architecture.mmd)
 
 ## Executive summary
@@ -28,13 +28,13 @@ Owners are roles from the project runbook, not named people. Technical owners su
 | Baseline item | Repository statement | Status |
 |---|---|---|
 | Project context | Fictional Nigerian retail/distribution business and order-management platform; design-only | Documented |
-| Region and planning basis | \`us-east-1\`; USD; 730 hours/month | Documented |
-| Application | Two Linux VMs, each 4 vCPU / 16 GiB; \`t3.xlarge\` is a pricing proxy; two-AZ ASG desired/minimum capacity 2 | Documented |
+| Region and planning basis | `us-east-1`; USD; 730 hours/month | Documented |
+| Application | Two Linux VMs, each 4 vCPU / 16 GiB; `t3.xlarge` is a pricing proxy; two-AZ ASG desired/minimum capacity 2 | Documented |
 | Source database | PostgreSQL VM, 8 vCPU / 32 GiB; 500 GB source/logical-data assumption | Documented |
 | Target database design | RDS PostgreSQL Multi-AZ DB instance deployment with one standby; exact version/class/storage performance open | Documented |
 | Shared storage | Approximately 1 TB NFS source assumption; Regional EFS with mount targets in both app AZs | Documented |
 | Archive storage | 500 GB S3 Standard planning assumption; private access through S3 Gateway Endpoint where appropriate | Documented |
-| Network | VPC \`10.30.0.0/16\`, two AZs, two public/two app/two DB subnets, plus separate private MGN staging subnet | Documented |
+| Network | VPC `10.30.0.0/16`, two AZs, two public/two app/two DB subnets, plus separate private MGN staging subnet | Documented |
 | Network entry and egress | One internet-facing ALB, HTTPS 443, public subnets; two NAT Gateways with same-AZ application egress | Documented |
 | Hybrid connectivity | One standard Site-to-Site VPN to VGW; transfer/routing/rate details open | Documented |
 | Migration methods | MGN for Linux application servers; DMS full load plus CDC for PostgreSQL data; DataSync for NFS→EFS and archives→S3 | Documented |

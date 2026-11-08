@@ -1,6 +1,6 @@
 # 08 — Assumptions and Decisions Register
 
-**ID:** CLI-AWS-ADR-008 | **Version:** 1.0 | **Status:** Open — workload validation required  
+**ID:** CLI-AWS-ADR-008 | **Version:** 1.1 | **Status:** Open — workload validation required  
 **Project:** Clafoke Investors Ltd (fictional portfolio case study)  
 **Region:** `us-east-1` | **Currency:** USD | **Planning month:** 730 hours  
 **Related:** [Discovery assessment](01-discovery-assessment.md), [Target architecture](02-target-architecture.md), [Network and security design](03-network-security-design.md), [Migration strategy](04-data-migration-strategy.md), [Migration runbook](05-migration-runbook.md), [Validation and rollback](06-validation-rollback-strategy.md), [Cost estimation and optimisation](07-cost-estimation-optimisation.md), [pricing assumptions](../cost/pricing-assumptions.csv), [target architecture diagram](../architecture/target-architecture.mmd)
@@ -11,7 +11,7 @@ This register distinguishes repository statements from architectural deductions,
 
 The existing saved AWS Pricing Calculator subtotal is **$1,923.46/month**, including two conventional NAT Gateways and the audited Site-to-Site VPN plus public IPv4 tunnel charges. This document does not change the calculator or convert that subtotal into a complete operating budget. The earlier $2,214–$2,702/month worksheet is withdrawn as a budget.
 
-Priority decisions are: (1) ALB traffic and LCU dimensions; (2) Route 53 zone ownership and query volume; (3) CloudWatch metrics, alarms, log ingestion/retention and Flow Logs; (4) EFS capacity, throughput, lifecycle and cross-AZ use; (5) VPN traffic and tunnel/public IPv4 treatment; and (6) migration source sizing, MGN/DMS/DataSync profiles, temporary network and overlap duration.
+Route 53 and CloudWatch price sensitivities have now been checked in AWS Pricing Calculator as unsaved scenarios; none is an approved client requirement or included in the saved estimate. The saved subtotal remains $1,923.46/month. Priority decisions remain: (1) ALB traffic and LCU dimensions; (2) DNS authority, zone ownership and billable query mix; (3) CloudWatch metrics, alarms, log ingestion/retention and Flow Log scope/destination; (4) EFS capacity, throughput, lifecycle and cross-AZ use; (5) VPN traffic; and (6) migration source sizing, MGN/DMS/DataSync profiles, temporary network and overlap duration.
 
 ## Status definitions
 
@@ -62,9 +62,23 @@ The LCU estimates below use the largest applicable dimension as an approximate p
 
 | ID | Assumption / decision | Conservative / baseline / high scenario | Status | Responsible owner | Evidence required | Affected services / cost components | Dependencies |
 |---|---|---|---|---|---|---|---|
-| A-005 | Route 53 authoritative DNS choice and public hosted-zone count | 1 / 1 / 2 zones as examples; do not price zones until hosting decision is confirmed | Pending Validation | Business Owner; Infrastructure Lead validates delegation | Registrar/DNS-provider record, delegation plan, ownership confirmation, approved record inventory | Route 53 hosted-zone charge and DNS migration work | Determines if Route 53 is billable; ALB alias and certificate validation depend on domain control |
-| A-006 | Monthly DNS query volume and routing features | 1 million / 10 million / 100 million queries/month as scenarios only | Pending Validation | Infrastructure Lead; Application Lead supplies demand profile | Existing DNS query reports or approved forecast; query types, routing policy and health checks | Route 53 query, health-check and routing-policy charges where applicable | Depends on A-005 |
-| A-007 | ACM public certificate domain validation and ALB association | One public certificate appears in the design; domain and validation method unknown | Pending Validation | Infrastructure Lead; Business Owner confirms domain control | Domain ownership, validation method and ALB association plan | ACM charges where applicable; Route 53 validation records; ALB HTTPS listener | Depends on A-005 |
+| A-005 | Route 53 authoritative DNS choice and public hosted-zone count | 1 / 1 / 2 zones are examples only; first 25 public zones price at $0.50 each/month; zone not entered in saved estimate pending hosting decision | Pending Validation | Business Owner; Infrastructure Lead validates delegation | Registrar/DNS-provider record, delegation plan, ownership confirmation, approved record inventory | Route 53 hosted-zone charge and DNS migration work | Determines if Route 53 is billable; ALB alias and certificate validation depend on domain control |
+| A-006 | Monthly DNS query volume and routing features | 1 / 10 / 100 million per month as examples; if all are billable standard non-alias queries, sensitivity is $0.40 / $4 / $40; ALB A/AAAA alias queries are free | Pending Validation | Infrastructure Lead; Application Lead supplies demand profile | Existing DNS query reports or approved forecast; query types, routing policy and health checks | Route 53 query, health-check and routing-policy charges where applicable | Depends on A-005; DNS query type and alias target determine billable volume |
+| A-007 | ACM public certificate domain validation and ALB association | One non-exportable public ACM certificate attached to ALB has no certificate fee; DNS validation can use existing DNS provider; domain and validation method unknown | Pending Validation | Infrastructure Lead; Business Owner confirms domain control | Domain ownership, validation method and ALB association plan | ACM charges where applicable; DNS validation record at authoritative provider; ALB HTTPS listener | Domain control is required; Route 53 hosting is not required for ACM validation |
+
+#### Route 53 pricing discovery record
+
+The architecture requires a public DNS record to reach the ALB and a public ACM certificate for HTTPS. It does not decide which provider hosts the authoritative zone: architecture and network documents make the Route 53 alias conditional on Route 53 being authoritative. The Route 53 icon in the diagram is not a DNS-provider decision. ACM DNS validation can be performed by publishing ACM's CNAME at the current provider. A free non-exportable ACM public certificate for an ALB does not require Route 53. No Route 53 health checks, failover, Traffic Flow, latency/geo/IP routing, Resolver endpoints, private zones or DNS query logging are documented.
+
+The Calculator displayed $0.50 per public hosted zone/month and $0.40 per million standard queries for the first billion. ALB A/AAAA aliases do not incur Route 53 query fees. Unsaved sensitivity calculations (all example query volumes conservatively treated as billable non-alias standard queries) are:
+
+| Scenario | Zones | Queries/month | Zone + query total/month |
+|---|---:|---:|---:|
+| Conservative | 1 | 1 million | $0.90 |
+| Baseline | 1 | 10 million | $4.50 |
+| High | 2 | 100 million | $41.00 |
+
+If those queries were only aliases to the ALB, query charges would be $0 and hypothetical one/two-zone totals would be $0.50/$1.00 per month. Do not add any Route 53 amount until the Business Owner confirms DNS authority/zone count and the Infrastructure Lead documents billable query mix. All these scenario prices remain **Pending Validation**, not Approved. See cost guide for official references and Calculator evidence.
 
 ### C. CloudWatch and VPC Flow Logs
 
@@ -72,10 +86,22 @@ Metric/log volumes below are illustrative planning bounds. Separate service-incl
 
 | ID | Assumption / decision | Conservative / baseline / high scenario | Status | Responsible owner | Evidence required | Affected services / cost components | Dependencies |
 |---|---|---|---|---|---|---|---|
-| A-008 | Custom metric time series, excluding included service metrics | 10 / 50 / 200 time series; dimensions/resolution TBD | Pending Validation | Operations Lead | Monitoring requirements matrix, metric names/dimensions/resolution and included-metric review | CloudWatch custom metrics, dashboards, alarm inputs | Derives from EC2, RDS, EFS, ALB, VPN, application and network monitoring needs |
-| A-009 | Application/system log ingestion and retention | 10 / 50 / 200 GB ingested/month; 30 / 90 / 365 days retained | Pending Validation | Operations Lead; Application Lead provides log-rate evidence | Sample or measured rate, source/filter inventory, destination, retention approval | CloudWatch Logs ingestion/storage, queries or metric filters where used | Depends on application, ALB/EC2/RDS logging and A-008 monitoring plan |
-| A-010 | Alarm count and evaluation policy | 10 / 25 / 100 standard alarms; alarm type/period/frequency TBD | Pending Validation | Operations Lead | Alarm catalogue: resource, threshold, period, evaluations, missing-data treatment, notification path | CloudWatch alarms; SNS/notification costs if selected | Depends on A-008 metric inventory and A-001 workload/availability objectives |
-| A-011 | VPC Flow Logs scope, volume and retention | 5 / 50 / 500 GB/month as separate Flow Log ingestion examples; 30 / 90 / 365 days retention examples | Pending Validation | Security Lead; Infrastructure Lead configures network scope | Approved VPC/subnet/interface scope, filters, destination, estimated log records and retention | CloudWatch Logs or alternate destination ingestion/storage; queries/filters | Depends on VPC, VPN, NAT, endpoint, ALB and MGN staging design; coordinate with A-009 to prevent double count |
+| A-008 | Custom metric time series, excluding included service metrics | 10 / 50 / 200 time series; current Calculator sensitivity $3 / $15 / $60 per month at $0.30/time series first tier; dimensions/resolution TBD | Pending Validation | Operations Lead | Monitoring requirements matrix, metric names/dimensions/resolution and included-metric review | CloudWatch custom metrics, dashboards, alarm inputs | Derives from EC2, RDS, EFS, ALB, VPN, application and network monitoring needs; examples are not actual metrics or approval |
+| A-009 | Application/system log ingestion and retention | 10 / 50 / 200 GB ingested/month; 30 / 90 / 365 days retained; app-log Calculator sensitivity at $0.50/GB is $5 / $25 / $100 before storage | Pending Validation | Operations Lead; Application Lead provides log-rate evidence | Sample or measured rate, source/filter inventory, destination, retention approval | CloudWatch Logs ingestion/storage, queries or metric filters where used | Depends on application, ALB/EC2/RDS logging and A-008 monitoring plan; rates are scenario-only |
+| A-010 | Alarm count and evaluation policy | 10 / 25 / 100 standard-resolution alarm metrics; Calculator sensitivity $1 / $2.50 / $10 per month at $0.10/alarm metric; type/period/evaluation TBD | Pending Validation | Operations Lead | Alarm catalogue: resource, threshold, period, evaluations, missing-data treatment, notification path | CloudWatch alarms; SNS/notification costs if selected | Depends on A-008 metric inventory and A-001 workload/availability objectives; no alarm catalog is approved |
+| A-011 | VPC Flow Logs scope, volume and retention | 5 / 50 / 500 GB/month as separate CloudWatch Vended Logs delivery examples; 30 / 90 / 365 days retention; Calculator delivery sensitivity $2.50 / $25 / $250 before storage | Pending Validation | Security Lead; Infrastructure Lead configures network scope | Approved VPC/subnet/interface scope, filters, destination, estimated log records and retention | CloudWatch Logs vended delivery and storage, or alternate destination ingestion/storage; queries/filters | Depends on VPC, VPN, NAT, endpoint, ALB and MGN staging design; coordinate with A-009 to prevent double count; CloudWatch destination is not approved |
+
+#### CloudWatch Calculator sensitivity record
+
+The following unsaved Calculator scenarios separately model application/system Standard Logs and VPC Flow Logs delivered to CloudWatch Logs as Standard Vended Logs. The register quantities remain illustrative. Flow Logs are not merged into app log input; the Calculator storage calculation does combine both volumes. Calculator one-month storage uses its displayed 15% compression factor. The scenarios exclude query/API use, dashboards, additional alarm forms, SNS, and other optional features.
+
+| Scenario | Custom time series | Application logs GB/mo | Flow Logs GB/mo | Standard alarm metrics | Calculator total at 30 days |
+|---|---:|---:|---:|---:|---:|
+| Conservative | 10 | 10 | 5 | 10 | $11.57/mo |
+| Baseline | 50 | 50 | 50 | 25 | $67.95/mo |
+| High | 200 | 200 | 500 | 100 | $423.15/mo |
+
+Independent retention extension for steady monthly ingestion and 15% compressed storage gives totals at 90 days of $11.70 / $68.85 / $429.45 and at 365 days of $12.32 / $72.98 / $458.33, respectively. This extension is an independent calculation, not an AWS Calculator result; the Calculator log model exposed only one-month retention. CloudWatch pricing sensitivity is not Approved. Keep these costs outside the saved $1,923.46/month subtotal until Operations and Security approve the sources, log destination, volume, retention, metric inventory/resolution, alarm design and notification path.
 
 ### D. EFS storage, throughput and transfer
 

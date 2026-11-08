@@ -1,6 +1,6 @@
 # 03 — Network and Security Design
 
-**ID:** CLI-AWS-NET-003 | **Version:** 1.2 | **Status:** Proposed baseline
+**ID:** CLI-AWS-NET-003 | **Version:** 1.3 | **Status:** Proposed baseline
 
 ## Architecture diagrams
 
@@ -94,9 +94,37 @@ The ALB health-check port and application listener port must match the actual ta
 Security groups are stateful: response traffic for an allowed flow is automatically permitted. Network ACLs are stateless; if custom NACLs are introduced, explicitly allow both request and return traffic, including the correct ephemeral port ranges for initiating clients and AWS-managed services. Retain default NACLs until a specific subnet-level deny/guardrail requirement justifies custom rules. Do not copy a generic ephemeral range without validating the client OS and service behaviour.
 
 No public SSH or PostgreSQL.
-## Endpoints and certificates
+## VPC endpoint inventory and private service access
 
-Candidate endpoints: S3 Gateway; Systems Manager (`ssm`, `ssmmessages`, and `ec2messages` where applicable); CloudWatch Logs/Monitoring; Secrets Manager; ECR API/Docker only if image pulls require them. Interface endpoints incur hourly and data-processing costs; model actual count and AZ coverage. Provision an ACM certificate for ALB HTTPS and Route 53 alias/DNS records if Route 53 is authoritative; certificate/DNS costs and prerequisites must be checked separately.
+Do not create every possible endpoint by default. First decide whether each private workload uses a VPC interface/gateway endpoint or the existing controlled same-AZ NAT egress path. The following is a workload-driven candidate inventory for `us-east-1`; none of these endpoints is deployed or approved yet.
+
+| Service / endpoint | Type | Decision | Workload and condition | Network / security requirements |
+|---|---|---|---|---|
+| S3 — `com.amazonaws.us-east-1.s3` | Gateway | **Baseline candidate** | App access to the S3 archive bucket; also required for private ECR image-layer downloads if ECR is later used | Associate only the route tables that need S3 access (initially App-A/App-B); restrict endpoint policy, bucket policy and IAM. No endpoint SG or per-AZ interface endpoint charge. |
+| Systems Manager — `com.amazonaws.us-east-1.ssm` | Interface | **Required if using private SSM without NAT** | EC2 managed-node registration and Systems Manager API operations | Private DNS; endpoint SG inbound TCP 443 from App SG; IAM instance profile and agent must also be correct. |
+| Systems Manager Messages — `com.amazonaws.us-east-1.ssmmessages` | Interface | **Required for Session Manager / SSM messaging when using private endpoint path** | SSM Agent control/data channels and Session Manager | Private DNS; endpoint SG inbound TCP 443 from App SG. |
+| EC2 Messages — `com.amazonaws.us-east-1.ec2messages` | Interface | **Conditional legacy compatibility only** | Older SSM Agent / legacy regional behaviour; current SSM Agent uses `ssmmessages` when available | Do not add automatically. Confirm SSM Agent version and current regional support; AWS documents `ec2messages` as unsupported in Regions launched in 2024 or later. |
+| Secrets Manager — `com.amazonaws.us-east-1.secretsmanager` | Interface | **Required if application/rotation function retrieves secrets privately without NAT** | Runtime DB credentials and other secrets | Private DNS; endpoint SG inbound TCP 443 from only the App SG or rotation-function SG; narrow endpoint policy and IAM permissions. |
+| CloudWatch Logs — `com.amazonaws.us-east-1.logs` | Interface | **Conditional** | Required if instances send application/system logs to CloudWatch Logs without NAT | Private DNS; endpoint SG inbound TCP 443 from log-publishing workloads; scope IAM and log-group permissions. |
+| CloudWatch Monitoring — `com.amazonaws.us-east-1.monitoring` | Interface | **Conditional** | Required if workloads publish metrics through the CloudWatch monitoring API without NAT | Private DNS; endpoint SG inbound TCP 443 from publishing workloads. This is distinct from the Logs endpoint. |
+| ECR API — `com.amazonaws.us-east-1.ecr.api` | Interface | **Future / conditional** | Required for private ECR API calls such as image metadata and authorization when pulling ECR images privately | Private DNS; endpoint SG inbound TCP 443 from container hosts. Not justified by the current EC2 application design alone. |
+| ECR Docker — `com.amazonaws.us-east-1.ecr.dkr` | Interface | **Future / conditional** | Required for Docker Registry pull operations from private ECR | Private DNS; endpoint SG inbound TCP 443 from container hosts. Pair with ECR API and the S3 Gateway Endpoint for image layers. |
+| KMS — `com.amazonaws.us-east-1.kms` | Interface | **Conditional** | Only if application code or an agent directly calls KMS APIs from private subnets | Private DNS; endpoint SG inbound TCP 443 from callers. EBS/RDS/EFS/S3 service-side encryption alone does not establish a need for an application KMS endpoint. |
+| STS — `com.amazonaws.us-east-1.sts` | Interface | **Conditional** | Only if workload SDKs/agents call regional STS APIs from private subnets and NAT is not used | Private DNS; regional STS endpoint configuration and TCP 443; verify SDK endpoint behaviour. |
+
+### Endpoint placement and controls
+
+- For each interface endpoint selected for high availability, enable endpoint network interfaces in both application AZs (or in dedicated endpoint subnets in both AZs). A single-AZ endpoint creates an AZ dependency and can introduce cross-AZ traffic.
+- Endpoint security groups should allow inbound TCP 443 only from the workload security groups that need each service. Workload security groups must allow outbound TCP 443 to the endpoint ENIs.
+- Enable private DNS only after confirming VPC DNS support/hostnames and that no conflicting private hosted zone or custom DNS forwarding rule intercepts the service name.
+- Endpoint policies are an additional resource-policy boundary; they do not replace IAM identity policies, bucket policies, KMS key policies or Secrets Manager resource policies.
+- Keep S3 Gateway Endpoint separate from interface endpoints: it uses route-table prefix-list entries, not endpoint ENIs/security groups.
+- Do not add ECS endpoints or ECR endpoints merely because the wider portfolio has a container project. Add them only if this Clafoke workload actually deploys/pulls images from ECR.
+- Price interface endpoints using the actual endpoint count × enabled AZs × hours, plus data processing. Compare this with NAT fixed-hour and data-processing costs before choosing the private-endpoint strategy. The current calculator subtotal does not include this endpoint inventory.
+
+### TLS certificate and DNS
+
+Provision an ACM certificate for ALB HTTPS and a DNS alias/record in the authoritative DNS provider. Route 53 is not assumed to be authoritative; confirm domain ownership, DNS hosting and certificate validation method. Record certificate region (same Region as the ALB for a regional ALB certificate), renewal/validation ownership and DNS cutover plan. DNS and ALB charges remain outside the current partial subtotal.
 
 ## Identity and security
 

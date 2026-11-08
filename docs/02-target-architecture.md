@@ -2,6 +2,14 @@
 
 **ID:** CLI-AWS-ARC-002 | **Version:** 1.2 | **Status:** Proposed, not deployed
 
+## Architecture diagrams
+
+- [Canonical master architecture](../architecture/target-architecture.md)
+- [Focused runtime and network view](../architecture/runtime-network-view.md)
+- [Focused migration data-flow view](../architecture/migration-data-flow.md)
+
+The focused diagrams are review companions; this document remains the decision record for the proposed design.
+
 ## Objectives
 
 Design a two-AZ AWS target with public entry, private application tier, isolated database tier, shared file storage, archives, hybrid migration connectivity and monitoring.

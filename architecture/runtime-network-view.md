@@ -12,7 +12,10 @@ flowchart TB
 
   subgraph VPC["VPC 10.30.0.0/16 — us-east-1 — two Availability Zones"]
     IGW["Internet Gateway"]
-    DNS -->|"DNS resolves to ALB DNS name"| ALB\n    IGW -->|"Internet ingress via public subnet routes"| ALB\n    ALB -.->|"Subnet mapping / ALB ENI — AZ-A"| ALB_A\n    ALB -.->|"Subnet mapping / ALB ENI — AZ-B"| ALB_B
+    DNS -->|"DNS resolves to ALB DNS name"| ALB
+    IGW -->|"Internet ingress via public subnet routes"| ALB
+    ALB -.->|"Subnet mapping / ALB ENI — AZ-A"| ALB_A
+    ALB -.->|"Subnet mapping / ALB ENI — AZ-B"| ALB_B
     VGW["Virtual Private Gateway<br/>Site-to-Site VPN"]
 
     subgraph PUB_A["AZ-A — Public subnet 10.30.1.0/24"]

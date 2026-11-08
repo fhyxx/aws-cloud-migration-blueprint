@@ -116,7 +116,7 @@ Security groups are stateful and should reference peer security groups wherever 
 | EFS mount-target SG | TCP 2049 from App SG and dedicated DataSync task-ENI SG | Stateful responses |
 | DMS SG | No unsolicited inbound required | TCP 5432 to PostgreSQL source subnet `10.50.20.0/24` over VGW and to RDS SG; required DMS service/logging dependencies |
 | DataSync task-ENI SG | No unsolicited inbound required | TCP 2049 to EFS mount-target SG; required DataSync task data-plane dependencies |
-| MGN staging SG | TCP 1500 from explicitly approved source-server CIDRs; no public inbound | TCP 443 to regional MGN service and only documented dependencies |
+| MGN staging SG | TCP 1500 from illustrative MGN source subnet `10.50.10.0/24` only; no public inbound | TCP 443 to regional MGN service and only documented dependencies |
 | Interface endpoint SG | TCP 443 from only the private workload SGs that need the endpoint | Stateful responses |
 
 The ALB health-check port and application listener port must match the actual target-group configuration; TCP 8080 is still provisional. If database administration is required, prefer a controlled SSM-based or approved private DBA path rather than exposing PostgreSQL publicly. Remove the temporary DMS-to-RDS rule after migration when DMS no longer needs it.

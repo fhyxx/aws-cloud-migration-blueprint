@@ -1,6 +1,6 @@
 # 05 — Migration Runbook
 
-**ID:** CLI-AWS-RUN-005 | **Version:** 1.1 | **Status:** Proposed, not executed
+**ID:** CLI-AWS-RUN-005 | **Version:** 1.2 | **Status:** Proposed, not executed — readiness evidence pending
 
 ## Roles
 
@@ -12,7 +12,7 @@ Appoint owners, approve scope/change/maintenance window, communications, escalat
 
 ## Phase 1 — Source readiness
 
-Inventory OS, packages, runtime, ports, services, jobs, database version/extensions/logging/backups, NFS paths/permissions/locking and API/session/queue dependencies. Confirm PostgreSQL WAL/logical replication prerequisites, table primary keys/replica identity, source DMS permissions and acceptable WAL retention. Exit: critical gaps have owners. Stop if recovery or dependencies are unknown.
+Inventory OS, packages, runtime, ports, services, jobs, database version/extensions/logging/backups, NFS paths/permissions/locking and API/session/queue dependencies. For PostgreSQL, capture SELECT version() and SHOW server_version, identify the intended RDS target major/minor and DMS engine version, then verify the current AWS DMS source/target support matrix. Confirm replication permissions, wal_level=logical, max_replication_slots, max_wal_senders, WAL generation/retention and disk headroom, long-running transactions, primary keys/replica identity, extension/object inventory and acceptable CDC latency. Exit: critical gaps have owners and the DBA has documented source readiness; stop if compatibility, recovery or dependencies are unknown.
 
 ## Phase 2 — AWS readiness
 
@@ -24,7 +24,7 @@ Check source OS/kernel/disk compatibility; create/identify dedicated staging-are
 
 ## Phase 4 — DMS
 
-Complete schema/object migration separately using an approved method; prepare encrypted Multi-AZ RDS; configure PostgreSQL logical replication and DMS endpoint permissions; configure DMS endpoints/task; full load; review errors, validation and referential integrity; enable CDC; monitor lag, replication slots and WAL retention; reconcile schema, critical rows, sequences, grants and permissions. DBA signs off on trigger/foreign-key handling and final sequence state. Exit: DBA sign-off.
+Before creating a task, satisfy the DMS gates in [Data Migration Strategy](04-data-migration-strategy.md) and [Migration Readiness Matrix](09-migration-readiness-matrix.md): exact source/target/DMS version compatibility, approved schema/object method, source permissions and logical-WAL readiness, key/replica-identity review, and a benchmark-supported capacity/runtime plan. Prepare encrypted Multi-AZ RDS; configure endpoints and task; run full load; review errors, validation and referential integrity; enable CDC; monitor lag, replication slots and WAL retention; reconcile schema, critical rows, grants and permissions. After CDC stops, reconcile PostgreSQL sequence values because DMS does not synchronize sequence state during ongoing replication. DBA signs off on trigger/foreign-key handling and final sequence state. Exit: DBA sign-off.
 
 ## Phase 5 — DataSync
 
@@ -74,4 +74,4 @@ aws rds describe-db-instances --region <AWS_REGION>
 
 Replace placeholders, verify account/Region, never put secrets in shell history. No destructive action without separate approval.
 
-**Status:** Proposed runbook; no execution occurred.
+**Status:** Proposed runbook; no execution occurred. Migration readiness evidence is tracked in [Migration Readiness Matrix](09-migration-readiness-matrix.md); all MGN, DMS, DataSync, temporary network and schedule gates remain Pending Validation until evidence and approvals are recorded.

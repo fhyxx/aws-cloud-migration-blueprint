@@ -9,9 +9,9 @@
 
 This register distinguishes repository statements from architectural deductions, illustrative planning scenarios and information still requiring validation. The project is fictional and design-only: no production measurements, AWS deployment, migration or load test has occurred. None of the illustrative usage scenarios below is an approved client requirement.
 
-The existing saved AWS Pricing Calculator subtotal is **$1,923.46/month**, including two conventional NAT Gateways and the audited Site-to-Site VPN plus public IPv4 tunnel charges. This document does not change the calculator or convert that subtotal into a complete operating budget. The earlier $2,214–$2,702/month worksheet is withdrawn as a budget.
+The existing saved AWS Pricing Calculator subtotal is **$1,930.76/month**, including two conventional NAT Gateways and the audited Site-to-Site VPN plus public IPv4 tunnel charges. This document does not change the calculator or convert that subtotal into a complete operating budget. The earlier $2,214–$2,702/month worksheet is withdrawn as a budget.
 
-Route 53, CloudWatch and EFS price sensitivities have now been checked in AWS Pricing Calculator as unsaved scenarios; none is an approved client requirement or included in the saved estimate. EFS storage is the existing $300/month Calculator entry; usage scenarios exclude cross-AZ and migration-period charges. The saved subtotal remains $1,923.46/month. Priority decisions remain: (1) ALB traffic and LCU dimensions; (2) DNS authority, zone ownership and billable query mix; (3) CloudWatch metrics, alarms, log ingestion/retention and Flow Log scope/destination; (4) EFS capacity, throughput, lifecycle and cross-AZ use; (5) VPN traffic; and (6) migration source sizing, MGN/DMS/DataSync profiles, temporary network and overlap duration.
+Route 53, CloudWatch and EFS price sensitivities have now been checked in AWS Pricing Calculator as unsaved scenarios; none is an approved client requirement or included in the saved estimate. EFS storage is the existing $300/month Calculator entry; usage scenarios exclude cross-AZ and migration-period charges. The saved subtotal is now $1,930.76/month. Priority decisions remain: (1) ALB traffic and LCU dimensions; (2) DNS authority, zone ownership and billable query mix; (3) CloudWatch metrics, alarms, log ingestion/retention and Flow Log scope/destination; (4) EFS capacity, throughput, lifecycle and cross-AZ use; (5) VPN traffic; and (6) migration source sizing, MGN/DMS/DataSync profiles, temporary network and overlap duration.
 
 ## Status definitions
 
@@ -40,7 +40,7 @@ Owners are roles from the project runbook, not named people. Technical owners su
 | Migration methods | MGN for Linux application servers; DMS full load plus CDC for PostgreSQL data; DataSync for NFS→EFS and archives→S3 | Documented |
 | DNS and certificate | ACM certificate and Route 53 alias are implementation requirements; Route 53 zone ownership is conditional/unresolved | Documented |
 | Business goals | 99.9% availability, RTO 4h, RPO 15m are targets only; not demonstrated | Documented |
-| Calculator checkpoint | Existing saved estimate subtotal $1,923.46/month, verified in calculator; includes two conventional NAT Gateways and $7.30/month for two VPN tunnel public IPv4 addresses | Documented |
+| Calculator checkpoint | Current saved estimate subtotal $1,930.76/month, verified in calculator; includes NAT gateway-hours plus two NAT public IPv4 addresses ($73.00 NAT line) and separate VPN connection-hours plus two tunnel addresses ($43.80 VPN line) | Documented |
 | Known cost gaps | ALB LCU, DNS usage, monitoring usage, EFS workload/transfer, VPN transfer, and migration-period costs/overlap are not fully priced | Documented |
 
 ## Assumptions and decisions register
@@ -101,7 +101,7 @@ The following unsaved Calculator scenarios separately model application/system S
 | Baseline | 50 | 50 | 50 | 25 | $67.95/mo |
 | High | 200 | 200 | 500 | 100 | $423.15/mo |
 
-Independent retention extension for steady monthly ingestion and 15% compressed storage gives totals at 90 days of $11.70 / $68.85 / $429.45 and at 365 days of $12.32 / $72.98 / $458.33, respectively. This extension is an independent calculation, not an AWS Calculator result; the Calculator log model exposed only one-month retention. CloudWatch pricing sensitivity is not Approved. Keep these costs outside the saved $1,923.46/month subtotal until Operations and Security approve the sources, log destination, volume, retention, metric inventory/resolution, alarm design and notification path.
+Independent retention extension for steady monthly ingestion and 15% compressed storage gives totals at 90 days of $11.70 / $68.85 / $429.45 and at 365 days of $12.32 / $72.98 / $458.33, respectively. This extension is an independent calculation, not an AWS Calculator result; the Calculator log model exposed only one-month retention. CloudWatch pricing sensitivity is not Approved. Keep these costs outside the saved $1,930.76/month subtotal until Operations and Security approve the sources, log destination, volume, retention, metric inventory/resolution, alarm design and notification path.
 
 ### D. EFS storage, throughput and transfer
 
@@ -166,6 +166,24 @@ All entries remain in the separate migration group and **Pending Validation** ex
 
 AWS MGN's service charge is free for 2,160 continuous hours per source server. MGN-provisioned replication infrastructure and launched test/cutover compute/storage are chargeable during that window. Two source servers are in scope from the strategy; disks, used bytes, change rate, replication resources, schedules and test/cutover hours are not. A-017's three-month scenario defined as 3 × 730 hours is 2,190 hours—30 hours past the MGN free period—but no service rate or resource amount is included here. DMS is documented as PostgreSQL full load plus CDC; DBA profiling must determine provisioned instance class or Serverless DCU, storage and runtime. The current AWS DMS pricing model charges for chosen hourly capacity; no class/DCU or arbitrary runtime is entered. A-023's 1-week / 1-month / 3-month and parallel-running scenarios remain provisional; calculate source/target overlap, test launches, temporary routes and eventual source retirement on the approved calendar. Network traffic A-015/A-021 is not DataSync transfer volume, and migration costs are not steady-state application EFS traffic.
 
+
+### Network reconciliation supplement — 8 November 2026
+
+The verified calculator baseline is **$1,930.76/month ($23,169.12 annualised)**. The NAT line is $73.00: two gateways × 730 hours × $0.045 = $65.70, plus two public IPv4 addresses × 730 hours × $0.005 = $7.30. The separate VPN line remains $43.80 and includes its own two tunnel addresses. NAT processed bytes remain a zero placeholder. NAT processing sensitivities are $4.50/$46.08/$460.80 for 100/1,024/10,240 GB, independent and excluded. VPN all-outbound sensitivities remain $0/$83.16/$912.60 with account-wide 100 GB allowance available, or $9/$92.16/$921.60 if already consumed. None of these traffic scenarios is approved.
+
+| ID | Decision | Status | Owner | Evidence | Cost/dependency |
+|---|---|---|---|---|---|
+| A-024 | NAT processed GB and destination split | Pending Validation | Application Lead; Infrastructure verifies routes | NAT metrics/Flow Logs or workload egress inventory by destination and route | NAT processing, standard egress, possible cross-AZ; depends on S3 endpoint routes and A-011 |
+| A-025 | Interface endpoint services, count, AZ coverage and egress policy | Pending Validation | Security and Infrastructure Leads; workload owners confirm calls | App/staging service dependency matrix, allowed egress policy, resilience/AZ decision | PrivateLink hours/GB and NAT bytes avoided/remaining; depends on SSM, CloudWatch, Secrets Manager, MGN/DataSync and A-020/A-022 |
+| A-026 | App-to-EFS cross-AZ selection and volume | Pending Validation | Application Lead; Infrastructure verifies | Per-AZ mount/DNS configuration and traffic telemetry or representative test | EC2 cross-AZ transfer; depends on EFS A-012–A-014 and app placement |
+| A-027 | App-to-RDS writer AZ traffic/failover profile | Pending Validation | DBA and Infrastructure Lead | RDS writer AZ history, app AZ distribution, DB flow bytes by AZ and failover evidence | EC2-side cross-AZ transfer; Multi-AZ replication included; depends on writer placement |
+| A-028 | Temporary migration paths, bytes, AZs and duration | Pending Validation | Migration Lead; Infrastructure/Security/DBA/storage owners | Flow matrix for MGN TCP1500/source to staging and service endpoints, DMS source→replication→RDS, DataSync agent/service/storage; direction, GB, route, AZ, duration | Migration-only NAT, PrivateLink, VPN/data-out, cross-AZ, staging and S3 requests; depends on A-015–A-023 |
+| A-029 | Active MGN replication and target/source overlap calendar | Pending Validation | Migration Lead; Business Owner approves | Signed start/stop, test, cutover, rollback, stabilisation and retirement schedule per wave | 2,160 MGN free active hours per source; chargeable staging resources; DMS runtime; network; incremental overlap; depends on A-017–A-023 |
+
+Endpoint inventory remains conditional, not an approved endpoint count. Documented S3 Gateway Endpoint is no-fee. Steady-state interface candidates are SSM if private management is selected, CloudWatch Logs/Monitoring if configured publishers need private service paths, and Secrets Manager if runtime API access must be private. Same-AZ NAT is already a public HTTPS alternative. Migration private MGN may use MGN, EC2 and S3 interface endpoints plus S3 Gateway Endpoint; DataSync may use its VPC service endpoint over VPN. Each interface endpoint costs $0.01 per endpoint-AZ-hour plus $0.01/GB first tier; one in both app AZs is $14.60/month fixed. Endpoint security groups restrict client ingress (commonly TCP443; DataSync control path uses service-specific TCP1024–1064) alongside IAM/endpoint/bucket policies. No endpoint cost was added.
+
+Cross-AZ paths: same-AZ app→EFS mount and app→NAT are design intent, not measured routes/bytes; ALB↔EC2 private-IP traffic in one VPC is free; app→RDS traffic can be cross-AZ when the writer AZ differs, while standby replication is included. On-prem→AWS VPN traffic is inbound; AWS responses may count as egress. MGN/DMS/DataSync paths are migration-only. These are billing exposure classifications, not traffic measurements. See A-011, A-014–A-029.
+
 ## Decision dependency map
 
 ~~~mermaid
@@ -175,7 +193,7 @@ flowchart TD
   dns[DNS authority and queries A-005/A-006] --> cert[Certificate and ALB DNS A-007]
   alb --> cw[Metrics and alarms A-008/A-010]
   appLogs[App logs and retention A-009] --> cw
-  vpc[VPC, AZ, NAT, VPN, endpoints] --> flow[Flow Logs A-011]
+  vpc[VPC, AZ, NAT, VPN, endpoints] --> flow[Flow Logs A-011]\n  natBytes[NAT processed GB A-024] --> net[egress and cost]\n  endpoints[Endpoint choice A-025] --> net\n  efsPlacement[EFS cross-AZ A-026] --> efsData\n  dbWriter[Writer AZ traffic A-027] --> net\n  migrationPaths[Migration paths A-028] --> net
   efsData[EFS inventory A-012] --> efsPerf[EFS throughput/mode A-013]
   placement[App AZ placement] --> efsCross[EFS cross-AZ A-014]
   efsData --> ds[DataSync A-019]
@@ -193,8 +211,8 @@ flowchart TD
 2. **DNS and certificate prerequisites (A-005–A-007):** confirm DNS authority, hosted-zone count, queries and domain control.
 3. **Monitoring scope (A-008–A-011):** define custom metrics, alarms, log GB/retention and Flow Log destination/scope, keeping Flow Logs separate from application logs.
 4. **EFS workload profile (A-012–A-014):** validate used storage/growth, throughput mode, read/write workload, lifecycle and cross-AZ share.
-5. **VPN and network inputs (A-015/A-016, A-020–A-022):** quantify traffic/direction, verify selected VPN/tunnel pricing and settle migration subnet routes/endpoints/NAT.
-6. **Migration sizing and schedule (A-017–A-023):** inventory MGN sources, complete DBA/DMS sizing, inventory DataSync data, and approve overlap/retirement dates.
+5. **VPN and network inputs (A-015/A-016, A-020–A-022, A-024–A-028):** quantify traffic/direction, verify selected VPN/tunnel pricing and settle migration subnet routes/endpoints/NAT.
+6. **Migration sizing and schedule (A-017–A-023, A-028–A-029):** inventory MGN sources, complete DBA/DMS sizing, inventory DataSync data, and approve overlap/retirement dates.
 7. **Record decisions and price:** assign evidence and status, then enter approved or clearly provisional scenario inputs and reconcile each service. Keep migration-period totals separate from steady-state monthly costs.
 
 A partial calculator subtotal must not be described as a complete operating budget or customer commitment. Scenario selection does not make usage measured; any adopted scenario remains Provisional unless formally approved as a planning assumption.

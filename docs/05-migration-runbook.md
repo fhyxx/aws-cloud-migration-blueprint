@@ -28,7 +28,7 @@ Complete schema/object migration separately using an approved method; prepare en
 
 ## Phase 5 — DataSync
 
-Configure EFS/S3 destinations; initial NFS and archive transfers; inspect errors/skips; compare counts/sizes; validate permissions/locking/application access. Prepare final sync.
+Before execution, obtain measured NFS used bytes/file counts and archive eligible bytes/object counts. The discovery's approximately 1 TB NFS is a planning assumption; 500 GB S3 describes target storage, not archive source volume. Record exclusions, access/ownership, open writers, change rate, task mode/agent count, route, bandwidth window and expected run time. Execute initial NFS and archive transfers early; retain task reports, bytes/files transferred/skipped/failed and verification outcome; reconcile source and destination, permissions/locking and application access. Set the final-sync trigger to confirmed writer/job freeze. Run and validate the final sync under the approved maintenance window; exact runtime and final delta are currently unknown.
 
 ## Phase 6 — Integrated tests
 
@@ -39,8 +39,8 @@ Test login, order creation/retrieval/update, payment/delivery test APIs, DB conn
 1. Announce approved maintenance.
 2. Stop source order creation and background writers.
 3. Confirm source DB and file writes stopped.
-4. Final DataSync transfer.
-5. DMS CDC catch-up; verify lag is zero/within agreed threshold and no task errors.
+4. Start final DataSync transfer after writers/jobs stop; verify completion, exceptions, counts and destination data.
+5. Complete DMS CDC catch-up; verify agreed lag and no task errors. DataSync and DMS are independent gates; maintenance-window plan must assign sequencing/concurrency and allow both to finish before approval.
 6. Reconcile critical orders and financial records; reconcile sequences and grants.
 7. Configure target app with RDS/EFS/secrets.
 8. Smoke test.
@@ -57,7 +57,7 @@ Before AWS writes: isolate target, verify source consistency, restore source rou
 
 ## Phase 9 — Stabilisation
 
-Monitor EC2/RDS/EFS/ALB/CloudWatch/security; validate backups; reconcile transactions; resolve incidents; hand over operations. Five business days is a planning assumption. Source retirement is a separate approval.
+Monitor EC2/RDS/EFS/ALB/CloudWatch/security; validate backups; reconcile transactions; resolve incidents; hand over operations. Five business days is a stabilisation planning assumption, not a DataSync duration or approved migration calendar. Initial DataSync, final sync, DBA catch-up, cutover, rollback and source retirement dates/hours need explicit approval. Source retirement is a separate approval.
 
 ## Evidence register
 

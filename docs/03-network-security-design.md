@@ -88,7 +88,7 @@ The selected source aggregate `10.50.0.0/16` does not overlap the AWS VPC `10.30
 
 ## Route-table design baseline
 
-Use separate route tables where isolation or failure-domain control matters. The following is the intended route set; route-table IDs, subnet associations, source CIDRs and route-propagation mode are not yet deployed or approved.
+Use separate route tables where isolation or failure-domain control matters. The following is the selected illustrative route set; route-table IDs and subnet associations are not deployed. The source CIDR and BGP route-propagation scope are portfolio assumptions, not measured client facts.
 
 | Route table / association | Required routes | Explicit exclusions / validation |
 |---|---|---|
@@ -172,7 +172,7 @@ Confirm non-overlapping CIDRs, route tables, DB isolation, ALB-only public entry
 
 ## Open decisions
 
-N01 AZ IDs; N02 illustrative source CIDR `10.50.0.0/16` and subdivisions; N03 BGP reference choice (ASN 65010/64512) and two-tunnel failover; N04 app port; N05 API allowlisting; N06 endpoint inventory; N07 egress inspection; N08 NACL requirements; N09 IAM boundaries; N10 retention; N11 MGN staging `10.30.31.0/24` in AZ-A; N12 DNS zone/certificate ownership. These are fictional planning assumptions until implementation.
+N01 AZ IDs; N02 source CIDR implementation and overlap validation (reference `10.50.0.0/16`); N03 BGP implementation, both tunnel sessions and failover evidence (reference ASNs 65010/64512); N04 app port; N05 API allowlisting; N06 endpoint inventory; N07 egress inspection; N08 NACL requirements; N09 IAM boundaries; N10 retention; N11 MGN staging IP-capacity and AZ validation (reference `10.30.31.0/24` in AZ-A); N12 DNS zone/certificate ownership. Values are fictional planning assumptions until implementation.
 
 **Status:** Proposed design; no AWS network/security resources deployed.
 

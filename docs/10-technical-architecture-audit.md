@@ -35,7 +35,7 @@ The saved calculator configuration is PostgreSQL `db.m6i.2xlarge`, Multi-AZ DB i
 
 | Component | Calculator input / arithmetic | Monthly |
 |---|---:|---:|
-| Multi-AZ compute | $1.424 per DB instance-hour × 730 hours | $1,039.52 |
+| Multi-AZ compute | $1.424 per configured Multi-AZ DB-hour × 730 hours | $1,039.52 |
 | gp3 provisioned storage | 500 GB × $0.23 per GB-month | $115.00 |
 | Database Insights | 8 vCPU × 730 hours × $0.0125 per vCPU-hour | $73.00 |
 | **RDS subtotal** | **Saved calculator result** | **$1,227.52** |
@@ -59,6 +59,14 @@ The proposed starting thresholds and recovery tests are documented in `docs/06-v
 7. Execute load, AZ/failover, database restore, EFS restore, S3 recovery and end-to-end application tests; retain dated evidence.
 8. Complete migration-period cost modelling from measured source profiles, benchmarks, network flows and approved dates.
 9. Visually inspect the rendered Mermaid diagram and reconcile it with all architecture/network/runbook descriptions.
+
+## AWS service references
+
+- [Amazon RDS Multi-AZ DB instance billing](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_OnDemandDBInstances.html)
+- [AWS DMS replication VPC and subnet-group requirements](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.VPC.html)
+- [AWS Application Migration Service network requirements](https://docs.aws.amazon.com/pdfs/mgn/latest/ug/user-guide.pdf)
+- [AWS DataSync network requirements](https://docs.aws.amazon.com/datasync/latest/userguide/datasync-network.html)
+- [AWS DataSync access to EFS and task network interfaces](https://docs.aws.amazon.com/datasync/latest/userguide/create-efs-location.html)
 
 ## Audit decision
 

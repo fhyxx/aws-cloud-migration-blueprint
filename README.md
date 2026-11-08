@@ -22,7 +22,7 @@ A cloud migration blueprint for a fictional Nigerian retail/distribution company
 
 ## Architecture
 
-The canonical Mermaid source is [architecture/target-architecture.mmd](architecture/target-architecture.mmd). Open the [rendered architecture page](architecture/target-architecture.md) to inspect the diagram in GitHub. It shows the steady-state VPC, MGN staging area, hybrid VPN path, and distinct MGN, DMS and DataSync flows. Visual review remains pending before design sign-off.
+The canonical master Mermaid source is [architecture/target-architecture.mmd](architecture/target-architecture.mmd); inspect it in the [rendered master view](architecture/target-architecture.md). For clearer review, use the focused [runtime/network view](architecture/runtime-network-view.md) (subnet CIDRs, AZ placement, route intent and security-group boundaries) and [migration data-flow view](architecture/migration-data-flow.md) (separate MGN, DMS and DataSync paths). Editable Mermaid sources are provided beside each rendered page. All views are proposed design artifacts; visual review and implementation validation remain pending.
 
 ## Deliverables
 
@@ -37,7 +37,7 @@ The canonical Mermaid source is [architecture/target-architecture.mmd](architect
 9. [Migration readiness matrix](docs/09-migration-readiness-matrix.md)
 10. [Technical architecture audit](docs/10-technical-architecture-audit.md)
 
-Additional assets: `architecture/target-architecture.mmd`, `architecture/target-architecture.md` (rendered companion), `cost/pricing-assumptions.csv`, `evidence/README.md`, `DESIGN-CONSISTENCY.md`.
+Additional assets: master architecture source/rendered page; [runtime/network source](architecture/runtime-network-view.mmd) and [rendered view](architecture/runtime-network-view.md); [migration-flow source](architecture/migration-data-flow.mmd) and [rendered view](architecture/migration-data-flow.md); `cost/pricing-assumptions.csv`, `evidence/README.md`, `DESIGN-CONSISTENCY.md`.
 
 ## Cost review status
 

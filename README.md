@@ -39,7 +39,7 @@ Additional assets: `architecture/target-architecture.mmd`, `cost/pricing-assumpt
 
 ## Cost review status
 
-**Partial calculator subtotal: $1,916.16/month ($22,993.92 annualised); no approved budget.** The saved estimate includes EC2 ($274.94), RDS PostgreSQL ($1,227.52), EFS ($300.00), S3 ($11.50), two conventional NAT Gateways ($65.70) and Site-to-Site VPN ($36.50). The subtotal excludes unresolved ALB LCU, DNS, CloudWatch, EFS metered throughput/transfer, VPN transfer, applicable endpoint costs, backups and all migration-period costs. The calculator and price register document the configuration and open decisions; $2,214–$2,702/month is a withdrawn historical worksheet, not a budget.
+**Partial calculator subtotal: $1,923.46/month ($23,081.52 annualised); no approved budget.** The saved estimate includes EC2 ($274.94), RDS PostgreSQL ($1,227.52), EFS ($300.00), S3 ($11.50), two conventional NAT Gateways ($65.70) and Site-to-Site VPN plus tunnel public IPv4 ($43.80). The subtotal excludes unresolved ALB LCU, DNS, CloudWatch, EFS metered throughput/transfer, VPN transfer, applicable endpoint costs, backups and all migration-period costs. The calculator and price register document the configuration and open decisions; $2,214–$2,702/month is a withdrawn historical worksheet, not a budget.
 
 ## Important limitations
 

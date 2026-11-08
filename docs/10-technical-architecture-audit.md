@@ -1,6 +1,6 @@
 # 10 — Technical Architecture Audit
 
-**ID:** CLI-AWS-AUD-010 | **Version:** 1.3 | **Status:** In progress — endpoint decision inventory documented; implementation validation pending  
+**ID:** CLI-AWS-AUD-010 | **Version:** 1.4 | **Status:** In progress — illustrative BGP hybrid design documented; implementation validation pending  
 **Project:** Clafoke Investors Ltd (fictional, design-only)  
 **Audit date:** 2026-11-08
 
@@ -8,7 +8,7 @@
 
 The blueprint has a coherent two-AZ target pattern and a defensible separation between steady-state cost and migration-period cost. The review identified gaps in migration-service network placement and traffic paths. Those design gaps have been corrected in the canonical diagram and supporting network, architecture, runbook and readiness documents.
 
-The design is **not yet approved for implementation**. Source compatibility, network routes, exact service configuration, workload benchmarks, backup policy, monitoring thresholds, recovery tests and visual diagram review remain open. No AWS resources or migration services have been deployed.
+The design is **not yet approved for implementation**. Source compatibility, live route/tunnel configuration, workload benchmarks, backup policy, monitoring thresholds and recovery tests remain open. The fictional source network, BGP design and VPN failover model are now specified as reference assumptions; no AWS resources or migration services have been deployed. No AWS resources or migration services have been deployed.
 
 ## Scope reviewed
 
@@ -32,6 +32,7 @@ The design is **not yet approved for implementation**. Source compatibility, net
 | AUD-09 | Route-table intent was described narratively but not specified per subnet, and the master diagram implied a VGW route to isolated DB subnets. | Added a route-table baseline for public, app, DB, MGN staging and S3 endpoint associations; removed the unsupported baseline VGW-to-DB route; clarified specific on-premises routes and return routing. | Confirm actual subnet associations, on-premises CIDRs, route propagation/static route mode, customer-gateway return routes and MGN staging CIDR/AZ. |
 | AUD-10 | Security-group direction and subnet-level return-path controls were too broad to validate consistently. | Added source/destination SG intent, health-check dependency, DMS temporary ingress, DataSync task-ENI/EFS path and stateful SG versus stateless NACL guidance. | Validate exact app/health-check port, DBA access path, egress dependencies and any custom NACL ephemeral-port rules. |
 | AUD-11 | Private service access was listed as a generic endpoint candidate set without a workload-by-workload decision, risking unnecessary endpoints and missing endpoint dependencies. | Added a conditional VPC endpoint inventory separating S3 Gateway, SSM/ssmmessages, Secrets Manager, CloudWatch Logs/Monitoring and future ECR/KMS/STS use cases. Clarified endpoint AZ coverage, SG, private DNS, policy and pricing requirements. | Confirm workload API calls, SSM Agent version, NAT-vs-PrivateLink decision, endpoint subnet/AZ count, endpoint policies, DNS resolution and reachability; update cost model only after scope is approved. |
+| AUD-12 | Hybrid VPN routing remained abstract and depended on source-network facts from a fictional client; tunnel redundancy could be mistaken for active-active load sharing. | Defined an illustrative non-overlapping source network `10.50.0.0/16`, BGP customer ASN `65010`, VGW ASN `64512`, one VPN connection with two redundant tunnels, propagation scope limited to App-A/App-B/MGN staging, and migration subnet `10.30.31.0/24`. Explicitly documented that VGW does not support ECMP and that both tunnels are for redundancy/failover. | Validate CIDR and IP capacity, generated tunnel configuration, both BGP sessions, route propagation, customer-side learned routes/firewall rules, asymmetric routing and tunnel failure/recovery in a controlled test. |
 
 ## RDS calculator reconciliation
 
@@ -58,7 +59,7 @@ The proposed starting thresholds and recovery tests are documented in `docs/06-v
 2. Capture PostgreSQL source version/patch, choose exact RDS target version and DMS engine, then validate the live DMS compatibility matrix.
 3. Approve DMS source permissions, WAL/slot/sender headroom, primary-key/replica-identity handling, schema/object migration method and benchmark.
 4. Inventory NFS used bytes/file counts and archive source bytes/object counts; choose DataSync mode, agent and endpoint design.
-5. Approve VPN CIDRs/routes, MGN staging AZ/egress, DMS routes/SGs, DataSync task-ENI subnet/SG, workload-driven VPC endpoint inventory, DNS ownership and API allowlists.
+5. Validate illustrative VPN CIDRs, BGP ASNs, both tunnel sessions/failover, route propagation scope, MGN staging subnet/egress, DMS routes/SGs, DataSync task-ENI subnet/SG, workload-driven VPC endpoint inventory, DNS ownership and API allowlists.
 6. Confirm application readiness endpoint, health-check behaviour, EC2 family, ASG maximum/scaling, RDS performance, backup retention and log retention.
 7. Execute load, AZ/failover, database restore, EFS restore, S3 recovery and end-to-end application tests; retain dated evidence.
 8. Complete migration-period cost modelling from measured source profiles, benchmarks, network flows and approved dates.
@@ -85,6 +86,10 @@ The proposed starting thresholds and recovery tests are documented in `docs/06-v
 - [CloudWatch Monitoring VPC endpoint](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch-and-interface-VPC.html)
 - [CloudWatch Logs VPC endpoint](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/cloudwatch-logs-and-interface-VPC.html)
 - [ECR VPC endpoints and S3 image-layer access](https://docs.aws.amazon.com/AmazonECR/latest/userguide/vpc-endpoints.html)
+- [AWS Site-to-Site VPN static and dynamic routing](https://docs.aws.amazon.com/vpn/latest/s2svpn/vpn-static-dynamic.html)
+- [AWS Site-to-Site VPN routing options](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPNRoutingTypes.html)
+- [AWS Site-to-Site VPN route priority and VGW ECMP limitation](https://docs.aws.amazon.com/vpn/latest/s2svpn/vpn-route-priority.html)
+- [AWS Site-to-Site VPN two-tunnel architecture](https://docs.aws.amazon.com/vpn/latest/s2svpn/how_it_works.html)
 
 ## Audit decision
 

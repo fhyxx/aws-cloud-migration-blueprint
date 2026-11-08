@@ -39,7 +39,7 @@ Additional assets: `architecture/target-architecture.mmd`, `cost/pricing-assumpt
 
 ## Cost review status
 
-**Partial calculator subtotal: $1,923.46/month ($23,081.52 annualised); no approved budget.** The saved estimate includes EC2 ($274.94), RDS PostgreSQL ($1,227.52), EFS ($300.00), S3 ($11.50), two conventional NAT Gateways ($65.70) and Site-to-Site VPN plus tunnel public IPv4 ($43.80). The subtotal excludes unresolved ALB LCU, DNS, CloudWatch, EFS metered throughput/transfer, VPN transfer, applicable endpoint costs, backups and all migration-period costs. The calculator and price register document the configuration and open decisions; $2,214–$2,702/month is a withdrawn historical worksheet, not a budget.
+**Partial calculator subtotal: $1,923.46/month ($23,081.52 annualised); no approved budget.** The saved estimate includes EC2 ($274.94), RDS PostgreSQL ($1,227.52), EFS ($300.00), S3 ($11.50), two conventional NAT Gateways ($65.70) and Site-to-Site VPN plus tunnel public IPv4 ($43.80). The subtotal excludes unresolved ALB LCU, DNS, CloudWatch, EFS metered throughput/transfer, VPN transfer, applicable endpoint costs, backups and all migration-period costs. Route 53 ownership is unconfirmed, so its verified $0.90/$4.50/$41.00 illustrative sensitivity cases and CloudWatch's $11.57/$67.95/$423.15 at 30-day retention are unsaved, provisional calculator scenarios and are not added. ALB DNS alias queries are free in Route 53; authoritative hosted-zone ownership is a separate decision. The monitoring scenarios are not measured client requirements. The separate migration-period group remains unpriced. The calculator and price register document the configuration and open decisions; $2,214–$2,702/month is a withdrawn historical worksheet, not a budget.
 
 ## Important limitations
 
@@ -47,4 +47,4 @@ No AWS resources have been provisioned; no MGN replication, DMS migration, DataS
 
 ## Suggested review sequence
 
-Read discovery and assumptions, compare architecture with network/security, review migration and runbook, review validation/rollback and the assumptions/decisions register, then validate open workload inputs and complete the AWS Pricing Calculator estimate. Do not describe this as an actual customer migration or deployed system.
+Read discovery and assumptions, compare architecture with network/security, review migration and runbook, review validation/rollback and the assumptions/decisions register, then confirm DNS authority and validate open workload inputs, then complete the AWS Pricing Calculator estimate. Do not describe this as an actual customer migration or deployed system.

@@ -31,7 +31,7 @@ DMS full-load table ordering and referential-integrity behaviour must be tested.
 
 ## DMS compatibility and readiness gates
 
-DMS compatibility is **unverified** until the exact PostgreSQL source version/patch, chosen RDS PostgreSQL target version and DMS replication engine version have been checked together against the current AWS DMS source/target support matrix. AWS documents self-managed PostgreSQL sources from 9.4, subject to engine-version support; PostgreSQL 17 and 18 require DMS 3.5.4 or later. These are compatibility reference points, not confirmation that this source is supported. Capture `SELECT version();`, `SHOW server_version;`, OS/package details and the selected DMS engine version before approval. Recheck the live matrix at implementation time.
+DMS compatibility is **unverified** until the exact PostgreSQL source version/patch, chosen RDS PostgreSQL target version and DMS replication engine version have been checked together against the current AWS DMS source/target support matrix. AWS documents self-managed PostgreSQL sources from 9.4, subject to engine-version support. In the version matrix reviewed for this project, PostgreSQL 17 and 18 require DMS 3.5.4 or later; this is a dated reference point, not a substitute for rechecking the live matrix. These are compatibility reference points, not confirmation that this source is supported. Capture `SELECT version();`, `SHOW server_version;`, OS/package details and the selected DMS engine version before approval. Recheck the live matrix at implementation time.
 
 Before full load plus CDC, the DBA must validate:
 

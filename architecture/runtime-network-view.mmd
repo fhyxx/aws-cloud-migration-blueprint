@@ -2,15 +2,16 @@ flowchart TB
   USERS["Approved users"] --> DNS["Public DNS<br/>Authoritative provider TBD"]
 
   subgraph VPC["VPC 10.30.0.0/16 — us-east-1 — two Availability Zones"]
-    ALB["Internet-facing ALB<br/>HTTPS 443 / ACM certificate<br/>attached to both public subnets"]
     IGW["Internet Gateway"]
     DNS --> ALB
     VGW["Virtual Private Gateway<br/>Site-to-Site VPN"]
 
     subgraph PUB_A["AZ-A — Public subnet 10.30.1.0/24"]
+      ALB_A["ALB node A<br/>HTTPS listener 443"]
       NAT_A["NAT Gateway A"]
     end
     subgraph PUB_B["AZ-B — Public subnet 10.30.2.0/24"]
+      ALB_B["ALB node B<br/>HTTPS listener 443"]
       NAT_B["NAT Gateway B"]
     end
 
@@ -35,9 +36,12 @@ flowchart TB
     S3["S3 Standard archive target<br/>500 GB capacity assumption"]
     OPS["Private service access as required<br/>SSM / Secrets Manager / CloudWatch"]
     
-    IGW --> ALB
-    ALB --> APP_EC2_A
-    ALB --> APP_EC2_B
+    IGW --> ALB_A
+    IGW --> ALB_B
+    ALB_A --> APP_EC2_A
+    ALB_A --> APP_EC2_B
+    ALB_B --> APP_EC2_A
+    ALB_B --> APP_EC2_B
     APP_EC2_A -->|"TCP 5432 — application SG to DB SG"| DB_PRIMARY
     APP_EC2_B -->|"TCP 5432 — application SG to DB SG"| DB_PRIMARY
     DB_PRIMARY <-->|"Multi-AZ synchronous standby relationship"| DB_STANDBY
@@ -66,7 +70,7 @@ flowchart TB
   end
 
   subgraph SECURITY["Security-group intent — proposed, not deployed"]
-    SG1["ALB SG: inbound HTTPS 443<br/>approved client ranges"]
+    SG1["ALB SG: inbound HTTPS 443<br/>approved client ranges; egress to App SG listener/health port"]
     SG2["App SG: inbound app port 8080 from ALB SG<br/>port is provisional"]
     SG3["DB SG: TCP 5432 from App SG<br/>and approved DBA path"]
     SG4["EFS mount-target SG: TCP 2049<br/>from App SG"]

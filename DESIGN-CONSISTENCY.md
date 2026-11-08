@@ -17,14 +17,14 @@
 | App port | TCP 8080 provisional; discovery required |
 | Business objectives | 99.9% availability; RTO 4h; RPO 15m; not demonstrated |
 | Deployment | Not deployed; no tests executed |
-| Cost status | Partial calculator subtotal $1,916.16/month ($22,993.92 annualised); no approved total; earlier $2,214–$2,702/month worksheet is superseded |
+| Cost status | Partial calculator subtotal $1,923.46/month ($23,081.52 annualised), including audited VPN public IPv4; no approved total; earlier $2,214–$2,702/month worksheet is superseded |
 
-The architecture diagram, README, design documents, runbook and cost model should use these same baseline quantities. A partial AWS Pricing Calculator baseline of $1,916.16/month ($22,993.92 annualised) is saved; it is not a complete or approved budget. Remaining usage and migration inputs must be validated in AWS Pricing Calculator. The MGN staging subnet is an additional migration-only subnet, not part of the six steady-state subnets. The 500 GB RDS provisioned-storage assumption is counted for both primary and standby for pricing.
+The architecture diagram, README, design documents, runbook and cost model should use these same baseline quantities. A partial AWS Pricing Calculator baseline of $1,923.46/month ($23,081.52 annualised) is saved; it is not a complete or approved budget. Remaining usage and migration inputs must be validated in AWS Pricing Calculator. The MGN staging subnet is an additional migration-only subnet, not part of the six steady-state subnets. The 500 GB RDS provisioned-storage assumption is counted for both primary and standby for pricing.
 
 ## Review gates
 
 - Architecture and migration flows: source reviewed; diagram visual rendering remains pending.
 - Network/security: proposed controls and MGN staging requirements documented; no deployed validation.
 - PostgreSQL: DMS prerequisites, schema/object migration, CDC, WAL/slot, constraints/triggers and sequence reconciliation documented; no source-version compatibility test.
-- Pricing: partial AWS Pricing Calculator baseline is saved at $1,916.16/month ($22,993.92 annualised); production suitability validation, unresolved workload inputs, migration costs and final export/reconciliation remain outstanding.
+- Pricing: partial AWS Pricing Calculator baseline is saved at $1,923.46/month ($23,081.52 annualised); production suitability validation, unresolved workload inputs, migration costs and final export/reconciliation remain outstanding.
 - Operational validation: monitoring thresholds, ASG scaling policy, application SLO thresholds, recovery test and acceptance evidence outstanding.

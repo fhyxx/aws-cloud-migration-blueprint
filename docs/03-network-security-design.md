@@ -40,7 +40,8 @@ The MGN staging subnet is a seventh, migration-only network segment in addition 
 | ALB | TCP 443 from approved client ranges | App listener to app SG |
 | App | TCP 8080 from ALB SG (provisional) | TCP 5432 to DB SG; TCP 2049 to EFS mount-target SG; approved HTTPS |
 | DB | TCP 5432 from app SG and approved DBA path | Minimal required |
-| EFS mount target | TCP 2049 from app SG and the dedicated DataSync task-ENI SG | Stateful responses |\n| DMS replication | No unsolicited inbound required; outbound TCP 5432 to approved source CIDR and RDS DB SG, plus documented service/logging dependencies | Stateful responses |
+| EFS mount target | TCP 2049 from app SG and the dedicated DataSync task-ENI SG | Stateful responses |
+| DMS replication | No unsolicited inbound required; outbound TCP 5432 to approved source CIDR and RDS DB SG, plus documented service/logging dependencies | Stateful responses |
 | Interface endpoint | TCP 443 from approved private workloads | Stateful responses |
 | MGN staging/replication | TCP 1500 from explicitly approved source-server CIDRs/security groups where supported; no public inbound | TCP 443 to regional MGN API and only required replication/service paths |
 

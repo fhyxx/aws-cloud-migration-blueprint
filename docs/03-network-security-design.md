@@ -21,6 +21,23 @@ VPC `clafoke-production-vpc`, CIDR `10.30.0.0/16`, `us-east-1`, two AZs, DNS sup
 
 The MGN staging subnet is a seventh, migration-only network segment in addition to the six steady-state subnets. Allocate its CIDR after confirming source/VPC CIDR non-overlap and required IP capacity. Record the AZ placement, route table, NAT or VPC endpoint strategy, NACL and security-group rules before enabling replication.
 
+## Subnet sizing and Availability Zone placement
+
+The six steady-state subnet CIDRs are distinct, contained within `10.30.0.0/16`, and do not overlap one another.
+
+| Subnet | CIDR | IPv4 addresses in block | AWS-reserved | Initially assignable |
+|---|---|---:|---:|---:|
+| Public A | `10.30.1.0/24` | 256 | 5 | 251 |
+| Public B | `10.30.2.0/24` | 256 | 5 | 251 |
+| App A | `10.30.11.0/24` | 256 | 5 | 251 |
+| App B | `10.30.12.0/24` | 256 | 5 | 251 |
+| DB A | `10.30.21.0/24` | 256 | 5 | 251 |
+| DB B | `10.30.22.0/24` | 256 | 5 | 251 |
+
+AWS reserves five IPv4 addresses in each ordinary subnet. The public /24 subnets exceed the ALB minimum of /27 and, at subnet creation, have substantially more than the required eight free IP addresses. Recheck free IP capacity before ALB deployment and during growth; NAT Gateway, ALB ENIs, endpoints and other ENIs consume addresses. Actual AZ IDs must be selected and recorded because AZ letters can map differently across AWS accounts.
+
+The MGN staging subnet has no CIDR yet and is excluded from the six-row calculation. Select its non-overlapping CIDR and AZ only after confirming the on-premises network ranges, MGN replication-server scale, IP headroom and chosen egress design. Do not infer a subnet size from the current application assumptions.
+
 ## Routing
 
 - Public default route to IGW.
@@ -109,3 +126,10 @@ N01 AZ IDs; N02 source CIDRs; N03 static/BGP; N04 app port; N05 API allowlisting
 - [AWS DataSync network requirements](https://docs.aws.amazon.com/datasync/latest/userguide/datasync-network.html)
 - [AWS DataSync network architecture and traffic flows](https://docs.aws.amazon.com/datasync/latest/userguide/networking-datasync.html)
 - [AWS DataSync access to EFS, mount-target subnet and security-group rules](https://docs.aws.amazon.com/datasync/latest/userguide/create-efs-location.html)
+- [AWS VPC subnet sizing and five reserved IPv4 addresses](https://docs.aws.amazon.com/vpc/latest/userguide/subnet-sizing.html)
+- [Application Load Balancer subnet and free-IP requirements](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancers.html)
+- [VPC route tables and route selection](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html)
+- [Site-to-Site VPN route propagation and static routes](https://docs.aws.amazon.com/vpn/latest/s2svpn/SetUpVPNConnections.html)
+- [Security-group statefulness](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html)
+- [Network ACL statelessness and ephemeral ports](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html)
+- [S3 Gateway Endpoint route-table association](https://docs.aws.amazon.com/vpc/latest/privatelink/gateway-endpoints.html)

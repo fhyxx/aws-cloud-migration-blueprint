@@ -1,6 +1,6 @@
 # 07 — AWS Cost Estimation and Optimisation
 
-**ID:** CLI-AWS-COST-007 | **Version:** 1.4 | **Status:** Partial calculator baseline saved — pricing review open  
+**ID:** CLI-AWS-COST-007 | **Version:** 1.5 | **Status:** Partial calculator baseline saved — usage scenario review open  
 **Region:** `us-east-1` | **Currency:** USD | **Planning month:** 730 hours
 
 ## Executive decision
@@ -23,9 +23,9 @@ A partial estimate is saved in AWS Pricing Calculator. Its currently verified su
 | ALB | 1 internet-facing ALB, HTTPS 443 | Not included in the saved calculator subtotal. Unsaved AWS Pricing Calculator scenario results from the register are $19.35 / $28.11 / $74.83 per month (conservative / baseline / high), including 730 ALB hours and scenario LCU use. These are illustrative, not measured or approved client requirements, and are excluded from the saved subtotal; validate workload before adopting. |
 | Site-to-Site VPN | 1 standard connection to VGW, public IPv4 tunnel endpoints | **$43.80/month combined in the saved VPC entry:** $36.50 connection-hours plus $7.30 for two in-use public IPv4 address-hours. VPN transfer is unpriced. The 22 working days/month summary field belongs to the unselected Client VPN section; it does not affect the Site-to-Site calculation (1 × 730 h × $0.05/h = $36.50). |
 | Interface endpoints | Count and AZ coverage not final | Inventory each endpoint and AZ; price endpoint-hours and data processing. S3 Gateway Endpoint has no hourly endpoint charge. |
-| CloudWatch | Logs, metrics, alarms and Flow Logs | Estimate ingestion GB, retention, custom metrics, alarms and Flow Log destinations. |
+| CloudWatch | Logs, metrics, alarms and Flow Logs | Unsaved illustrative Calculator sensitivities: **$11.57 / $67.95 / $423.15 per month** at 30-day retention (conservative / baseline / high). At 90-day retention, independent storage-adjusted totals are $11.70 / $68.85 / $429.45; at 365 days, $12.32 / $72.98 / $458.33. Inputs remain provisional and are excluded from saved subtotal. |
 | Internet/data transfer | 100 GB was a placeholder | Replace with direction, destination, monthly volume and applicable free tiers. |
-| ACM / Route 53 | Public ALB certificate and DNS alias | Confirm public hosted-zone ownership, query volume and certificate validation prerequisites; model Route 53 charges where applicable. |
+| ACM / Route 53 | Public ALB certificate and DNS record | **Route 53 excluded from saved subtotal pending DNS authority decision.** Unsaved Route 53 sensitivities for the register’s 1/1/2 zones and 1/10/100 million standard-query examples are $0.90 / $4.50 / $41.00 monthly, if every query is billable non-alias traffic. A Route 53 ALB alias has no query charge; an authoritative public zone remains $0.50/month per zone. DNS owner, actual billable query volume and certificate validation method remain unresolved. |
 | MGN / DMS / DataSync | Temporary migration-period use | Model separately as one-time/overlap costs, including staging EC2/EBS, replication duration, DMS compute, DataSync transfer and temporary network resources. |
 
 ## VPN pricing audit
@@ -54,6 +54,63 @@ AWS's ELB pricing page describes the hourly ALB charge ($0.0225/hour) and LCU ch
 Calculation: 730 × $0.0225 ALB-hour base + (scenario LCU-hours × $0.008). Rounded to cents. The workload dimensions above were entered as representative values across the 730-hour month solely for sensitivity analysis. The calculator's displayed dominant LCU dimension was processed bytes for each case. Real LCU billing uses the highest dimension in each hour and actual hourly pattern, so these figures are not forecasts. ALB capacity and charges remain a pricing gate pending workload evidence and a saved calculator entry.
 
 AWS reference: [Elastic Load Balancing pricing — ALB LCU dimensions and `us-east-1` examples](https://aws.amazon.com/elasticloadbalancing/pricing/).
+
+## Route 53 and DNS pricing discovery
+
+The architecture requires a public DNS name to reach the internet-facing ALB and an ACM public certificate for HTTPS. It does **not** assign authoritative DNS hosting to Route 53: the target architecture and network design state “if Route 53 hosts the zone” / “if Route 53 is authoritative.” The diagram's Route 53 icon does not override that explicit conditional language. The DNS provider, registrar/delegation owner and hosted-zone quantity therefore remain unresolved. Do not assume a domain transfer or Route 53 hosted zone.
+
+Authoritative zone hosting and an ALB alias are separate things:
+
+- If Route 53 hosts the public zone, AWS currently prices the first 25 hosted zones at **$0.50/zone/month**. The Pricing Calculator showed this same global-service rate.
+- An A/AAAA Route 53 alias query to an Elastic Load Balancer is **not charged per query**. The DNS query itself can therefore be $0 even at high volumes, but the hosted-zone fee still applies if Route 53 hosts the zone.
+- Non-alias public DNS queries are charged. The current AWS Regions standard rate is **$0.40 per million queries** for the first 1 billion monthly queries; Route 53's service is global, so us-east-1 selection does not imply a different authoritative DNS rate.
+- If DNS remains with another provider, adding or changing the record and ACM validation CNAMEs there does not create a Route 53 hosted-zone charge. ACM DNS validation does not require Route 53. A public, non-exportable ACM certificate attached to an integrated service such as ALB has no certificate fee.
+- The design calls for no Route 53 health checks, DNS failover, Traffic Flow policy, latency/geolocation/IP routing, private hosted zone, Resolver endpoint, or DNS query logging. ALB target health checks are not Route 53 health checks. No optional Route 53 features were entered.
+
+The register's existing values are scenario quantities, not observed or approved requirements: **1 / 1 / 2 public zones** and **1 million / 10 million / 100 million monthly queries**. Calculator scenarios were entered and the resulting draft was canceled without saving:
+
+| Scenario | Hosted zones | Assumed billable standard non-alias queries/month | Hosted-zone cost | Query cost | Total sensitivity/month |
+|---|---:|---:|---:|---:|---:|
+| Conservative | 1 | 1 million | $0.50 | $0.40 | **$0.90** |
+| Baseline | 1 | 10 million | $0.50 | $4.00 | **$4.50** |
+| High | 2 | 100 million | $1.00 | $40.00 | **$41.00** |
+
+The calculator displayed the same rates and totals for these hypothetical inputs. They assume all example queries are billable standard non-alias queries, making them sensitivity bounds rather than an actual DNS bill. If the workload consists only of A/AAAA aliases to this ALB, the query component is $0; the one-zone Route 53 hosting case would be **$0.50/month**, and two zones would be **$1.00/month**. The architecture does not document query distribution between ALB aliases and other DNS record types, so actual query pricing is unknown. Route 53 DNS query logging, if later required, has no Route 53 logging fee but would incur CloudWatch destination ingestion/storage costs.
+
+**Decision:** Do not add a Route 53 item to the saved estimate now. First confirm whether the business's authoritative zone stays with its current provider or is delegated to Route 53, the number of public zones, who controls registrar/delegation, record inventory and query evidence. If the owner confirms one Route 53 hosted zone and only ALB alias records, a provisional calculator line of **one public hosted zone, no billable query volume, $0.50/month** is justified; label it conditional pending formal approval. If ownership remains external, leave Route 53 at **$0 in this AWS estimate**, while retaining the external DNS provider cost as out of scope / unknown. No DNS option is Approved.
+
+AWS references: [Route 53 pricing](https://aws.amazon.com/route53/pricing/), [Route 53 alias records and ELB query pricing](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-choosing-alias-non-alias.html), [ACM DNS validation with a non-Route 53 provider](https://docs.aws.amazon.com/acm/latest/userguide/dns-validation.html), and [ACM public certificate pricing for integrated services](https://aws.amazon.com/certificate-manager/pricing/).
+
+## CloudWatch monitoring and Flow Logs pricing discovery
+
+CloudWatch metrics, logs, alarms and VPC Flow Logs are documented monitoring functions, but the counts, log rates, retention periods, alarm policy and Flow Log destination are still pending validation. The register's **10/50/200 custom metric time series**, **10/50/200 GB/month application/system log ingestion**, **10/25/100 standard alarm metrics**, and **5/50/500 GB/month Flow Log volume** are illustrative sensitivity inputs only.
+
+The three draft scenarios used the current Pricing Calculator in us-east-1. Application/system logs were entered as Standard Logs data ingested; VPC Flow Logs were entered separately as Standard Vended Logs delivered to CloudWatch Logs. The draft was canceled without saving. No log-query scanning, API requests, dashboards, composite/high-resolution/Metric Insights alarms, notifications, or additional observability features were invented or entered.
+
+| Scenario | Custom time series | App/system logs | VPC Flow Logs to CloudWatch | Standard alarms | Calculator total at 30-day retention |
+|---|---:|---:|---:|---:|---:|
+| Conservative | 10 | 10 GB/mo | 5 GB/mo | 10 | **$11.57/mo** |
+| Baseline | 50 | 50 GB/mo | 50 GB/mo | 25 | **$67.95/mo** |
+| High | 200 | 200 GB/mo | 500 GB/mo | 100 | **$423.15/mo** |
+
+The Calculator's displayed components were respectively $0.30 per custom metric (the first tier), $0.50/GB for Standard Logs ingestion, $0.50/GB for VPC/Vended Logs delivered to CloudWatch Logs, $0.03/GB-month for archived storage, and $0.10 per standard-resolution alarm metric. It estimated stored log volume at **15% of combined monthly ingestion** and exposed a one-month retention storage assumption. Calculator details:
+- Conservative: metrics $3.00; app logs $5.00; Flow Logs $2.50; storage $0.0675; alarms $1.00 = $11.5675, displayed **$11.57**.
+- Baseline: metrics $15.00; app logs $25.00; Flow Logs $25.00; storage $0.45; alarms $2.50 = **$67.95**.
+- High: metrics $60.00; app logs $100.00; Flow Logs $250.00; storage $3.15; alarms $10.00 = **$423.15**.
+
+The Calculator exposes only its one-month storage/archival assumption for this log model. To show the register's 90- and 365-day retention cases, storage was independently extended with a steady monthly ingestion assumption: combined log GB/month × 15% compression factor × $0.03/GB-month × retention days/30. This storage extension is **an independent scenario calculation, not a Calculator result** and should be replaced once retention and log lifecycle requirements are approved.
+
+| Scenario | 30 days (Calculator) | 90 days (independent storage extension) | 365 days (independent storage extension) |
+|---|---:|---:|---:|
+| Conservative | $11.57 | $11.70 | $12.32 |
+| Baseline | $67.95 | $68.85 | $72.98 |
+| High | $423.15 | $429.45 | $458.33 |
+
+These totals exclude possible account free-tier benefits, dashboards, alarm queries, log queries/scanned bytes, metric API requests, data protection, SNS/notification charges, traces, Database Insights additions, third-party tooling and any cost for another destination. The scenario count for metrics is interpreted as time series, not metric datapoints. Default AWS service metrics may be included, but detailed monitoring and custom dimensions can add billable time series; confirm what is included before adoption. Flow Logs are priced separately from application/system ingestion to avoid double counting; their service delivery rate applies only if CloudWatch Logs is selected as destination. An S3 destination has different charges and has not been priced. The us-east-1 calculator and AWS pricing examples support the rates above; actual monthly usage and applicable free tier depend on account configuration.
+
+**Decision:** Keep CloudWatch out of the saved subtotal until Operations/Security approve the metric inventory, log sources/volume, Flow Log scope and destination, retention, alarms, resolution and notification plan. Use the baseline scenario only as an explicitly **Provisional** portfolio sensitivity if a labeled scenario estimate is required; it is not an approved planning value. Exports from the Calculator must preserve the separate line components and identify every remaining excluded usage feature.
+
+AWS references: [CloudWatch pricing (including N. Virginia rates, logs, metrics and alarms)](https://aws.amazon.com/cloudwatch/pricing/), [VPC Flow Logs destinations and vended-log charging](https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html).
 
 ## RDS billing treatment
 
@@ -99,7 +156,10 @@ Taxes, support plan, engineering labour, customer gateway and on-premises intern
 - [Amazon EFS pricing](https://aws.amazon.com/efs/pricing/)
 - [Amazon S3 pricing](https://aws.amazon.com/s3/pricing/)
 - [AWS Site-to-Site VPN pricing](https://aws.amazon.com/vpn/pricing/)
+- [Amazon Route 53 pricing](https://aws.amazon.com/route53/pricing/)
+- [Amazon CloudWatch pricing](https://aws.amazon.com/cloudwatch/pricing/)
+- [AWS Certificate Manager pricing](https://aws.amazon.com/certificate-manager/pricing/)
 - [AWS Pricing Calculator guide: export estimate](https://docs.aws.amazon.com/pricing-calculator/latest/userguide/export-estimate.html)
 - [AWS Pricing Calculator guide: share estimate](https://docs.aws.amazon.com/pricing-calculator/latest/userguide/save-share-estimate.html)
 
-**Status:** A partial AWS Pricing Calculator estimate is saved and verified at $1,923.46/month ($23,081.52 annualised). It is **not complete or approved**: ALB usage remains unresolved (scenario sensitivity only; no ALB calculator entry saved); DNS, CloudWatch, EFS metered throughput/transfer, VPN transfer, applicable endpoint costs, backups, and migration-period sizing/duration/overlap remain unresolved or unpriced. Keep the migration-period group separate. No AWS resources have been deployed.
+**Status:** A partial AWS Pricing Calculator estimate is saved and verified at $1,923.46/month ($23,081.52 annualised). It is **not complete or approved**: ALB usage remains unresolved (scenario sensitivity only; no ALB calculator entry saved); DNS authority and billable query use plus monitoring workload remain unresolved; Route 53 and CloudWatch sensitivity scenarios were verified in the calculator but canceled unsaved and remain excluded. EFS metered throughput/transfer, VPN transfer, applicable endpoint costs, backups, and migration-period sizing/duration/overlap remain unresolved or unpriced. Keep the migration-period group separate. No AWS resources have been deployed.

@@ -26,5 +26,5 @@ The architecture diagram, README, design documents, runbook and cost model shoul
 - Architecture and migration flows: source reviewed; diagram visual rendering remains pending.
 - Network/security: proposed controls and MGN staging requirements documented; no deployed validation.
 - PostgreSQL: DMS prerequisites, schema/object migration, CDC, WAL/slot, constraints/triggers and sequence reconciliation documented; no source-version compatibility test.
-- Pricing: exact class/configuration and exported AWS Pricing Calculator estimate outstanding.
+- Pricing: partial AWS Pricing Calculator baseline is saved at $1,916.16/month ($22,993.92 annualised); production suitability validation, unresolved workload inputs, migration costs and final export/reconciliation remain outstanding.
 - Operational validation: monitoring thresholds, ASG scaling policy, application SLO thresholds, recovery test and acceptance evidence outstanding.

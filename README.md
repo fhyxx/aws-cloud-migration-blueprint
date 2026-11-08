@@ -33,12 +33,13 @@ The canonical source diagram is [architecture/target-architecture.mmd](architect
 5. [Migration runbook](docs/05-migration-runbook.md)
 6. [Validation and rollback](docs/06-validation-rollback-strategy.md)
 7. [Cost estimate and optimisation](docs/07-cost-estimation-optimisation.md)
+8. [Assumptions and decisions register](docs/08-assumptions-decisions-register.md)
 
 Additional assets: `architecture/target-architecture.mmd`, `cost/pricing-assumptions.csv`, `evidence/README.md`, `DESIGN-CONSISTENCY.md`.
 
 ## Cost review status
 
-**No approved monthly total.** The previous USD $2,214–$2,702/month worksheet range is superseded and must not be used for budgeting. Exact RDS class/storage/IOPS, VPN connection configuration, NAT, EFS, ALB, endpoint, monitoring and transfer inputs must be entered into AWS Pricing Calculator. The cost document records the outstanding decisions and the required calculator export.
+**Partial calculator subtotal: $1,916.16/month ($22,993.92 annualised); no approved budget.** The saved estimate includes EC2 ($274.94), RDS PostgreSQL ($1,227.52), EFS ($300.00), S3 ($11.50), two conventional NAT Gateways ($65.70) and Site-to-Site VPN ($36.50). The subtotal excludes unresolved ALB LCU, DNS, CloudWatch, EFS metered throughput/transfer, VPN transfer, applicable endpoint costs, backups and all migration-period costs. The calculator and price register document the configuration and open decisions; $2,214–$2,702/month is a withdrawn historical worksheet, not a budget.
 
 ## Important limitations
 
@@ -46,4 +47,4 @@ No AWS resources have been provisioned; no MGN replication, DMS migration, DataS
 
 ## Suggested review sequence
 
-Read discovery and assumptions, compare architecture with network/security, review migration and runbook, review validation/rollback, then complete the AWS Pricing Calculator estimate. Do not describe this as an actual customer migration or deployed system.
+Read discovery and assumptions, compare architecture with network/security, review migration and runbook, review validation/rollback and the assumptions/decisions register, then validate open workload inputs and complete the AWS Pricing Calculator estimate. Do not describe this as an actual customer migration or deployed system.

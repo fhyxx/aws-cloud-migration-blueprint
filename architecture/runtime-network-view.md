@@ -46,7 +46,7 @@ flowchart TB
     EFS["Regional EFS<br/>1 TB planning assumption"]
     S3EP["S3 Gateway Endpoint<br/>prefix-list route"]
     S3["S3 Standard archive target<br/>500 GB capacity assumption"]
-    OPS["Private service access as required<br/>SSM / Secrets Manager / CloudWatch"]
+    OPS["PrivateLink candidates — conditional<br/>SSM / ssmmessages / Secrets Manager<br/>CloudWatch Logs / Monitoring"]
     
     ALB_A --> APP_EC2_A
     ALB_A --> APP_EC2_B

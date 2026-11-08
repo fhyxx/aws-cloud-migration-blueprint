@@ -5,7 +5,7 @@
 | Region | `us-east-1` |
 | VPC | `10.30.0.0/16` |
 | Steady-state subnets | 2 AZs; 2 public, 2 app, 2 DB |
-| Migration subnet | Dedicated private MGN staging subnet required in addition to steady-state six; subnet sizing/CIDR to be allocated |
+| Migration subnets | Dedicated private MGN staging subnet required in addition to steady-state six; DMS replication subnet group uses private app subnets in two AZs with a dedicated DMS SG; no additional DMS subnet CIDR assumed |\n| DataSync agent | On-premises agent near NFS source; archive source type/agent requirement remains unknown |
 | Application | 2 × 4 vCPU / 16 GiB; `t3.xlarge` is cost proxy only |
 | Source DB | PostgreSQL VM, 8 vCPU / 32 GiB / 500 GB logical data |
 | Target DB | RDS PostgreSQL Multi-AZ DB instance deployment; 500 GB provisioned-storage assumption per instance; primary + standby billed |
@@ -35,8 +35,8 @@ The [Migration Readiness Matrix](docs/09-migration-readiness-matrix.md) is the c
 
 ## Review gates
 
-- Architecture and migration flows: source reviewed; diagram visual rendering remains pending.
-- Network/security: proposed controls and MGN staging requirements documented; no deployed validation.
+- Architecture and migration flows: DMS replication placement and DataSync agent paths now explicit in source diagram; rendered visual review remains pending.
+- Network/security: proposed controls now include DMS two-AZ subnet group/TCP 5432 paths and DataSync agent/service/EFS flows; no deployed validation.
 - PostgreSQL: DMS prerequisites, schema/object migration, CDC, WAL/slot, constraints/triggers and sequence reconciliation documented; no exact source/target version compatibility test; DMS capacity and runtime remain unpriced pending DBA profiling/benchmark.
 - Pricing: partial AWS Pricing Calculator baseline is saved at $1,930.76/month ($23,169.12 annualised); production suitability validation, unresolved workload inputs, migration costs and final export/reconciliation remain outstanding.
 - Operational validation: monitoring thresholds, ASG scaling policy, application SLO thresholds, recovery test and acceptance evidence outstanding.

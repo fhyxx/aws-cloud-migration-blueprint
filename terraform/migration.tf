@@ -77,6 +77,7 @@ resource "aws_iam_role" "dms_endpoint_access" {
   tags = var.tags
 }
 
+## The secret-access role is regional, endpoint-scoped, and uses an explicit CMK ARN only when required.
 resource "aws_iam_role_policy" "dms_endpoint_secrets" {
   count = var.enable_dms_resources ? 1 : 0
   name  = "${var.name_prefix}-dms-endpoint-secrets"
@@ -94,10 +95,10 @@ resource "aws_iam_role_policy" "dms_endpoint_secrets" {
         ]
       },
 
-    ], var.source_secret_kms_key_arn == null ? [] : [{
-      Effect   = "Allow"
-      Action   = ["kms:Decrypt"]
-      Resource = var.source_secret_kms_key_arn
+      ], var.source_secret_kms_key_arn == null ? [] : [{
+        Effect   = "Allow"
+        Action   = ["kms:Decrypt"]
+        Resource = var.source_secret_kms_key_arn
     }])
   })
 }

@@ -94,6 +94,7 @@ Only after reviewing the displayed account, Region, subnet, SG and instance type
 ## 7. References
 
 - [AWS DMS IAM roles and confused-deputy guidance](https://docs.aws.amazon.com/dms/latest/userguide/security-iam.html)
+- [AWS DMS Secrets Manager endpoint authentication](https://docs.aws.amazon.com/dms/latest/userguide/security_iam_secretsmanager.html)
 - [AWS DMS network setup](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.VPC.html)
 - [AWS DataSync network requirements](https://docs.aws.amazon.com/datasync/latest/userguide/datasync-network.html)
 - [AWS DataSync service endpoint selection](https://docs.aws.amazon.com/datasync/latest/userguide/choose-service-endpoint.html)

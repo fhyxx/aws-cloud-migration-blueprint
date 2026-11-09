@@ -10,6 +10,7 @@ provider = (ROOT / "terraform" / "versions.tf").read_text()
 decisions = (ROOT / "docs" / "14-synthetic-case-study-decisions.md").read_text()
 spec = (ROOT / "docs" / "13-network-configuration-specification.md").read_text()
 workloads = (ROOT / "terraform" / "workloads.tf").read_text()
+migration = (ROOT / "terraform" / "migration.tf").read_text()
 
 required_subnets = [
     "public_a", "public_b", "app_a", "app_b", "db_a", "db_b",
@@ -52,5 +53,10 @@ assert "aws_availability_zones" not in main, "Plan should not require live AZ di
 
 assert 'variable "ami_id"' in variables and 'variable "aws_account_id"' in variables, "Offline full-plan inputs missing"
 assert "aws_ami" not in workloads and "aws_caller_identity" not in (ROOT / "terraform" / "migration.tf").read_text(), "Terraform plan must not require live data sources"
+
+
+assert 'dms.${var.aws_region}.amazonaws.com' in migration, "DMS secret role must use regional service principal"
+assert 'var.source_secret_kms_key_arn' in migration and 'Resource = "*"' not in migration, "DMS KMS decrypt must be scoped to an optional exact key"
+assert 'var.aws_account_id' in migration and 'aws:SourceAccount' in migration, "DMS service trust must be account-scoped"
 
 print("PASS: nine subnets, scoped VPN propagation, S3 endpoint associations, opt-in NAT/VPN, DMS egress, SG boundaries, MGN source scope and acceptance catalogue.")

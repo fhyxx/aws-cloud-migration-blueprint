@@ -79,4 +79,7 @@ assert 'AWSApplicationMigrationAgentPolicy_v2' in mgn and 'sts:SetSourceIdentity
 assert 'AWSApplicationMigrationFsxProxyRole' in mgn and 'AWSApplicationMigrationFsxProxyLinkRole' in mgn, "MGN FSx proxy roles missing from service initialization baseline"
 assert 'path = "/service-role/"' in mgn, "MGN roles must use the AWS-required service-role path"
 
+assert '"kms:ViaService"' in migration and '"kms:EncryptionContext:SecretARN"' in migration, "DMS CMK use must be Secrets Manager-only and source-secret-scoped"
+assert 'subdirectory     = "archives"' in migration, "DataSync Basic-mode S3 prefix must not begin with slash"
+
 print("PASS: eleven subnets, scoped VPN propagation, S3 endpoint associations, opt-in NAT/VPN/workloads/migration services, DMS IAM hardening, DataSync Interface endpoint, SG boundaries and acceptance catalogue.")

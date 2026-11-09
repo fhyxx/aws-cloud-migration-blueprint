@@ -1,6 +1,6 @@
 # 15 — Infrastructure as Code Design and Implementation Notes
 
-**ID:** CLI-AWS-IAC-015 | **Version:** 1.4 | **Status:** Network, workload and migration Terraform validated in CI — live account validation and deployment not performed  
+**ID:** CLI-AWS-IAC-015 | **Version:** 1.5 | **Status:** Network, workload and migration Terraform validated in CI — live account validation and deployment not performed  
 **Related:** [Synthetic case-study decisions](14-synthetic-case-study-decisions.md), [Network configuration specification](13-network-configuration-specification.md), [Terraform network foundation](../terraform/README.md)
 
 ## 1. Implementation scope

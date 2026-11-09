@@ -150,3 +150,9 @@ variable "db_master_username" {
   type        = string
   default     = "clafoke_admin"
 }
+
+variable "app_cpu_target" {
+  description = "Synthetic target average CPU utilization for ASG target tracking."
+  type        = number
+  default     = 60
+}

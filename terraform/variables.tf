@@ -221,3 +221,26 @@ variable "datasync_agent_cidr" {
   type        = string
   default     = "10.50.20.50/32"
 }
+
+variable "availability_zone_names" {
+  description = "Two synthetic AZ name aliases; override if either AZ is unavailable in the target account."
+  type        = list(string)
+  default     = ["us-east-1a", "us-east-1b"]
+
+  validation {
+    condition     = length(var.availability_zone_names) == 2 && var.availability_zone_names[0] != var.availability_zone_names[1]
+    error_message = "Provide exactly two distinct Availability Zone names."
+  }
+}
+
+variable "skip_credentials_validation" {
+  description = "Provider test switch only. Keep false outside the isolated no-refresh CI plan."
+  type        = bool
+  default     = false
+}
+
+variable "skip_requesting_account_id" {
+  description = "Provider test switch only. Keep false for real AWS operations."
+  type        = bool
+  default     = false
+}

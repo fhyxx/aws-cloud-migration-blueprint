@@ -181,6 +181,11 @@ variable "source_db_secret_arn" {
   type        = string
   default     = null
   nullable    = true
+
+  validation {
+    condition     = var.source_db_secret_arn == null || can(regex("^arn:[^:]+:secretsmanager:[^:]+:[0-9]{12}:secret:.+$", var.source_db_secret_arn))
+    error_message = "source_db_secret_arn must be a Secrets Manager secret ARN."
+  }
 }
 
 variable "database_name" {
@@ -220,6 +225,11 @@ variable "datasync_agent_cidr" {
   description = "Single synthetic on-premises DataSync agent address; only this host may reach the VPC endpoint and task ENI."
   type        = string
   default     = "10.50.20.50/32"
+
+  validation {
+    condition     = can(cidrhost(var.datasync_agent_cidr, 0)) && can(regex("/32$", var.datasync_agent_cidr))
+    error_message = "datasync_agent_cidr must be one valid IPv4 /32 host address."
+  }
 }
 
 variable "availability_zone_names" {
@@ -269,4 +279,9 @@ variable "source_secret_kms_key_arn" {
   type        = string
   default     = null
   nullable    = true
+
+  validation {
+    condition     = var.source_secret_kms_key_arn == null || can(regex("^arn:[^:]+:kms:[^:]+:[0-9]{12}:key/[0-9a-fA-F-]+$", var.source_secret_kms_key_arn))
+    error_message = "source_secret_kms_key_arn must be a customer-managed KMS key ARN."
+  }
 }

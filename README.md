@@ -22,7 +22,7 @@ A cloud migration blueprint for a fictional Nigerian retail/distribution company
 
 ## Architecture
 
-The canonical master Mermaid source is [architecture/target-architecture.mmd](architecture/target-architecture.mmd); inspect it in the [rendered master view](architecture/target-architecture.md). For clearer review, use the focused [runtime/network view](architecture/runtime-network-view.md) (subnet CIDRs, AZ placement, route intent and security-group boundaries) and [migration data-flow view](architecture/migration-data-flow.md) (separate MGN, DMS and DataSync paths). Editable Mermaid sources are provided beside each rendered page. Earlier versions of the master and focused views were visually confirmed in GitHub. The latest DMS subnet-isolation update changed the master and migration diagrams, so their current GitHub rendering needs a fresh visual check; the runtime view is unchanged by this update. All views remain proposed design artifacts; implementation and connectivity validation are pending. The master and migration diagrams show dedicated DMS migration subnets `10.30.41.0/24` and `10.30.42.0/24`; ordinary application subnets do not receive the on-premises route.
+The canonical master Mermaid source is [architecture/target-architecture.mmd](architecture/target-architecture.mmd); inspect it in the [rendered master view](architecture/target-architecture.md). For clearer review, use the focused [runtime/network view](architecture/runtime-network-view.md) (subnet CIDRs, AZ placement, route intent and security-group boundaries) and [migration data-flow view](architecture/migration-data-flow.md) (separate MGN, DMS and DataSync paths). Editable Mermaid sources are provided beside each rendered page. Earlier versions of the master and focused views were visually confirmed in GitHub. The latest DMS subnet-isolation update changed the master and migration diagrams; the user has now confirmed that both updated views render correctly; the runtime view is unchanged by this update. All views remain proposed design artifacts; implementation and connectivity validation are pending. The master and migration diagrams show dedicated DMS migration subnets `10.30.41.0/24` and `10.30.42.0/24`; ordinary application subnets do not receive the on-premises route.
 
 ## Deliverables
 
@@ -36,8 +36,9 @@ The canonical master Mermaid source is [architecture/target-architecture.mmd](ar
 8. [Assumptions and decisions register](docs/08-assumptions-decisions-register.md)
 9. [Migration readiness matrix](docs/09-migration-readiness-matrix.md)
 10. [Technical architecture audit](docs/10-technical-architecture-audit.md)
+11. [Network implementation preparation pack](docs/11-network-implementation-preparation.md)
 
-Additional assets: master architecture source/rendered page; [runtime/network source](architecture/runtime-network-view.mmd) and [rendered view](architecture/runtime-network-view.md); [migration-flow source](architecture/migration-data-flow.mmd) and [rendered view](architecture/migration-data-flow.md); `cost/pricing-assumptions.csv`, `evidence/README.md`, `DESIGN-CONSISTENCY.md`.
+Additional assets: [network implementation preparation pack](docs/11-network-implementation-preparation.md) (route-table associations, SG rule inventory, BGP/VPN preparation, read-only CLI inspection, test catalogue and evidence register); master architecture source/rendered page; [runtime/network source](architecture/runtime-network-view.mmd) and [rendered view](architecture/runtime-network-view.md); [migration-flow source](architecture/migration-data-flow.mmd) and [rendered view](architecture/migration-data-flow.md); `cost/pricing-assumptions.csv`, `evidence/README.md`, `DESIGN-CONSISTENCY.md`.
 
 ## Cost review status
 

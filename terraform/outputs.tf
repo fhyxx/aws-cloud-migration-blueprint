@@ -22,7 +22,8 @@ output "security_group_ids" {
     efs           = aws_security_group.efs.id
     dms           = aws_security_group.dms.id
     mgn_staging   = aws_security_group.mgn_staging.id
-    datasync_task = aws_security_group.datasync_task.id
+    datasync_task     = aws_security_group.datasync_task.id
+    datasync_endpoint = aws_security_group.datasync_endpoint.id
   }
 }
 
@@ -39,4 +40,9 @@ output "datasync_endpoint_subnet_id" {
 output "datasync_endpoint_security_group_id" {
   description = "Security group to attach when activating the DataSync VPC service endpoint."
   value       = aws_security_group.datasync_endpoint.id
+}
+
+output "datasync_task_subnet_id" {
+  description = "Dedicated subnet for DataSync task ENIs, with hybrid return routing."
+  value       = aws_subnet.this["datasync_task"].id
 }

@@ -98,6 +98,7 @@ Only after reviewing the displayed account, Region, subnet, SG and instance type
 - [AWS DMS network setup](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.VPC.html)
 - [AWS DataSync network requirements](https://docs.aws.amazon.com/datasync/latest/userguide/datasync-network.html)
 - [AWS DataSync service endpoint selection](https://docs.aws.amazon.com/datasync/latest/userguide/choose-service-endpoint.html)
+- [AWS DataSync cross-service confused deputy prevention](https://docs.aws.amazon.com/datasync/latest/userguide/cross-service-confused-deputy-prevention.html)
 - [AWS MGN replication configuration template CLI](https://docs.aws.amazon.com/cli/latest/reference/mgn/create-replication-configuration-template.html)
 - [AWS MGN network requirements](https://docs.aws.amazon.com/mgn/latest/ug/preparing-environments.html)
 

@@ -335,7 +335,10 @@ resource "aws_iam_role" "datasync_s3" {
       Effect    = "Allow"
       Principal = { Service = "datasync.amazonaws.com" }
       Action    = "sts:AssumeRole"
-      Condition = { StringEquals = { "aws:SourceAccount" = var.aws_account_id } }
+      Condition = {
+        StringEquals = { "aws:SourceAccount" = var.aws_account_id }
+        ArnLike      = { "aws:SourceArn" = "arn:aws:datasync:${var.aws_region}:${var.aws_account_id}:*" }
+      }
     }]
   })
   tags = var.tags

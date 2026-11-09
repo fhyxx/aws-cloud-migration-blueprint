@@ -10,7 +10,7 @@
 
 **Decision: synthetic portfolio baseline is approved for continued Terraform design and validation. Live AWS deployment remains separately gated.**
 
-The reference network is internally structured for a fictional migration: VPC `10.30.0.0/16`, six steady-state subnets, dedicated DMS-A/DMS-B subnets, a separate MGN staging subnet, selective VGW route propagation, and explicit migration traffic paths. These are portfolio design values, not customer-discovered facts.
+The reference network is internally structured for a fictional migration: VPC `10.30.0.0/16`, six steady-state subnets, dedicated MGN staging and DMS-A/DMS-B subnets, plus separate DataSync endpoint/task subnets; selective VGW route propagation is limited to those five migration route tables. These are portfolio design values, not customer-discovered facts.
 
 The review found one material implementation caveat: the current least-privilege DMS outbound SG proposal is narrower than the current AWS DMS networking guidance, which recommends allowing all outbound traffic from the replication-instance security group. The proposed narrow rule set must therefore be treated as **unverified**, not an approved DMS configuration. See finding NVR-08.
 

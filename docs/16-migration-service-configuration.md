@@ -1,6 +1,6 @@
 # 16 — Migration Service Configuration and Activation Runbook
 
-**ID:** CLI-AWS-MSA-016 | **Version:** 1.0 | **Status:** Prepared for synthetic portfolio execution — no service activation or migration run  
+**ID:** CLI-AWS-MSA-016 | **Version:** 1.1 | **Status:** Prepared for synthetic portfolio execution — no service activation or migration run  
 **Related:** [Terraform network/workload/migration foundation](../terraform/README.md), [Migration strategy](04-data-migration-strategy.md), [Migration runbook](05-migration-runbook.md), [Network configuration](13-network-configuration-specification.md), [Synthetic decisions](14-synthetic-case-study-decisions.md)
 
 ## 1. Purpose
@@ -25,7 +25,7 @@ Do not enable these flags merely to make a plan look complete. Each creates char
 
 The source PostgreSQL secret must be stored in AWS Secrets Manager outside this repository and contain the DMS connection fields expected by the selected PostgreSQL endpoint, with the four required endpoint-authentication fields: lowercase `username`, `password`, `port` and `host`. Set the database name separately through the DMS endpoint configuration. Do not put credentials in `.tfvars`, command-line arguments, shell history or Git.
 
-The target endpoint references the RDS-managed master-user secret created by the RDS instance. The endpoint access role is limited to the source and target secret ARNs and uses the regional DMS service principal with SourceAccount/SourceArn conditions. A customer-managed source-secret KMS key can be granted explicitly through `source_secret_kms_key_arn`; the default AWS-managed Secrets Manager key needs no extra KMS permission. The DMS service roles use the exact required names `dms-vpc-role` and `dms-cloudwatch-logs-role`, with an `aws:SourceAccount` trust condition. The identity that creates endpoints also needs `iam:GetRole`, `iam:PassRole` and `secretsmanager:DescribeSecret` for the selected secret/role.
+The target endpoint references the RDS-managed master-user secret created by the RDS instance. The endpoint access role is limited to the source and target secret ARNs and uses the regional DMS service principal with `aws:SourceAccount` and endpoint-scoped `aws:SourceArn` conditions. The endpoint-creation principal must also be allowed to pass the role only to the DMS service. A customer-managed source-secret KMS key can be granted explicitly through `source_secret_kms_key_arn`; the default AWS-managed Secrets Manager key needs no extra KMS permission. The customer-managed key policy must also permit the role's decrypt use through Secrets Manager. The DMS service roles use the exact required names `dms-vpc-role` and `dms-cloudwatch-logs-role`, with an `aws:SourceAccount` trust condition. The identity that creates endpoints also needs `iam:GetRole`, `iam:PassRole` and `secretsmanager:DescribeSecret` for the selected secret/role.
 
 Before enabling DMS:
 

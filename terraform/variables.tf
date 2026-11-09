@@ -285,3 +285,9 @@ variable "source_secret_kms_key_arn" {
     error_message = "source_secret_kms_key_arn must be a customer-managed KMS key ARN."
   }
 }
+
+variable "enable_mgn_resources" {
+  description = "Create the AWS-managed IAM roles and policy attachments required to initialize MGN in this account and Region."
+  type        = bool
+  default     = false
+}

@@ -1,4 +1,5 @@
 data "aws_ami" "amazon_linux_2023" {
+  count       = var.enable_workload_resources ? 1 : 0
   most_recent = true
   owners      = ["amazon"]
 
@@ -125,7 +126,7 @@ resource "aws_launch_template" "app" {
   count = var.enable_workload_resources ? 1 : 0
 
   name_prefix   = "${var.name_prefix}-app-"
-  image_id      = data.aws_ami.amazon_linux_2023.id
+  image_id      = data.aws_ami.amazon_linux_2023[0].id
   instance_type = var.app_instance_type
 
   iam_instance_profile {

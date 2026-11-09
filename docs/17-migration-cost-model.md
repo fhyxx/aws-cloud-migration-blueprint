@@ -101,7 +101,7 @@ Migration-period pricing is ready for Calculator entry only when MGN source/stag
 - [AWS Transform MGN pricing](https://aws.amazon.com/application-migration-service/pricing/) — service pricing and additional infrastructure charges.
 - [AWS Transform MGN FAQs](https://aws.amazon.com/application-migration-service/faqs/) — 2,160-hour / 90-day per-source service-fee period and infrastructure charges during the free period.
 - [AWS MGN cost-planning guidance](https://docs.aws.amazon.com/mgn/latest/ug/migration_at_scale.html) — replication and migration infrastructure cost drivers.
-- [AWS-hosted MGN pricing deck](https://pages.awscloud.com/rs/112-TZM-766/images/2022_0804-MIG_Slide-Deck.pdf) — published $0.042 per source-server-hour reference after the initial 90 days; verify current offer rate before use.
+- [AWS-hosted MGN pricing deck](https://pages.awscloud.com/rs/112-TZM-766/images/2022_0804-MIG_Slide-Deck.pdf) — published $0.042 per source-server-hour reference after the initial 90 days; an [AWS re:Post pricing note](https://www.repost.aws/articles/ARkxDvlDuPQN6i6Xnvtf3Jvw/how-to-safely-decommission-aws-application-migration-service-mgn-and-stop-replication-charges) also cites $0.042/hour for us-east-1 as of July 2026. Recheck the current Price List before use.
 - [AWS DMS pricing](https://aws.amazon.com/dms/pricing/) — provisioned and Serverless billing models, included storage notes and transfer treatment.
 - [AWS DataSync pricing](https://aws.amazon.com/datasync/pricing/) — Basic/Enhanced per-GB rates, execution charge, PrivateLink control traffic and destination request/storage charges.
 - [DataSync task-mode guidance](https://docs.aws.amazon.com/datasync/latest/userguide/choosing-task-mode.html) — supported transfer types and Basic-mode quotas.

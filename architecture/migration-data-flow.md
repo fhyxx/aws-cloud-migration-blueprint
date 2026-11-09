@@ -1,6 +1,6 @@
 # Migration Data-Flow View
 
-**ID:** CLI-AWS-VIEW-012 | **Version:** 1.0 | **Status:** Proposed — not executed
+**ID:** CLI-AWS-VIEW-012 | **Version:** 1.1 | **Status:** Proposed — not executed
 
 This focused view separates MGN, DMS and DataSync paths so their distinct source, destination, protocols and dependencies can be reviewed independently. It complements the [canonical master architecture](target-architecture.md).
 

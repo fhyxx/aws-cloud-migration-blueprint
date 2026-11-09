@@ -99,7 +99,7 @@ Security groups are stateful. Prefer SG-to-SG references for VPC-local peers; us
 
 | Rule ID | SG / direction | Source or destination | Protocol / port | Purpose and constraints | Owner / validation |
 |---|---|---|---|---|---|
-| SG-01 | ALB ingress | Approved client CIDRs | TCP 443 | Public HTTPS only; ACM certificate and listener confirmed | Security + App; verify TLS/listener |
+| SG-01 | ALB ingress | `0.0.0.0/0` (public HTTPS baseline) | TCP 443 | Current Terraform baseline exposes the internet-facing ALB publicly; replace with an approved client allow-list only if the business access requirement calls for restricted source ranges. ACM certificate and listener must be confirmed. | Security + App; verify TLS/listener and confirm public-vs-allow-list decision |
 | SG-02 | ALB ingress (conditional) | Approved client CIDRs | TCP 80 | Only if HTTP-to-HTTPS redirect is required | Security; otherwise omit |
 | SG-03 | ALB egress | App SG | TCP 8080 (synthetic application contract) | Listener and health-check target; confirm actual application contract | App; target health test |
 | SG-04 | App ingress | ALB SG | Actual target protocol/port (8080 provisional) | No direct public or on-premises application ingress | App + Security |

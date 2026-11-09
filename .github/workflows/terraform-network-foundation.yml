@@ -14,6 +14,8 @@ on:
       - "docs/09-migration-readiness-matrix.md"
       - "docs/10-technical-architecture-audit.md"
       - "docs/13-network-configuration-specification.md"
+      - "docs/09-migration-readiness-matrix.md"
+      - "docs/10-technical-architecture-audit.md"
       - "docs/15-infrastructure-as-code-design.md"
       - "docs/16-migration-service-configuration.md"
   push:

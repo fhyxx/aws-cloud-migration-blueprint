@@ -287,3 +287,26 @@ resource "aws_vpc_security_group_egress_rule" "app_https" {
   to_port           = 443
   ip_protocol       = "tcp"
 }
+
+resource "aws_autoscaling_policy" "app_cpu" {
+  count                  = var.enable_workload_resources ? 1 : 0
+  name                   = "${var.name_prefix}-app-cpu-target-tracking"
+  policy_type            = "TargetTrackingScaling"
+  autoscaling_group_name = aws_autoscaling_group.app[0].name
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+    target_value = var.app_cpu_target
+  }
+}
+
+resource "aws_efs_backup_policy" "app" {
+  count          = var.enable_workload_resources ? 1 : 0
+  file_system_id = aws_efs_file_system.app[0].id
+
+  backup_policy {
+    status = "ENABLED"
+  }
+}

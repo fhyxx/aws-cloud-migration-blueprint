@@ -23,9 +23,9 @@ Do not enable these flags merely to make a plan look complete. Each creates char
 
 ## 3. DMS endpoint secret contract
 
-The source PostgreSQL secret must be stored in AWS Secrets Manager outside this repository and contain the DMS connection fields expected by the selected PostgreSQL endpoint, including host, port, username, password and database name. Do not put credentials in `.tfvars`, command-line arguments, shell history or Git.
+The source PostgreSQL secret must be stored in AWS Secrets Manager outside this repository and contain the DMS connection fields expected by the selected PostgreSQL endpoint, with the four required endpoint-authentication fields: lowercase `username`, `password`, `port` and `host`. Set the database name separately through the DMS endpoint configuration. Do not put credentials in `.tfvars`, command-line arguments, shell history or Git.
 
-The target endpoint references the RDS-managed master-user secret created by the RDS instance. The endpoint access role is limited to the source and target secret ARNs and KMS decrypt through Secrets Manager. The DMS service roles use the exact required names `dms-vpc-role` and `dms-cloudwatch-logs-role`, with an `aws:SourceAccount` trust condition.
+The target endpoint references the RDS-managed master-user secret created by the RDS instance. The endpoint access role is limited to the source and target secret ARNs and uses the regional DMS service principal with SourceAccount/SourceArn conditions. A customer-managed source-secret KMS key can be granted explicitly through `source_secret_kms_key_arn`; the default AWS-managed Secrets Manager key needs no extra KMS permission. The DMS service roles use the exact required names `dms-vpc-role` and `dms-cloudwatch-logs-role`, with an `aws:SourceAccount` trust condition. The identity that creates endpoints also needs `iam:GetRole`, `iam:PassRole` and `secretsmanager:DescribeSecret` for the selected secret/role.
 
 Before enabling DMS:
 

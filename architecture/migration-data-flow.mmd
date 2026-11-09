@@ -49,9 +49,10 @@ flowchart LR
   VPN --> PG_SRC
   DMS -->|"Target connection TCP 5432<br/>temporary DB ingress from DMS SG"| RDS
 
-  DS_AGENT -->|"TCP 1024–1064 control plane"| DS_VPCE
-  DS_AGENT -->|"TCP 443 task data plane"| DS_ENI
-  DS_VPCE --> DS_SERVICE
+  DS_AGENT -->|"DataSync control/data plane over IPsec VPN"| VPN
+  VPN --> VGW
+  VGW -->|"TCP 1024–1064 control plane"| DS_VPCE
+  VGW -->|"TCP 443 task data plane"| DS_ENI
   DS_SERVICE -->|"Creates task data-plane ENI"| DS_ENI
   DS_ENI -->|"NFS TCP 2049<br/>task-ENI SG to EFS mount-target SG"| EFS
   DS_ENI --- EFS_SG

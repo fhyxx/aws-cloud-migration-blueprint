@@ -49,6 +49,7 @@ jobs:
           path: terraform/.terraform.lock.hcl
           if-no-files-found: error
           retention-days: 7
+          include-hidden-files: true
 
       - name: Terraform validate
         run: terraform -chdir=terraform validate

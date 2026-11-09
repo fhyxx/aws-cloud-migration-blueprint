@@ -7,8 +7,8 @@ locals {
   az_b = data.aws_availability_zones.available.names[1]
 
   subnets = {
-    public_a = { cidr = "10.30.1.0/24",  az = local.az_a }
-    public_b = { cidr = "10.30.2.0/24",  az = local.az_b }
+    public_a = { cidr = "10.30.1.0/24", az = local.az_a }
+    public_b = { cidr = "10.30.2.0/24", az = local.az_b }
     app_a    = { cidr = "10.30.11.0/24", az = local.az_a }
     app_b    = { cidr = "10.30.12.0/24", az = local.az_b }
     db_a     = { cidr = "10.30.21.0/24", az = local.az_a }

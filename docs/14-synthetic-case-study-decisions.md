@@ -62,7 +62,11 @@ Terraform must be safe to inspect and validate without creating chargeable resou
 - No secrets, pre-shared keys, real public IPs, AWS account IDs or customer data belong in Git.
 - RDS, EC2, DMS, MGN, DataSync tasks/agents, ALB, EFS and S3 workload resources are separate application/migration layers and are not silently created by the network foundation.
 
-## 5. Remaining engineering work
+## 5. Terraform implementation
+
+The first network foundation is being codified in [Terraform](../terraform/README.md), with implementation boundaries and validation notes in [document 15](15-infrastructure-as-code-design.md). The code remains unvalidated until local/CI checks complete; no apply is authorized.
+
+## 6. Remaining engineering work
 
 These are implementation/test tasks, not reasons to stop documenting the fictional scenario:
 

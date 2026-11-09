@@ -7,7 +7,7 @@ flowchart TB
     PG_SRC[(Self-managed PostgreSQL source)]
     NFS_SRC[(NFS file server)]
     ARCH_SRC[Archive source<br/>location and type TBD]
-    DS_AGENT["DataSync agent VM instances<br/>as required by source and task mode"]
+    DS_AGENT["DataSync agent VM<br/>10.50.20.50/32<br/>VPC endpoint mode"]
     NFS_SRC -->|NFS TCP 2049 or 111 + 2049| DS_AGENT
     ARCH_SRC -.->|archive source/agent path TBD| DS_AGENT
   end
@@ -41,6 +41,12 @@ flowchart TB
       MGN_EGRESS[Controlled TCP 443 egress<br/>same-AZ NAT or validated private endpoint]
       MGN_REPL --> MGN_EGRESS
     end
+    subgraph DATASYNC_ENDPOINT_SUBNET["DataSync VPC endpoint subnet<br/>10.30.51.0/24 • AZ-A"]
+      DS_VPCE["DataSync VPC service endpoint<br/>TCP 1024–1064 from agent"]
+    end
+    subgraph DATASYNC_TASK_SUBNET["DataSync task ENI subnet<br/>10.30.52.0/24 • AZ-A"]
+      DS_ENI[DataSync task ENI<br/>TCP 443 from agent]
+    end
     EFS[(Regional EFS<br/>1 TB assumption<br/>mount target in each app AZ)]
     DS_ENI[DataSync task ENI<br/>in same VPC and AZ as selected EFS mount target]
     S3EP[S3 Gateway Endpoint]
@@ -71,9 +77,14 @@ flowchart TB
   APP_SRC -->|MGN replication stream<br/>TCP 1500 over approved VPN route| MGN_REPL
   APP_SRC -->|MGN service access<br/>TCP 443 via approved egress| MGN_SVC
   DMS -->|Initiates PostgreSQL source connection<br/>TCP 5432 over VPN| PG_SRC
-  DS_AGENT -->|DataSync service endpoint<br/>public or VPC endpoint| DS
+  DS_AGENT -->|TCP 1024–1064 control plane| DS_VPCE
+  DS_AGENT -->|TCP 443 task data plane| DS_ENI
+  DS_VPCE --> DS
+  DS -->|Task orchestration| DS_ENI
   DS -->|Creates task data-plane ENI| DS_ENI
   DS_ENI -->|NFS TCP 2049| EFS
   DS -->|S3 service-side transfer| S3
-  VGW ---|BGP 10.50.0.0/16 propagated only to DMS-A/DMS-B and MGN staging| DMS_MIGRATION
+  VGW ---|BGP 10.50.0.0/16 propagated only to DMS-A/DMS-B, MGN staging, DataSync endpoint and task subnets| DMS_MIGRATION
   VGW ---|BGP source route • TCP 1500 to staging<br/>two tunnels • no VGW ECMP| MGN_STAGING
+  VGW ---|BGP source route only; no default route| DATASYNC_ENDPOINT_SUBNET
+  VGW ---|BGP source route only; no default route| DATASYNC_TASK_SUBNET

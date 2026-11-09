@@ -30,6 +30,16 @@ The previously generated PDF export is **stale**: its 8 November export showed *
 
 No calculator values were changed during this read-only audit.
 
+### Calculator configuration QA — additional findings, 9 November 2026
+
+The current estimate view still displays **$1,930.76/month**, but two description/configuration checks remain open before the estimate can be treated as fully reconciled:
+
+1. **VPN row description is stale.** The $43.80 VPC/VPN row description says the NAT Gateway quantity is not represented and remains outstanding. A separate $73.00 VPC/NAT row is now present. Update the VPN row description to state that it covers the VPN connection and two tunnel public IPv4 addresses, with NAT Gateway costs priced separately.
+2. **NAT calculator configuration needs confirmation.** The $73.00 NAT row description says two conventional public NAT Gateways, one per AZ, with two public IPv4 addresses, and says Regional NAT is not selected. Its configuration summary nevertheless displays Regional NAT parameters of 5 gateways and 3 Availability Zones alongside 2 conventional NAT Gateways. The $73.00 amount arithmetically matches two conventional NAT Gateways at 730 hours plus two public IPv4 addresses at 730 hours; this is a derived check, not proof that the Regional NAT fields are inactive. Confirm the selected NAT type and ensure the Regional NAT parameters are not contributing to the estimate before exporting.
+
+The calculator's export flow also displays a **Public server acknowledgment** stating that the estimate data will be stored on AWS public servers and that anyone with the public share link can access it. No acknowledgement has been accepted and no public share link has been created in this session. Obtain explicit owner consent before accepting that disclosure or generating a public link. A fresh PDF/CSV export remains outstanding; no exported file path has been verified.
+
+
 ## Architecture quantities to price
 
 | Service | Current design input | Pricing status / required decision |

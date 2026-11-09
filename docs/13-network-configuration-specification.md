@@ -1,6 +1,6 @@
 # 13 — Network Configuration Specification
 
-**ID:** CLI-AWS-NCS-013 | **Version:** 1.1 | **Status:** Proposed configuration baseline — customer inputs and approvals outstanding  
+**ID:** CLI-AWS-NCS-013 | **Version:** 1.1 | **Status:** Approved synthetic configuration baseline — live AWS execution gated  
 **Project:** Clafoke Investors Ltd (fictional portfolio case study)  
 **Related:** [Network and security design](03-network-security-design.md), [Network implementation preparation](11-network-implementation-preparation.md), [Network implementation review](12-network-implementation-review.md), [Migration readiness matrix](09-migration-readiness-matrix.md), [Technical architecture audit](10-technical-architecture-audit.md)
 
@@ -10,13 +10,13 @@
 
 This document is the configuration-level handoff between the architecture/preparation artifacts and a future implementation plan. It defines subnet and route-table intent, route propagation boundaries, security-group policy, service-specific network dependencies, endpoint decision criteria, and acceptance tests.
 
-**Current decision: HOLD.** The reference configuration is coherent enough for technical review, but actual source prefixes, AWS account/AZ mapping, customer gateway details, application listener, migration service modes, endpoint dependencies and owner approvals remain unverified. Do not generate/apply Terraform or change AWS/customer firewalls until the input register and change gates are closed.
+**Current decision: approved for the fictional portfolio baseline.** Synthetic values are fixed in document 14 and Terraform variables. Account-specific AZ IDs, a real customer gateway IP, ACM certificate, activated DataSync agent and real source credentials are runtime inputs only if the corresponding AWS resources are enabled. Continue Terraform engineering and validation without waiting for fictional customer evidence. Do not apply resources or start migration tasks without explicit user permission.
 
 ### Decision labels
 
 - **Baseline proposal:** the portfolio design owner's recommended configuration, still subject to owner approval.
 - **AWS service requirement/guidance:** a service-specific network behaviour to recheck against current documentation and the selected service mode/Region.
-- **Customer input required:** cannot be truthfully fixed from the fictional case study.
+- **Runtime input required:** needed only when an opt-in resource is enabled in a real AWS account.
 - **Conditional:** apply only when the named workload/service dependency is confirmed.
 
 ## 2. Addressing and subnet configuration baseline
@@ -234,7 +234,7 @@ All tests below are **not run**. Execute only in an approved non-production/test
 2. Replace illustrative values only when supported by dated source evidence; otherwise retain them explicitly as synthetic portfolio assumptions.
 3. Resolve NVR-08 DMS egress, NVR-10 MGN endpoints/inspection, NVR-11 staging AZ/capacity, NVR-14/15 DataSync endpoint/agent design and NVR-07 VPN resilience.
 4. Update the readiness matrix and audit with owner decisions and evidence references.
-5. Only after the HOLD is lifted, derive Terraform variables/modules and an approved implementation plan. Validate a plan output before any apply; AWS changes require explicit change approval.
+5. Continue Terraform modules, static checks, CI, plan review and documentation against the synthetic values. A real AWS apply still requires explicit permission, a verified account/Region and the required runtime inputs.
 
 ## 11. AWS references
 
@@ -250,4 +250,4 @@ All tests below are **not run**. Execute only in an approved non-production/test
 - [Security groups](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html)
 - [Network ACLs](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html)
 
-**Specification decision:** proposed network configuration baseline published for review. Customer inputs, approvals, implementation and live validation remain outstanding.
+**Specification decision:** synthetic network configuration baseline approved and aligned with Terraform. Account-specific execution inputs, live deployment and connectivity validation remain outstanding.

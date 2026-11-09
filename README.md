@@ -36,8 +36,11 @@ The canonical master Mermaid source is [architecture/target-architecture.mmd](ar
 8. [Assumptions and decisions register](docs/08-assumptions-decisions-register.md)
 9. [Migration readiness matrix](docs/09-migration-readiness-matrix.md)
 10. [Technical architecture audit](docs/10-technical-architecture-audit.md)
-11. [Network implementation preparation pack](docs/11-network-implementation-preparation.md)\n12. [Network implementation review and input validation register](docs/12-network-implementation-review.md)
-
+11. [Network implementation preparation pack](docs/11-network-implementation-preparation.md)
+12. [Network implementation review and input validation register](docs/12-network-implementation-review.md)
+13. [Network configuration specification](docs/13-network-configuration-specification.md)
+14. [Synthetic case-study decisions](docs/14-synthetic-case-study-decisions.md)
+15. [Infrastructure as Code design](docs/15-infrastructure-as-code-design.md)
 Additional assets: [Terraform network and workload foundation](terraform/README.md), [synthetic case-study decisions](docs/14-synthetic-case-study-decisions.md), [IaC design notes](docs/15-infrastructure-as-code-design.md), [network implementation preparation pack](docs/11-network-implementation-preparation.md), [network implementation review/input validation register](docs/12-network-implementation-review.md), [network configuration specification](docs/13-network-configuration-specification.md) (route-table associations, SG rule inventory, BGP/VPN preparation, read-only CLI inspection, test catalogue and evidence register); master architecture source/rendered page; [runtime/network source](architecture/runtime-network-view.mmd) and [rendered view](architecture/runtime-network-view.md); [migration-flow source](architecture/migration-data-flow.mmd) and [rendered view](architecture/migration-data-flow.md); `cost/pricing-assumptions.csv`, `evidence/README.md`, `DESIGN-CONSISTENCY.md`.
 
 ## Cost review status

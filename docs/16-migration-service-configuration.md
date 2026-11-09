@@ -108,7 +108,9 @@ Only after reviewing the displayed account, Region, subnet, SG and instance type
 - [AWS DataSync network requirements](https://docs.aws.amazon.com/datasync/latest/userguide/datasync-network.html)
 - [AWS DataSync service endpoint selection](https://docs.aws.amazon.com/datasync/latest/userguide/choose-service-endpoint.html)
 - [AWS DataSync cross-service confused deputy prevention](https://docs.aws.amazon.com/datasync/latest/userguide/cross-service-confused-deputy-prevention.html)
+- [AWS MGN API initialization sequence and required roles](https://docs.aws.amazon.com/mgn/latest/ug/mgn-initialize-api.html)
 - [AWS MGN replication configuration template CLI](https://docs.aws.amazon.com/cli/latest/reference/mgn/create-replication-configuration-template.html)
+- [AWS MGN launch configuration template CLI](https://docs.aws.amazon.com/cli/latest/reference/mgn/create-launch-configuration-template.html)
 - [AWS MGN network requirements](https://docs.aws.amazon.com/mgn/latest/ug/preparing-environments.html)
 
 **Execution status:** code and activation instructions are prepared. No migration service has been activated, no task has been started and no source data has moved.

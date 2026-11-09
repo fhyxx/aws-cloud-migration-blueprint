@@ -59,4 +59,9 @@ assert 'dms.${var.aws_region}.amazonaws.com' in migration, "DMS secret role must
 assert 'var.source_secret_kms_key_arn' in migration and 'Resource = "*"' not in migration, "DMS KMS decrypt must be scoped to an optional exact key"
 assert 'var.aws_account_id' in migration and 'aws:SourceAccount' in migration, "DMS service trust must be account-scoped"
 
+
+assert 'resource "aws_vpc_endpoint" "datasync"' in main, "Private DataSync interface endpoint resource missing"
+assert 'service_name        = "com.amazonaws.${var.aws_region}.datasync"' in main, "DataSync endpoint service name mismatch"
+assert 'vpc_endpoint_type   = "Interface"' in main and 'aws_security_group.datasync_endpoint.id' in main, "DataSync endpoint must use dedicated SG"
+
 print("PASS: nine subnets, scoped VPN propagation, S3 endpoint associations, opt-in NAT/VPN, DMS egress, SG boundaries, MGN source scope and acceptance catalogue.")

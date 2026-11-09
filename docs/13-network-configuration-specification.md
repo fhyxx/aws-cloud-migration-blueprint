@@ -99,7 +99,7 @@ Security groups are stateful. Prefer SG-to-SG references for VPC-local peers; us
 |---|---|---|---|---|---|
 | SG-01 | ALB ingress | Approved client CIDRs | TCP 443 | Public HTTPS only; ACM certificate and listener confirmed | Security + App; verify TLS/listener |
 | SG-02 | ALB ingress (conditional) | Approved client CIDRs | TCP 80 | Only if HTTP-to-HTTPS redirect is required | Security; otherwise omit |
-| SG-03 | ALB egress | App SG | Actual target protocol/port (8080 provisional) | Listener and health-check target; confirm actual application contract | App; target health test |
+| SG-03 | ALB egress | App SG | TCP 8080 (synthetic application contract) | Listener and health-check target; confirm actual application contract | App; target health test |
 | SG-04 | App ingress | ALB SG | Actual target protocol/port (8080 provisional) | No direct public or on-premises application ingress | App + Security |
 | SG-05 | App egress | RDS SG | TCP 5432 | Application database access | DBA; connection test |
 | SG-06 | App egress | EFS mount-target SG | TCP 2049 | Application shared-file access | Infrastructure; mount test |

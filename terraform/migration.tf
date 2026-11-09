@@ -101,7 +101,7 @@ resource "aws_iam_role_policy" "dms_endpoint_secrets" {
         Resource = var.source_secret_kms_key_arn
         Condition = {
           StringEquals = {
-            "kms:ViaService"                    = "secretsmanager.${var.aws_region}.amazonaws.com"
+            "kms:ViaService"                  = "secretsmanager.${var.aws_region}.amazonaws.com"
             "kms:EncryptionContext:SecretARN" = var.source_db_secret_arn
           }
         }

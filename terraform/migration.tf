@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "terraform_data" "dms_prerequisites" {
   count = var.enable_dms_resources ? 1 : 0
   input = true
@@ -24,6 +26,7 @@ resource "aws_iam_role" "dms_vpc" {
       Effect    = "Allow"
       Principal = { Service = "dms.amazonaws.com" }
       Action    = "sts:AssumeRole"
+      Condition = { StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current.account_id } }
     }]
   })
   tags = var.tags
@@ -81,7 +84,7 @@ resource "aws_iam_role_policy" "dms_endpoint_secrets" {
     Statement = [
       {
         Effect   = "Allow"
-        Action   = ["secretsmanager:GetSecretValue"]
+        Action   = ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"]
         Resource = [
           var.source_db_secret_arn,
           aws_db_instance.app[0].master_user_secret[0].secret_arn

@@ -254,10 +254,10 @@ Evidence should be dated, attributed to an owner and labelled measured, derived 
 
 - [ ] Owner, evidence link, date, status and approval record for every register item.
 - [ ] AWS Pricing Calculator configuration capture per service, with units, Region, 730-hour basis and scenario label.
-- [ ] Service totals reconciled against saved calculator and export; no manual duplication of calculator-embedded Multi-AZ billing.
+- [x] Service totals reconciled against saved calculator and export; no manual duplication of calculator-embedded Multi-AZ billing. See [calculator export evidence](../evidence/aws-pricing-calculator-2026-11-09.md).
 - [ ] Separate steady-state and migration-period groups with temporary duration/overlap shown independently.
 - [ ] Explicit list of unpriced items, zero placeholders and exclusions; distinguish a zero placeholder from validated zero cost.
-- [ ] Dated calculator CSV/PDF or equivalent export and share URL if approved for portfolio publication.
+- [x] Dated calculator CSV/PDF and owner-authorized public share URL recorded for portfolio publication in [the evidence record](../evidence/aws-pricing-calculator-2026-11-09.md).
 - [ ] Statement that estimates exclude taxes and do not imply deployed infrastructure or executed migration.
 
 ## Calculator evidence checkpoint — 9 November 2026

@@ -362,8 +362,8 @@ The prior combined arithmetic using a $18.75 DataSync fee has been withdrawn bec
 3. Add EC2, EBS, RDS for PostgreSQL, EFS, S3, VPC/NAT, ALB, Site-to-Site VPN, CloudWatch and Route 53 as applicable.
 4. Use 730 hours/month. Record selected calculator configurations and remaining decisions, including PostgreSQL version/workload validation, backup retention, NAT processed GB, ALB LCU inputs, VPN transfer, endpoint count/AZs and data processing from the [endpoint decision inventory](03-network-security-design.md), logs and transfer.
 5. Create a separate migration-period group for MGN staging, DMS, DataSync, temporary instances, transfer and overlap duration.
-6. Export the estimate as CSV and PDF and retain the public share URL. Record the estimate date and pricing assumptions.
-7. Reconcile the exported service totals with this document and `cost/pricing-assumptions.csv`. Do not approve a budget until missing inputs are resolved.
+6. [x] Exported the current estimate as CSV and PDF and recorded the public share URL, date and pricing assumptions in [the evidence record](../evidence/aws-pricing-calculator-2026-11-09.md).
+7. [x] Reconciled the exported service totals with this document and `cost/pricing-assumptions.csv`. Do not approve a budget until missing inputs are resolved.
 
 AWS explains that the calculator uses service configuration and Region inputs, can export CSV/PDF and can generate a shareable estimate link. Its estimate excludes taxes and only includes the information entered.
 

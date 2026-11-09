@@ -2,6 +2,8 @@
 
 **ID:** CLI-AWS-NET-003 | **Version:** 1.6 | **Status:** Proposed reference design — implementation review findings open
 
+**Configuration baseline:** [Network Configuration Specification](13-network-configuration-specification.md) (proposed; HOLD remains in force).
+
 ## Architecture diagrams
 
 - [Focused runtime and network view](../architecture/runtime-network-view.md)

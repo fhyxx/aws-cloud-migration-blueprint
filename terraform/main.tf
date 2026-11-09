@@ -153,162 +153,184 @@ resource "aws_vpn_gateway_route_propagation" "migration" {
   route_table_id = aws_route_table.this[each.key].id
 }
 
+# Security group resources are declared without inline peer rules. Separate
+# aws_security_group_rule resources avoid cyclic SG-to-SG dependencies.
+
 resource "aws_security_group" "alb" {
   name        = "${var.name_prefix}-alb-sg"
   description = "HTTPS ingress from clients; forwards to application targets."
   vpc_id      = aws_vpc.this.id
-
-  ingress {
-    description = "Public HTTPS"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    description     = "Application targets"
-    from_port       = var.app_port
-    to_port         = var.app_port
-    protocol        = "tcp"
-    security_groups = [aws_security_group.app.id]
-  }
-
-  tags = merge(var.tags, { Name = "${var.name_prefix}-alb-sg" })
+  tags        = merge(var.tags, { Name = "${var.name_prefix}-alb-sg" })
 }
 
 resource "aws_security_group" "app" {
   name        = "${var.name_prefix}-app-sg"
   description = "Application ingress only from ALB."
   vpc_id      = aws_vpc.this.id
-
-  ingress {
-    description     = "ALB to application"
-    from_port       = var.app_port
-    to_port         = var.app_port
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
-  }
-
-  egress {
-    description     = "Application to PostgreSQL"
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [aws_security_group.rds.id]
-  }
-
-  egress {
-    description     = "Application to EFS"
-    from_port       = 2049
-    to_port         = 2049
-    protocol        = "tcp"
-    security_groups = [aws_security_group.efs.id]
-  }
-
-  tags = merge(var.tags, { Name = "${var.name_prefix}-app-sg" })
+  tags        = merge(var.tags, { Name = "${var.name_prefix}-app-sg" })
 }
 
 resource "aws_security_group" "rds" {
   name        = "${var.name_prefix}-rds-sg"
   description = "PostgreSQL accepts application and migration traffic only."
   vpc_id      = aws_vpc.this.id
-
-  ingress {
-    description     = "Application PostgreSQL"
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [aws_security_group.app.id]
-  }
-
-  ingress {
-    description     = "Temporary DMS PostgreSQL target access"
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [aws_security_group.dms.id]
-  }
-
-  tags = merge(var.tags, { Name = "${var.name_prefix}-rds-sg" })
+  tags        = merge(var.tags, { Name = "${var.name_prefix}-rds-sg" })
 }
 
 resource "aws_security_group" "efs" {
   name        = "${var.name_prefix}-efs-sg"
   description = "NFS only from application and DataSync task ENIs."
   vpc_id      = aws_vpc.this.id
-
-  ingress {
-    description     = "Application NFS"
-    from_port       = 2049
-    to_port         = 2049
-    protocol        = "tcp"
-    security_groups = [aws_security_group.app.id]
-  }
-
-  ingress {
-    description     = "DataSync task ENI NFS"
-    from_port       = 2049
-    to_port         = 2049
-    protocol        = "tcp"
-    security_groups = [aws_security_group.datasync_task.id]
-  }
-
-  tags = merge(var.tags, { Name = "${var.name_prefix}-efs-sg" })
+  tags        = merge(var.tags, { Name = "${var.name_prefix}-efs-sg" })
 }
 
 resource "aws_security_group" "dms" {
   name        = "${var.name_prefix}-dms-sg"
   description = "Dedicated DMS SG; all outbound follows AWS DMS network guidance."
   vpc_id      = aws_vpc.this.id
-
-  egress {
-    description = "AWS DMS documented all-outbound baseline; restrict peer ingress and subnet routing."
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(var.tags, { Name = "${var.name_prefix}-dms-sg" })
+  tags        = merge(var.tags, { Name = "${var.name_prefix}-dms-sg" })
 }
 
 resource "aws_security_group" "mgn_staging" {
   name        = "${var.name_prefix}-mgn-staging-sg"
   description = "MGN staging replication traffic from synthetic source application subnet."
   vpc_id      = aws_vpc.this.id
-
-  ingress {
-    description = "MGN replication stream from source VMs"
-    from_port   = 1500
-    to_port     = 1500
-    protocol    = "tcp"
-    cidr_blocks = [var.source_app_cidr]
-  }
-
-  egress {
-    description = "MGN service HTTPS and service dependencies"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(var.tags, { Name = "${var.name_prefix}-mgn-staging-sg" })
+  tags        = merge(var.tags, { Name = "${var.name_prefix}-mgn-staging-sg" })
 }
 
 resource "aws_security_group" "datasync_task" {
   name        = "${var.name_prefix}-datasync-task-sg"
   description = "DataSync task ENIs access EFS over NFS."
   vpc_id      = aws_vpc.this.id
+  tags        = merge(var.tags, { Name = "${var.name_prefix}-datasync-task-sg" })
+}
 
-  egress {
-    description     = "DataSync task ENI to EFS mount target"
-    from_port       = 2049
-    to_port         = 2049
-    protocol        = "tcp"
-    security_groups = [aws_security_group.efs.id]
-  }
+resource "aws_security_group_rule" "alb_https_ingress" {
+  type              = "ingress"
+  security_group_id = aws_security_group.alb.id
+  description       = "Public HTTPS"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+}
 
-  tags = merge(var.tags, { Name = "${var.name_prefix}-datasync-task-sg" })
+resource "aws_security_group_rule" "alb_to_app" {
+  type                     = "egress"
+  security_group_id        = aws_security_group.alb.id
+  description              = "ALB to application targets"
+  from_port                = var.app_port
+  to_port                  = var.app_port
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.app.id
+}
+
+resource "aws_security_group_rule" "app_from_alb" {
+  type                     = "ingress"
+  security_group_id        = aws_security_group.app.id
+  description              = "Application listener from ALB only"
+  from_port                = var.app_port
+  to_port                  = var.app_port
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.alb.id
+}
+
+resource "aws_security_group_rule" "app_to_rds" {
+  type                     = "egress"
+  security_group_id        = aws_security_group.app.id
+  description              = "Application to PostgreSQL"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.rds.id
+}
+
+resource "aws_security_group_rule" "app_to_efs" {
+  type                     = "egress"
+  security_group_id        = aws_security_group.app.id
+  description              = "Application to EFS"
+  from_port                = 2049
+  to_port                  = 2049
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.efs.id
+}
+
+resource "aws_security_group_rule" "rds_from_app" {
+  type                     = "ingress"
+  security_group_id        = aws_security_group.rds.id
+  description              = "Application PostgreSQL"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.app.id
+}
+
+resource "aws_security_group_rule" "rds_from_dms" {
+  type                     = "ingress"
+  security_group_id        = aws_security_group.rds.id
+  description              = "Temporary DMS PostgreSQL target access"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.dms.id
+}
+
+resource "aws_security_group_rule" "efs_from_app" {
+  type                     = "ingress"
+  security_group_id        = aws_security_group.efs.id
+  description              = "Application NFS"
+  from_port                = 2049
+  to_port                  = 2049
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.app.id
+}
+
+resource "aws_security_group_rule" "efs_from_datasync" {
+  type                     = "ingress"
+  security_group_id        = aws_security_group.efs.id
+  description              = "DataSync task ENI NFS"
+  from_port                = 2049
+  to_port                  = 2049
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.datasync_task.id
+}
+
+resource "aws_security_group_rule" "dms_all_egress" {
+  type              = "egress"
+  security_group_id = aws_security_group.dms.id
+  description       = "AWS DMS documented all-outbound baseline; restrict peer ingress and subnet routing."
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "mgn_source_to_staging" {
+  type              = "ingress"
+  security_group_id = aws_security_group.mgn_staging.id
+  description       = "MGN replication stream from synthetic source VMs"
+  from_port         = 1500
+  to_port           = 1500
+  protocol          = "tcp"
+  cidr_blocks       = [var.source_app_cidr]
+}
+
+resource "aws_security_group_rule" "mgn_https_egress" {
+  type              = "egress"
+  security_group_id = aws_security_group.mgn_staging.id
+  description       = "MGN service HTTPS and documented service dependencies"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "datasync_task_to_efs" {
+  type                     = "egress"
+  security_group_id        = aws_security_group.datasync_task.id
+  description              = "DataSync task ENI to EFS mount target"
+  from_port                = 2049
+  to_port                  = 2049
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.efs.id
 }

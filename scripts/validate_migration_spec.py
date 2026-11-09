@@ -171,7 +171,7 @@ assert "current Terraform baseline; non-Multi-AZ" in target_source
 assert "non-Multi-AZ" in migration_source
 assert "Provisioned DMS replication instance" in target_source
 assert "Provisioned AWS DMS replication instance" in migration_source
-assert "Enhanced mode is not supported for NFS-to-EFS" in data_migration_strategy
+assert "NFS-to-EFS is not an eligible Enhanced-mode transfer" in data_migration_strategy
 assert "Enhanced mode is not supported for NFS-to-EFS" in cost_estimate
 assert "Enhanced mode is not supported for the current NFS-to-EFS path" in migration_service_doc
 assert "`0.0.0.0/0` (public HTTPS baseline)" in network_spec, (

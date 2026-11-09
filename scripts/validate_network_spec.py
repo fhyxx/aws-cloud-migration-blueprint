@@ -49,4 +49,8 @@ assert 'default     = ["us-east-1a", "us-east-1b"]' in variables, "Synthetic two
 assert "skip_credentials_validation" in provider and "skip_requesting_account_id" in provider, "CI no-refresh provider switches missing"
 assert "aws_availability_zones" not in main, "Plan should not require live AZ discovery"
 
+
+assert 'variable "ami_id"' in variables and 'variable "aws_account_id"' in variables, "Offline full-plan inputs missing"
+assert "aws_ami" not in workloads and "aws_caller_identity" not in (ROOT / "terraform" / "migration.tf").read_text(), "Terraform plan must not require live data sources"
+
 print("PASS: nine subnets, scoped VPN propagation, S3 endpoint associations, opt-in NAT/VPN, DMS egress, SG boundaries, MGN source scope and acceptance catalogue.")

@@ -8,6 +8,7 @@ main = (ROOT / "terraform" / "main.tf").read_text()
 variables = (ROOT / "terraform" / "variables.tf").read_text()
 decisions = (ROOT / "docs" / "14-synthetic-case-study-decisions.md").read_text()
 spec = (ROOT / "docs" / "13-network-configuration-specification.md").read_text()
+workloads = (ROOT / "terraform" / "workloads.tf").read_text()
 
 required_subnets = [
     "public_a", "public_b", "app_a", "app_b", "db_a", "db_b",
@@ -27,5 +28,14 @@ assert 'cidr_ipv4         = var.source_app_cidr' in main, "MGN staging source sc
 assert "No public SSH" in decisions, "Synthetic security decisions missing"
 assert "NCS-21" in spec, "Network acceptance catalogue missing"
 assert "terraform apply" in decisions, "No-apply safety rule missing"
+
+
+assert 'variable "enable_workload_resources"' in variables and 'default     = false' in variables, "Workload resources must be opt-in"
+assert 'condition     = var.create_nat_gateways' in workloads, "Workloads must require NAT or private endpoints"
+assert 'aws_lb_listener" "https"' in workloads and 'path                = "/health/ready"' in workloads, "HTTPS ALB health-check baseline missing"
+assert any(line.strip().startswith('manage_master_user_password') and 'true' in line for line in workloads.splitlines()), "RDS managed password baseline missing"
+assert any(line.strip().startswith('multi_az') and 'true' in line for line in workloads.splitlines()), "RDS Multi-AZ baseline missing"
+assert 'resource "aws_efs_backup_policy" "app"' in workloads, "EFS backup policy missing"
+assert 'resource "aws_autoscaling_policy" "app_cpu"' in workloads, "ASG target tracking policy missing"
 
 print("PASS: nine subnets, scoped VPN propagation, S3 endpoint associations, opt-in NAT/VPN, DMS egress, SG boundaries, MGN source scope and acceptance catalogue.")

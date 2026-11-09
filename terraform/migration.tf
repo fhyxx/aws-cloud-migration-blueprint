@@ -46,7 +46,7 @@ resource "aws_iam_role" "dms_cloudwatch" {
       Effect    = "Allow"
       Principal = { Service = "dms.amazonaws.com" }
       Action    = "sts:AssumeRole"
-      Condition = { StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current[0].account_id } }
+      Condition = { StringEquals = { "aws:SourceAccount" = var.aws_account_id } }
     }]
   })
   tags = var.tags
@@ -68,7 +68,7 @@ resource "aws_iam_role" "dms_endpoint_access" {
       Effect    = "Allow"
       Principal = { Service = "dms.amazonaws.com" }
       Action    = "sts:AssumeRole"
-      Condition = { StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current[0].account_id } }
+      Condition = { StringEquals = { "aws:SourceAccount" = var.aws_account_id } }
     }]
   })
   tags = var.tags
@@ -337,7 +337,7 @@ resource "aws_iam_role" "datasync_s3" {
       Effect    = "Allow"
       Principal = { Service = "datasync.amazonaws.com" }
       Action    = "sts:AssumeRole"
-      Condition = { StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current[0].account_id } }
+      Condition = { StringEquals = { "aws:SourceAccount" = var.aws_account_id } }
     }]
   })
   tags = var.tags

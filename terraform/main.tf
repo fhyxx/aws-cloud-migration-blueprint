@@ -199,6 +199,13 @@ resource "aws_security_group" "mgn_staging" {
   tags        = merge(var.tags, { Name = "${var.name_prefix}-mgn-staging-sg" })
 }
 
+resource "aws_security_group" "datasync_endpoint" {
+  name        = "${var.name_prefix}-datasync-endpoint-sg"
+  description = "DataSync VPC service endpoint accepts control-plane traffic from the synthetic on-prem agent only."
+  vpc_id      = aws_vpc.this.id
+  tags        = merge(var.tags, { Name = "${var.name_prefix}-datasync-endpoint-sg" })
+}
+
 resource "aws_security_group" "datasync_task" {
   name        = "${var.name_prefix}-datasync-task-sg"
   description = "DataSync task ENIs access EFS over NFS."
@@ -307,6 +314,24 @@ resource "aws_vpc_security_group_egress_rule" "mgn_https_egress" {
   security_group_id = aws_security_group.mgn_staging.id
   description       = "MGN service HTTPS and documented service dependencies"
   cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "datasync_endpoint_from_agent" {
+  security_group_id = aws_security_group.datasync_endpoint.id
+  description       = "DataSync VPC endpoint control plane from the activated on-prem agent."
+  cidr_ipv4         = var.datasync_agent_cidr
+  from_port         = 1024
+  to_port           = 1064
+  ip_protocol       = "tcp"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "datasync_task_from_agent" {
+  security_group_id = aws_security_group.datasync_task.id
+  description       = "DataSync agent data-plane connection to task ENI."
+  cidr_ipv4         = var.datasync_agent_cidr
   from_port         = 443
   to_port           = 443
   ip_protocol       = "tcp"

@@ -1,6 +1,6 @@
 # 09 — Migration Readiness Matrix
 
-**ID:** CLI-AWS-MRM-009 | **Version:** 1.6 | **Status:** Open — evidence and owner decisions required  
+**ID:** CLI-AWS-MRM-009 | **Version:** 1.7 | **Status:** Open — evidence and owner decisions required  
 **Project:** Clafoke Investors Ltd (fictional portfolio case study)  
 **Related:** [Data migration strategy](04-data-migration-strategy.md), [Migration runbook](05-migration-runbook.md), [Cost estimation and optimisation](07-cost-estimation-optimisation.md), [Assumptions and decisions register](08-assumptions-decisions-register.md), [Pricing assumptions](../cost/pricing-assumptions.csv), [Network configuration specification](13-network-configuration-specification.md)
 

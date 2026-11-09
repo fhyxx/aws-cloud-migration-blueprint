@@ -71,8 +71,9 @@ flowchart TB
   end
 
   ONPREM["Illustrative on-premises<br/>10.50.0.0/16<br/>App 10.50.10.0/24<br/>DB/NFS 10.50.20.0/24<br/>DataSync agent 10.50.20.50/32"] ---|"IPsec VPN • BGP ASN 65010 ↔ 64512<br/>two tunnels • VGW no ECMP"| VGW
-  ONPREM -->|"TCP 1024–1064 control plane<br/>TCP 443 task data plane"| DS_EP
-  ONPREM --> DS_TASK
+  ONPREM -->|"TCP 1024–1064 control plane<br/>TCP 443 task data plane over VPN"| VGW
+  VGW --> DS_EP
+  VGW --> DS_TASK
 
   subgraph ROUTING["Route-table intent — proposed, not deployed"]
     R1["Public A/B: default route to IGW"]

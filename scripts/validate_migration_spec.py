@@ -115,6 +115,54 @@ assert "describe-replication-configuration-templates" in mgn_script
 assert "describe-launch-configuration-templates" in mgn_script
 assert "Existing templates are never overwritten" in mgn_script
 
+
+# Architecture views: the editable Mermaid sources must match their rendered
+# Markdown blocks, and network labels must match the Terraform subnet/route
+# implementation rather than an obsolete pre-migration design.
+architecture_dir = ROOT / "architecture"
+runtime_source = (architecture_dir / "runtime-network-view.mmd").read_text().strip()
+runtime_view = (architecture_dir / "runtime-network-view.md").read_text()
+target_source = (architecture_dir / "target-architecture.mmd").read_text().strip()
+target_view = (architecture_dir / "target-architecture.md").read_text()
+migration_source = (architecture_dir / "migration-data-flow.mmd").read_text().strip()
+migration_view = (architecture_dir / "migration-data-flow.md").read_text()
+
+
+def embedded_mermaid(markdown: str) -> str:
+    match = re.search(r"\x60\x60\x60mermaid\\s*(.*?)\x60\x60\x60", markdown, re.DOTALL)
+    assert match, "Rendered Markdown page must contain a Mermaid block"
+    return match.group(1).strip()
+
+
+assert embedded_mermaid(runtime_view) == runtime_source, (
+    "Runtime/network rendered diagram drifted from its editable Mermaid source"
+)
+assert embedded_mermaid(target_view) == target_source, (
+    "Target architecture rendered diagram drifted from its editable Mermaid source"
+)
+assert embedded_mermaid(migration_view) == migration_source, (
+    "Migration data-flow rendered diagram drifted from its editable Mermaid source"
+)
+for cidr in (
+    "10.30.31.0/24",
+    "10.30.41.0/24",
+    "10.30.42.0/24",
+    "10.30.51.0/24",
+    "10.30.52.0/24",
+):
+    assert cidr in runtime_source, f"Runtime view missing migration subnet {cidr}"
+assert "No VGW propagation" in runtime_source, (
+    "Application route tables must not receive the on-premises BGP aggregate"
+)
+assert "DMS reuses the two private application subnets" not in runtime_view, (
+    "Obsolete DMS/application subnet statement remains in runtime view"
+)
+assert "Provisioned DMS replication instance" in target_source
+assert "Provisioned AWS DMS replication instance" in migration_source
+assert "instance or Serverless" not in target_source + migration_source, (
+    "Diagrams must distinguish the provisioned Terraform baseline from an unimplemented Serverless alternative"
+)
+
 print(
     "PASS: migration flags default off; DMS is private, TLS/Secrets-Manager "
     "backed and stopped; DataSync endpoint, EFS transport and archive prefix "

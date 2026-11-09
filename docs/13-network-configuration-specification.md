@@ -10,7 +10,7 @@
 
 This document is the configuration-level handoff between the architecture/preparation artifacts and a future implementation plan. It defines subnet and route-table intent, route propagation boundaries, security-group policy, service-specific network dependencies, endpoint decision criteria, and acceptance tests.
 
-**Current decision: approved for the fictional portfolio baseline.** Synthetic values are fixed in document 14 and Terraform variables. Account-specific AZ IDs, a real customer gateway IP, ACM certificate, activated DataSync agent and real source credentials are runtime inputs only if the corresponding AWS resources are enabled. Continue Terraform engineering and validation without waiting for fictional customer evidence. Do not apply resources or start migration tasks without explicit user permission.
+**Current decision: approved for the fictional portfolio baseline.** Synthetic values are fixed in document 14 and Terraform variables. The rendered architecture views are checked in CI for source synchronisation and key subnet/route-boundary consistency. Account-specific AZ IDs, a real customer gateway IP, ACM certificate, activated DataSync agent and real source credentials are runtime inputs only if the corresponding AWS resources are enabled. Continue Terraform engineering and validation without waiting for fictional customer evidence. Do not apply resources or start migration tasks without explicit user permission.
 
 ### Decision labels
 

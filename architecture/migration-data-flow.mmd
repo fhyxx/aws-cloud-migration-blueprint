@@ -20,7 +20,7 @@ flowchart LR
     end
 
     subgraph DMS_SUBNETS["Dedicated private DMS migration subnets<br/>10.30.41.0/24 • AZ-A and 10.30.42.0/24 • AZ-B"]
-      DMS["AWS DMS replication<br/>instance or Serverless<br/>dedicated DMS SG"]
+      DMS["Provisioned AWS DMS replication instance<br/>current Terraform option; non-Multi-AZ<br/>dedicated DMS SG"]
     end
 
     RDS[("RDS PostgreSQL target<br/>Multi-AZ DB instance deployment")]

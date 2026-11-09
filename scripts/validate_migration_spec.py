@@ -199,6 +199,16 @@ assert "feature/terraform-network-foundation" not in audit_text, (
 for route_table in ("DataSync endpoint", "DataSync task"):
     assert route_table in audit_text, f"Audit must include {route_table} in migration route propagation scope"
 
+consistency_doc = (ROOT / "DESIGN-CONSISTENCY.md").read_text()
+preparation_doc = (ROOT / "docs" / "11-network-implementation-preparation.md").read_text()
+expected_route_scope = "DMS-A, DMS-B, MGN staging, DataSync endpoint and DataSync task"
+assert expected_route_scope in consistency_doc, "Design consistency register must list all five migration route tables"
+assert "RT-DATASYNC-ENDPOINT" in preparation_doc and "RT-DATASYNC-TASK" in preparation_doc, (
+    "Network preparation steps must include both DataSync migration route tables"
+)
+assert "latest updated GitHub visual rendering remains pending confirmation" in consistency_doc, (
+    "Do not overstate visual confirmation of the latest runtime diagram"
+)
 print(
     "PASS: migration flags default off; DMS is private, TLS/Secrets-Manager "
     "backed and stopped; DataSync endpoint, EFS transport and archive prefix "

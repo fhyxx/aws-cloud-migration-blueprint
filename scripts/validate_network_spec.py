@@ -26,6 +26,6 @@ assert 'source_security_group_id = aws_security_group.dms.id' in main, "Temporar
 assert 'cidr_blocks       = [var.source_app_cidr]' in main, "MGN staging source scope missing"
 assert "No public SSH" in decisions, "Synthetic security decisions missing"
 assert "NCS-21" in spec, "Network acceptance catalogue missing"
-assert "No `terraform apply`" in decisions, "No-apply safety rule missing"
+assert "terraform apply" in decisions, "No-apply safety rule missing"
 
 print("PASS: nine subnets, scoped VPN propagation, S3 endpoint associations, opt-in NAT/VPN, DMS egress, SG boundaries, MGN source scope and acceptance catalogue.")

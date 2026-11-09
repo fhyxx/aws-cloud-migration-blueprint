@@ -65,8 +65,9 @@ The GitHub Actions workflow runs on Terraform-related pull requests and main-bra
 2. Terraform initialization with backend disabled.
 3. Terraform validation.
 4. Python static assertions for subnet count, route propagation scope, opt-in cost controls and security-group boundaries.
+5. A no-refresh Terraform plan using dummy credentials and all cost-bearing feature flags disabled; this validates the resource graph without querying or changing an AWS account.
 
-CI has been added but has not yet been observed running successfully. Local Windows validation is still required to verify the exact provider lock, formatted HCL and a no-refresh plan against the intended provider version. The first plan should use `create_nat_gateways=false` and `enable_site_to_site_vpn=false`.
+CI now runs formatting, init, validate, static assertions and a no-refresh plan with dummy credentials and all NAT/VPN/workload/migration flags disabled. This checks the default resource graph without an AWS account; it does not validate enabled service plans or replace a real account-specific plan. Local Windows validation is still required to verify the exact provider lock, formatted HCL and a no-refresh plan against the intended provider version. The first plan should use `create_nat_gateways=false` and `enable_site_to_site_vpn=false`.
 
 ## 6. Next implementation layers
 

@@ -37,5 +37,19 @@ jobs:
       - name: Terraform validate
         run: terraform -chdir=terraform validate
 
+      - name: No-refresh plan (all chargeable feature flags off)
+        env:
+          AWS_ACCESS_KEY_ID: testing
+          AWS_SECRET_ACCESS_KEY: testing
+          AWS_DEFAULT_REGION: us-east-1
+          TF_VAR_skip_credentials_validation: "true"
+          TF_VAR_skip_requesting_account_id: "true"
+          TF_VAR_create_nat_gateways: "false"
+          TF_VAR_enable_site_to_site_vpn: "false"
+          TF_VAR_enable_workload_resources: "false"
+          TF_VAR_enable_dms_resources: "false"
+          TF_VAR_enable_datasync_resources: "false"
+        run: terraform -chdir=terraform plan -refresh=false -input=false -no-color
+
       - name: Static network design assertions
         run: python3 scripts/validate_network_spec.py

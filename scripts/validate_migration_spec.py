@@ -185,6 +185,7 @@ assert "instance or Serverless" not in target_source + migration_source, (
 for doc_path in (
     ROOT / "docs" / "09-migration-readiness-matrix.md",
     ROOT / "docs" / "10-technical-architecture-audit.md",
+    ROOT / "docs" / "11-network-implementation-preparation.md",
 ):
     doc_text = doc_path.read_text()
     assert r"\n" not in doc_text, (
@@ -206,7 +207,7 @@ assert expected_route_scope in consistency_doc, "Design consistency register mus
 assert "RT-DATASYNC-ENDPOINT" in preparation_doc and "RT-DATASYNC-TASK" in preparation_doc, (
     "Network preparation steps must include both DataSync migration route tables"
 )
-assert "latest updated GitHub visual rendering remains pending confirmation" in consistency_doc, (
+assert "updated GitHub visual rendering remains pending confirmation" in consistency_doc, (
     "Do not overstate visual confirmation of the latest runtime diagram"
 )
 print(

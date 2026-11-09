@@ -380,7 +380,7 @@ resource "aws_datasync_location_s3" "archive" {
   count = var.enable_datasync_resources ? 1 : 0
 
   s3_bucket_arn    = aws_s3_bucket.archive[0].arn
-  subdirectory     = "/archives"
+  subdirectory     = "archives"
   s3_storage_class = "STANDARD"
 
   s3_config {

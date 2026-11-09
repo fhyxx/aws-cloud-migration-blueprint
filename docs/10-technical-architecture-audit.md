@@ -1,6 +1,6 @@
 # 10 — Technical Architecture Audit
 
-**ID:** CLI-AWS-AUD-010 | **Version:** 1.7 | **Status:** In progress — BGP hybrid, DMS flow and migration-subnet isolation corrections published; implementation validation pending  
+**ID:** CLI-AWS-AUD-010 | **Version:** 1.8 | **Status:** In progress — BGP hybrid, DMS flow and migration-subnet isolation corrections published; implementation validation pending  
 **Project:** Clafoke Investors Ltd (fictional, design-only)  
 **Audit date:** 2026-11-08
 
@@ -37,7 +37,7 @@ The design is **not yet approved for implementation**. The user confirmed the ma
 | AUD-14 | DMS shared the ordinary application subnets, so enabling VGW route propagation there would expose a broad on-premises route to application workloads and make on-premises firewall source filtering less precise. | Added dedicated DMS migration subnets `10.30.41.0/24` and `10.30.42.0/24` across two AZs, dedicated route tables and a dedicated DMS SG. VGW route propagation is now limited to DMS-A, DMS-B and MGN staging; app, public and DB route tables receive no source route. The diagrams, network design, readiness matrix and runbook were aligned. | Validate actual CIDR availability, subnet/AZ mapping, DMS subnet-group placement, propagated route tables, on-premises firewall source restrictions, DMS-to-source/target connectivity and migration-period resource teardown. |
 | AUD-15 | Network validation requirements were described across several sections but lacked a single source/destination/port allow-list and explicit negative tests for unintended paths. | Added a migration traffic/security matrix for DMS, MGN, DataSync and application flows, plus negative tests for application-to-on-premises access, unauthorized DMS source paths, MGN destination scope, DB route isolation and VPN tunnel failover. Added readiness gate NET-03. | Execute each test in an approved environment and retain sanitized route, SG/NACL/firewall, connectivity and tunnel evidence; no live validation is claimed. |
 
-## RDS calculator reconciliation
+| AUD-16 | The network design had detailed route and traffic intent but no consolidated implementation handoff covering exact subnet associations, SG rule direction, customer VPN/BGP inputs, read-only inspection, test sequence and evidence handling. | Added [Network Implementation Preparation Pack](11-network-implementation-preparation.md) with subnet/route-table mapping, SG intent, customer Gateway/VGW/BGP preparation, ordered build gates, read-only PowerShell/AWS CLI inspection commands, positive/negative validation tests, tunnel failover procedure and evidence/redaction register. | Reconcile all fictional network inputs with actual customer facts, obtain owner approvals, and execute tests only under an approved change. No deployment or live validation is claimed. |\n\n## RDS calculator reconciliation
 
 The saved calculator configuration is PostgreSQL `db.m6i.2xlarge`, Multi-AZ DB instance deployment, 500 GB gp3 storage input, 12,000 IOPS, 500 MiB/s throughput and Database Insights. The saved line items reconcile as follows:
 

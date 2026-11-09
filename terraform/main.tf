@@ -1,10 +1,6 @@
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
 locals {
-  az_a = data.aws_availability_zones.available.names[0]
-  az_b = data.aws_availability_zones.available.names[1]
+  az_a = var.availability_zone_names[0]
+  az_b = var.availability_zone_names[1]
 
   subnets = {
     public_a          = { cidr = "10.30.1.0/24", az = local.az_a }

@@ -57,7 +57,7 @@ All route tables include the VPC-local route. The table below lists additional i
 |---|---|---|---|
 | RT-PUBLIC-A | Public-A | `0.0.0.0/0 → IGW` | VGW propagated source route |
 | RT-PUBLIC-B | Public-B | `0.0.0.0/0 → IGW` | VGW propagated source route |
-| RT-APP-A | App-A | `0.0.0.0/0 → NAT-A`; S3 prefix-list route → S3 Gateway Endpoint when endpoint is associated | `10.50.0.0/16 → VGW` |
+| RT-APP-A | App-A | `0.0.0.0/0 → NAT-A`; S3 prefix-list route → S3 Gateway Endpoint (associated with App-A, App-B and MGN staging) | `10.50.0.0/16 → VGW` |
 | RT-APP-B | App-B | `0.0.0.0/0 → NAT-B`; S3 prefix-list route → S3 Gateway Endpoint when endpoint is associated | `10.50.0.0/16 → VGW` |
 | RT-DB-A | DB-A | Local route only | Default internet route; VGW propagated route |
 | RT-DB-B | DB-B | Local route only | Default internet route; VGW propagated route |

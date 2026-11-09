@@ -37,7 +37,7 @@ jobs:
         run: terraform -chdir=terraform fmt -check -recursive
 
       - name: Terraform init (no backend)
-        run: terraform -chdir=terraform init -backend=false
+        run: terraform -chdir=terraform init -backend=false -lockfile=readonly
 
       - name: Terraform validate
         run: terraform -chdir=terraform validate

@@ -74,7 +74,7 @@ CI runs formatting, init, validate, static assertions, a default no-refresh plan
 
 ## 6. Remaining engineering work
 
-1. The AWS provider is pinned to `5.100.0`; generate and commit a reviewed `.terraform.lock.hcl` with Windows/Linux checksums for reproducible local/CI installs.
+1. The AWS provider is pinned to `5.100.0`; `terraform/.terraform.lock.hcl` is committed with Linux/Windows checksums and CI uses `-lockfile=readonly`.
 2. Run local Windows `fmt`, `init -backend=false`, `validate`, Python static checks and a no-refresh plan; compare provider version with CI.
 3. Retain the guarded MGN replication-template CLI workflow unless a supported Terraform provider resource is confirmed; then test template creation in an approved lab.
 4. Review whether the single-AZ MGN staging subnet is sufficient for the synthetic recovery objectives; document a deliberate multi-AZ/HA option and its cost/operational trade-off.

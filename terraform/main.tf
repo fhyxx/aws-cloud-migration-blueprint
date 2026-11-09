@@ -7,15 +7,15 @@ locals {
   az_b = data.aws_availability_zones.available.names[1]
 
   subnets = {
-    public_a = { cidr = "10.30.1.0/24", az = local.az_a }
-    public_b = { cidr = "10.30.2.0/24", az = local.az_b }
-    app_a    = { cidr = "10.30.11.0/24", az = local.az_a }
-    app_b    = { cidr = "10.30.12.0/24", az = local.az_b }
-    db_a     = { cidr = "10.30.21.0/24", az = local.az_a }
-    db_b     = { cidr = "10.30.22.0/24", az = local.az_b }
-    mgn      = { cidr = "10.30.31.0/24", az = local.az_a }
-    dms_a    = { cidr = "10.30.41.0/24", az = local.az_a }
-    dms_b    = { cidr = "10.30.42.0/24", az = local.az_b }
+    public_a          = { cidr = "10.30.1.0/24", az = local.az_a }
+    public_b          = { cidr = "10.30.2.0/24", az = local.az_b }
+    app_a             = { cidr = "10.30.11.0/24", az = local.az_a }
+    app_b             = { cidr = "10.30.12.0/24", az = local.az_b }
+    db_a              = { cidr = "10.30.21.0/24", az = local.az_a }
+    db_b              = { cidr = "10.30.22.0/24", az = local.az_b }
+    mgn               = { cidr = "10.30.31.0/24", az = local.az_a }
+    dms_a             = { cidr = "10.30.41.0/24", az = local.az_a }
+    dms_b             = { cidr = "10.30.42.0/24", az = local.az_b }
     datasync_endpoint = { cidr = "10.30.51.0/24", az = local.az_a }
     datasync_task     = { cidr = "10.30.52.0/24", az = local.az_a }
   }

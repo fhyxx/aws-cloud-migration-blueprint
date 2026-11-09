@@ -273,6 +273,7 @@ resource "aws_datasync_task" "nfs_to_efs" {
   name                     = "${var.name_prefix}-nfs-to-efs"
   source_location_arn      = aws_datasync_location_nfs.source[0].arn
   destination_location_arn = aws_datasync_location_efs.destination[0].arn
+  task_mode                = "BASIC"
   cloudwatch_log_group_arn = aws_cloudwatch_log_group.datasync[0].arn
 
   options {

@@ -73,6 +73,9 @@ assert 'resource "aws_vpc_endpoint" "datasync"' in main
 assert 'vpc_endpoint_type   = "Interface"' in main
 assert "private_dns_enabled = false" in main
 assert "var.datasync_agent_cidr" in main
+assert 'task_mode                = "BASIC"' in migration, (
+    "NFS-to-EFS DataSync task mode must be explicit for reproducible pricing and quota assumptions"
+)
 assert "var.datasync_agent_arn != null" in migration
 assert 'version = "NFS4_1"' in migration
 assert 'in_transit_encryption = "TLS1_2"' in migration

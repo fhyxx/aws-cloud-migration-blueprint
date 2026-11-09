@@ -250,7 +250,7 @@ resource "aws_datasync_location_efs" "destination" {
   subdirectory        = "/"
 
   ec2_config {
-    subnet_arn          = aws_subnet.this["app_a"].arn
+    subnet_arn          = aws_subnet.this["datasync_task"].arn
     security_group_arns = [aws_security_group.datasync_task.arn]
   }
 

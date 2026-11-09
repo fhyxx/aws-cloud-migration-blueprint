@@ -210,6 +210,14 @@ assert "RT-DATASYNC-ENDPOINT" in preparation_doc and "RT-DATASYNC-TASK" in prepa
 assert "updated GitHub visual rendering remains pending confirmation" in consistency_doc, (
     "Do not overstate visual confirmation of the latest runtime diagram"
 )
+runbook_text = (ROOT / "docs" / "05-migration-runbook.md").read_text()
+review_text = (ROOT / "docs" / "12-network-implementation-review.md").read_text()
+for cidr in ("10.30.51.0/24", "10.30.52.0/24"):
+    assert cidr in runbook_text, f"Migration runbook must include DataSync subnet {cidr}"
+    assert cidr in review_text, f"Network review must include DataSync subnet {cidr}"
+assert "Propagate the source BGP route only to those five migration route tables" in runbook_text, (
+    "Migration runbook must scope BGP propagation to all five migration-only route tables"
+)
 print(
     "PASS: migration flags default off; DMS is private, TLS/Secrets-Manager "
     "backed and stopped; DataSync endpoint, EFS transport and archive prefix "

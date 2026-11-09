@@ -1,6 +1,6 @@
 # 10 — Technical Architecture Audit
 
-**ID:** CLI-AWS-AUD-010 | **Version:** 1.8 | **Status:** In progress — BGP hybrid, DMS flow and migration-subnet isolation corrections published; implementation validation pending  
+**ID:** CLI-AWS-AUD-010 | **Version:** 1.8 | **Status:** In progress — network implementation preparation pack published; implementation validation pending  
 **Project:** Clafoke Investors Ltd (fictional, design-only)  
 **Audit date:** 2026-11-08
 
@@ -8,7 +8,7 @@
 
 The blueprint has a coherent two-AZ target pattern and a defensible separation between steady-state cost and migration-period cost. The review identified gaps in migration-service network placement and traffic paths. Those design gaps have been corrected in the canonical diagram and supporting network, architecture, runbook and readiness documents.
 
-The design is **not yet approved for implementation**. The user confirmed the master and focused GitHub diagram renderings before the latest DMS-subnet isolation revision; the revised master and migration diagrams need a final visual refresh. Rendering confirmation closes only the documentation check, not live network validation. Source compatibility, live route/tunnel configuration, workload benchmarks, backup policy, monitoring thresholds and recovery tests remain open. The fictional source network, BGP design and VPN failover model are now specified as reference assumptions; no AWS resources or migration services have been deployed.
+The design is **not yet approved for implementation**. The user has confirmed that the updated master and migration diagrams render correctly in GitHub. Rendering confirmation closes only the documentation check, not live network validation. Source compatibility, live route/tunnel configuration, workload benchmarks, backup policy, monitoring thresholds and recovery tests remain open. The fictional source network, BGP design and VPN failover model are now specified as reference assumptions; no AWS resources or migration services have been deployed.
 
 ## Scope reviewed
 
@@ -66,7 +66,7 @@ The proposed starting thresholds and recovery tests are documented in `docs/06-v
 6. Confirm application readiness endpoint, health-check behaviour, EC2 family, ASG maximum/scaling, RDS performance, backup retention and log retention.
 7. Execute load, AZ/failover, database restore, EFS restore, S3 recovery and end-to-end application tests; retain dated evidence.
 8. Complete migration-period cost modelling from measured source profiles, benchmarks, network flows and approved dates.
-9. GitHub rendering of the master and both focused diagrams has been visually confirmed from user screenshots. The runtime view now depicts ALB nodes in both public subnets; the latest BGP VPN/source-network update is published. The master view's Mermaid fence and DMS source-flow direction were corrected; refresh the master page to confirm rendering.
+9. The user confirmed that the updated master and migration diagrams render correctly in GitHub; the runtime view remains unchanged by the latest DMS-subnet isolation revision. This closes the documentation rendering check only, not live network validation.
 10. Validate route-table associations, source/return VPN routes, SG rule directions, NACL return traffic, S3 endpoint association and IP capacity before implementation.
 
 ## AWS service references

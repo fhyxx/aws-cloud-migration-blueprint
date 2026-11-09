@@ -56,3 +56,13 @@ output "datasync_vpc_endpoint_network_interface_ids" {
   description = "Network interface IDs for locating the private DataSync endpoint IP used by agent activation."
   value       = try(aws_vpc_endpoint.datasync[0].network_interface_ids, [])
 }
+
+output "datasync_endpoint_subnet_arn" {
+  description = "Subnet ARN selected for DataSync VPC endpoint agent activation."
+  value       = aws_subnet.this["datasync_endpoint"].arn
+}
+
+output "datasync_endpoint_security_group_arn" {
+  description = "Security group ARN selected for DataSync VPC endpoint agent activation."
+  value       = aws_security_group.datasync_endpoint.arn
+}

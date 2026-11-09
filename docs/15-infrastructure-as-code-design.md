@@ -1,6 +1,6 @@
 # 15 — Infrastructure as Code Design and Implementation Notes
 
-**ID:** CLI-AWS-IAC-015 | **Version:** 1.1 | **Status:** Network, workload and migration Terraform validated in CI — live account validation and deployment not performed  
+**ID:** CLI-AWS-IAC-015 | **Version:** 1.2 | **Status:** Network, workload and migration Terraform validated in CI — live account validation and deployment not performed  
 **Related:** [Synthetic case-study decisions](14-synthetic-case-study-decisions.md), [Network configuration specification](13-network-configuration-specification.md), [Terraform network foundation](../terraform/README.md)
 
 ## 1. Implementation scope
@@ -8,7 +8,7 @@
 The Terraform layers codify the fictional network, workload and migration-service foundations:
 
 - VPC, DNS support/hostnames and Internet Gateway.
-- Eleven subnets across two account-resolved Availability Zones (six steady-state and five migration-only).
+- Eleven subnets across two explicitly configured AZ name aliases (six steady-state and five migration-only). The synthetic defaults are `us-east-1a` and `us-east-1b`; resolve physical AZ IDs before real deployment.
 - Dedicated route tables and explicit subnet associations.
 - Public IGW routes and optional private-subnet NAT routes.
 - S3 Gateway Endpoint for App-A, App-B and MGN staging route tables.
@@ -72,17 +72,14 @@ The GitHub Actions workflow runs on Terraform-related pull requests and main-bra
 
 CI runs formatting, init, validate, static assertions, a default no-refresh plan with all cost-bearing flags disabled (61 resources), and a full synthetic feature plan with NAT, VPN, ALB/ASG, RDS/EFS, DMS and DataSync enabled (122 resources). Both use dummy credentials, synthetic AMI/certificate/secret/agent identifiers and no refresh, so they validate the Terraform resource graph without calling AWS. They do not validate service-side existence, account quotas, actual pricing or live connectivity. Local Windows validation is still required to verify the exact provider lock, formatted HCL and a no-refresh plan against the intended provider version. The first plan should use `create_nat_gateways=false` and `enable_site_to_site_vpn=false`.
 
-## 6. Next implementation layers
+## 6. Remaining engineering work
 
-Proceed without waiting for synthetic customer input:
+1. Complete CI verification for the new DataSync Interface VPC endpoint and merge the endpoint change after checks pass.
+2. Commit/pin the Terraform provider lock file and run local Windows `fmt`, `init`, `validate` and no-refresh plan review.
+3. Add MGN replication configuration as a reproducible resource if the selected Terraform provider exposes a supported resource; otherwise retain the guarded AWS CLI workflow and test it in an approved lab.
+4. Review whether the single-AZ MGN staging subnet is sufficient for the synthetic recovery objectives; document a deliberate multi-AZ/HA option and its cost/operational trade-off.
+5. Add automated security scanning (Terraform static analysis, secret scanning, dependency review) and a cost estimate for the opt-in migration resources.
+6. Refresh all three Mermaid renderings after the DataSync endpoint change and obtain visual confirmation of the changed diagrams.
+7. Complete approved lab connectivity tests for DMS, MGN and DataSync; do not describe static plans as live service validation.
 
-1. Complete local `terraform fmt`, `init -backend=false`, `validate` and static plan review.
-2. Correct any HCL/provider issues revealed by CI or local validation.
-3. Add ALB, ACM/DNS assumptions, launch template/ASG and application health-check contract.
-4. Add RDS subnet group/parameter and option groups, encryption, backup/monitoring and deletion protection.
-5. Add EFS, mount targets, encryption and backup policy.
-6. Add DMS replication configuration only after source/target versions and migration-mode assumptions are explicitly represented.
-7. Add MGN and DataSync service resources with endpoint-specific network paths.
-8. Add test harnesses, security scanning, cost scenarios and operational runbooks.
-
-**Current truth:** Terraform network, workload and migration-service layers and CI checks are drafted on a feature branch. They are not locally validated, not yet merged, and not deployed.
+**Current truth:** network, workload and migration Terraform is implemented and earlier CI plans passed. The latest DataSync endpoint addition is under review; no AWS resources have been applied and no migration has run.

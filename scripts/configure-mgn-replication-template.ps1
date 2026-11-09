@@ -53,7 +53,7 @@ $json = $payload | ConvertTo-Json -Depth 8
 $tempFile = Join-Path $env:TEMP ("mgn-replication-template-" + [guid]::NewGuid().ToString("N") + ".json")
 
 try {
-    [System.IO.File]::WriteAllText($tempFile, $json, (New-Object System.Text.UTF8Encoding($false)))
+    [System.IO.File]::WriteAllText($tempFile, $json, [System.Text.UTF8Encoding]::new($false))
     Write-Host "MGN replication configuration template request:"
     Write-Host $json
 

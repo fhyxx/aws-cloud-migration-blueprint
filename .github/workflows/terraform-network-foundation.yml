@@ -6,6 +6,9 @@ on:
       - "terraform/**"
       - "scripts/validate_network_spec.py"
       - ".github/workflows/terraform-network-foundation.yml"
+      - "docs/09-migration-readiness-matrix.md"
+      - "docs/10-technical-architecture-audit.md"
+      - "docs/16-migration-service-configuration.md"
   push:
     branches: [main]
     paths:

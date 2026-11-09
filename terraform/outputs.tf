@@ -16,7 +16,7 @@ output "route_table_ids" {
 output "security_group_ids" {
   description = "Network security group IDs."
   value = {
-    alb           = aws_security_group.alb.id
+    alb               = aws_security_group.alb.id
     app               = aws_security_group.app.id
     rds               = aws_security_group.rds.id
     efs               = aws_security_group.efs.id

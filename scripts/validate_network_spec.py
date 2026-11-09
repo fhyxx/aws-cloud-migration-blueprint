@@ -65,4 +65,7 @@ assert 'resource "aws_vpc_endpoint" "datasync"' in main, "Private DataSync inter
 assert 'service_name        = "com.amazonaws.${var.aws_region}.datasync"' in main, "DataSync endpoint service name mismatch"
 assert 'vpc_endpoint_type   = "Interface"' in main and 'aws_security_group.datasync_endpoint.id' in main, "DataSync endpoint must use dedicated SG"
 
+assert '"kms:ViaService"' in migration and '"kms:EncryptionContext:SecretARN"' in migration, "DMS CMK use must be Secrets Manager-only and secret-scoped"
+assert 'subdirectory     = "archives"' in migration, "DataSync Basic-mode S3 prefix must not begin with slash"
+
 print("PASS: eleven subnets, scoped VPN propagation, S3 endpoint associations, opt-in NAT/VPN/workloads/migration services, DMS IAM hardening, DataSync Interface endpoint, SG boundaries and acceptance catalogue.")

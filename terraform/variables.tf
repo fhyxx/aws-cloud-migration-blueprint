@@ -156,3 +156,62 @@ variable "app_cpu_target" {
   type        = number
   default     = 60
 }
+
+variable "enable_dms_resources" {
+  description = "Opt in to DMS replication instance, endpoints and stopped full-load-and-CDC task. Requires NAT, VPN, workload target and source secret."
+  type        = bool
+  default     = false
+}
+
+variable "dms_replication_instance_class" {
+  description = "DMS class selected after source profiling and benchmark; required when DMS is enabled."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "dms_allocated_storage" {
+  description = "DMS replication instance storage in GiB."
+  type        = number
+  default     = 100
+}
+
+variable "source_db_secret_arn" {
+  description = "Secrets Manager ARN containing PostgreSQL source endpoint connection details; never store credentials in Terraform variables or state."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "database_name" {
+  description = "Synthetic PostgreSQL database name for DMS source and target endpoints."
+  type        = string
+  default     = "clafoke_orders"
+}
+
+variable "enable_datasync_resources" {
+  description = "Opt in to NFS-to-EFS DataSync task and private S3 archive destination. Requires an activated VPC-endpoint agent."
+  type        = bool
+  default     = false
+}
+
+variable "datasync_agent_arn" {
+  description = "ARN of an already activated DataSync agent configured for a VPC service endpoint."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "nfs_source_hostname" {
+  description = "Synthetic NFSv4.1 source hostname or IP reachable over approved hybrid connectivity."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "nfs_source_subdirectory" {
+  description = "Exported NFS source subdirectory, for example /exports/orders."
+  type        = string
+  default     = null
+  nullable    = true
+}

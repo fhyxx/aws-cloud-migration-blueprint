@@ -24,7 +24,7 @@ When `enable_dms_resources=true`, Terraform creates DMS service roles, the dedic
 
 When `enable_datasync_resources=true`, Terraform creates the regional DataSync Interface VPC endpoint in `10.30.51.0/24`, NFSv4.1 and EFS locations, a stopped NFS-to-EFS task, task log group and a private S3 archive bucket/location. The VPC endpoint ID, endpoint ENI IDs, endpoint subnet ARN and endpoint security-group ARN are outputs for agent activation. Agent activation remains a separate operator step because activation keys must not be stored in Terraform state or Git. No archive transfer task is created until a source archive system is specified.
 
-When `enable_mgn_resources=true`, Terraform creates the eight AWS-required MGN IAM roles and managed-policy attachments under `/service-role/`. After those roles are applied, the guarded PowerShell script can initialize the regional MGN service and create both replication and launch configuration templates. It refuses to create duplicate templates; launch disposition is STOPPED and public IP assignment is disabled. It does not install source agents, register source servers, start replication or cut over.
+When `enable_mgn_resources=true`, Terraform creates the eight AWS-required MGN IAM roles and managed-policy attachments under `/service-role/`. After those roles are applied, the guarded PowerShell script can initialize the regional MGN service and create both replication and launch configuration templates. It creates only missing templates, leaves existing templates unchanged and can resume safely after a partial first run; launch disposition is STOPPED and public IP assignment is disabled. It does not install source agents, register source servers, start replication or cut over.
 
 ## Cost and safety controls
 

@@ -59,8 +59,10 @@ AZ-A and AZ-B are logical labels. Implementation must record the actual AZ IDs f
 | MGN-STAGING | 10.30.31.0/24 | AZ-A provisional | RT-MGN-STAGING | MGN replication servers |
 | DMS-A | 10.30.41.0/24 | AZ-A | RT-DMS-A | DMS replication ENIs |
 | DMS-B | 10.30.42.0/24 | AZ-B | RT-DMS-B | DMS replication ENIs |
+| DataSync endpoint | 10.30.51.0/24 | AZ-A | RT-DATASYNC-ENDPOINT | DataSync VPC service endpoint ENI |
+| DataSync task | 10.30.52.0/24 | AZ-A | RT-DATASYNC-TASK | DataSync task ENIs; same AZ as EFS mount target A |
 
-A /24 has 251 initially assignable IPv4 addresses after AWS reserves five. This is not a capacity guarantee. Capture available IP counts before and during deployment, especially in public, DMS and MGN staging subnets.
+A /24 has 251 initially assignable IPv4 addresses after AWS reserves five. This is not a capacity guarantee. The scenario now has six steady-state subnets and five migration-only subnets. Capture available IP counts before and during deployment, especially in public, DMS and MGN staging subnets.
 
 ### 3.2 Route-table routes and associations
 
@@ -75,8 +77,10 @@ A /24 has 251 initially assignable IPv4 addresses after AWS reserves five. This 
 | RT-DMS-A | DMS-A | VPC local; propagated 10.50.0.0/16 → VGW; 0.0.0.0/0 → NAT-A; S3 prefix list only if required | Enabled |
 | RT-DMS-B | DMS-B | VPC local; propagated 10.50.0.0/16 → VGW; 0.0.0.0/0 → NAT-B; S3 prefix list only if required | Enabled |
 | RT-MGN-STAGING | MGN-STAGING | VPC local; propagated 10.50.0.0/16 → VGW; 0.0.0.0/0 → NAT-A | Enabled |
+| RT-DATASYNC-ENDPOINT | DataSync endpoint | VPC local; propagated 10.50.0.0/16 → VGW; no default route | Enabled |
+| RT-DATASYNC-TASK | DataSync task | VPC local; propagated 10.50.0.0/16 → VGW; no default route | Enabled |
 
-**Isolation invariant:** only RT-DMS-A, RT-DMS-B and RT-MGN-STAGING receive the source aggregate route. App, public and DB route tables must not receive 10.50.0.0/16. Do not enable propagation on the main route table as a shortcut. If the real source has multiple prefixes, document and approve each prefix and its route scope.
+**Isolation invariant:** only RT-DMS-A, RT-DMS-B, RT-MGN-STAGING, RT-DATASYNC-ENDPOINT and RT-DATASYNC-TASK receive the source aggregate route. App, public and DB route tables must not receive 10.50.0.0/16. Do not enable propagation on the main route table as a shortcut. If the real source has multiple prefixes, document and approve each prefix and its route scope.
 
 S3 Gateway Endpoint routes are prefix-list routes attached to selected route tables. They are not interface endpoints and have no security-group attachment. Apply endpoint, IAM, bucket and KMS policies independently.
 
@@ -84,9 +88,9 @@ S3 Gateway Endpoint routes are prefix-list routes attached to selected route tab
 
 - Every subnet has the intended route-table association; no unintended main-table fallback.
 - All route tables contain the VPC local route.
-- Only the three migration route tables have VGW propagation enabled.
-- The source route is present in those three tables and absent from App, DB and Public tables.
-- App default routes use their same-AZ NAT; DMS-A uses NAT-A; DMS-B uses NAT-B; MGN staging uses NAT-A.
+- Only the five migration route tables have VGW propagation enabled.
+- The source route is present in those five tables and absent from App, DB and Public tables.
+- App default routes use their same-AZ NAT; DMS-A uses NAT-A; DMS-B uses NAT-B; MGN staging uses NAT-A; DataSync endpoint and task subnets have no default route.
 - DB route tables have no default route, IGW, NAT or VGW route.
 - S3 prefix-list routes exist only where approved.
 - Customer-side routing has a return path to the VPC CIDR.
@@ -115,6 +119,8 @@ These are rule intents, not deployed rules. Use security-group references for sa
 | SG-DMS | Outbound | DNS TCP/UDP 53 | Approved resolver(s) | Only if required by resolver design |
 | SG-MGN-STAGING | Inbound | TCP 1500 | 10.50.10.0/24 illustrative | MGN replication stream from approved source VMs only |
 | SG-MGN-STAGING | Outbound | TCP 443 | Regional MGN service path and required AWS dependencies (including S3 where current service guidance requires) | Controlled NAT/private path; no SSL interception on documented MGN API paths |
+| SG-DATASYNC-ENDPOINT | Inbound | TCP 1024–1064 | 10.50.20.50/32 | VPC service endpoint control-plane from the single synthetic DataSync agent |
+| SG-DATASYNC-TASK-ENI | Inbound | TCP 443 | 10.50.20.50/32 | DataSync agent data-plane to task ENI |
 | SG-DATASYNC-TASK-ENI | Outbound | TCP 2049 | SG-EFS | DataSync task data-plane to EFS |
 | SG-ENDPOINT | Inbound | TCP 443 | Only workload SGs needing that endpoint | Define per interface endpoint |
 

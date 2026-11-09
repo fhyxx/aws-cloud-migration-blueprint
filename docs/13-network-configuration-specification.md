@@ -1,6 +1,6 @@
 # 13 — Network Configuration Specification
 
-**ID:** CLI-AWS-NCS-013 | **Version:** 1.0 | **Status:** Proposed configuration baseline — customer inputs and approvals outstanding  
+**ID:** CLI-AWS-NCS-013 | **Version:** 1.1 | **Status:** Approved synthetic configuration baseline — live AWS execution gated  
 **Project:** Clafoke Investors Ltd (fictional portfolio case study)  
 **Related:** [Network and security design](03-network-security-design.md), [Network implementation preparation](11-network-implementation-preparation.md), [Network implementation review](12-network-implementation-review.md), [Migration readiness matrix](09-migration-readiness-matrix.md), [Technical architecture audit](10-technical-architecture-audit.md)
 
@@ -10,13 +10,13 @@
 
 This document is the configuration-level handoff between the architecture/preparation artifacts and a future implementation plan. It defines subnet and route-table intent, route propagation boundaries, security-group policy, service-specific network dependencies, endpoint decision criteria, and acceptance tests.
 
-**Current decision: HOLD.** The reference configuration is coherent enough for technical review, but actual source prefixes, AWS account/AZ mapping, customer gateway details, application listener, migration service modes, endpoint dependencies and owner approvals remain unverified. Do not generate/apply Terraform or change AWS/customer firewalls until the input register and change gates are closed.
+**Current decision: approved for the fictional portfolio baseline.** Synthetic values are fixed in document 14 and Terraform variables. Account-specific AZ IDs, a real customer gateway IP, ACM certificate, activated DataSync agent and real source credentials are runtime inputs only if the corresponding AWS resources are enabled. Continue Terraform engineering and validation without waiting for fictional customer evidence. Do not apply resources or start migration tasks without explicit user permission.
 
 ### Decision labels
 
 - **Baseline proposal:** the portfolio design owner's recommended configuration, still subject to owner approval.
 - **AWS service requirement/guidance:** a service-specific network behaviour to recheck against current documentation and the selected service mode/Region.
-- **Customer input required:** cannot be truthfully fixed from the fictional case study.
+- **Runtime input required:** needed only when an opt-in resource is enabled in a real AWS account.
 - **Conditional:** apply only when the named workload/service dependency is confirmed.
 
 ## 2. Addressing and subnet configuration baseline
@@ -34,8 +34,10 @@ This document is the configuration-level handoff between the architecture/prepar
 | MGN staging | `10.30.31.0/24` | AZ-A (provisional) | RT-MGN | MGN replication servers |
 | DMS-A | `10.30.41.0/24` | AZ-A | RT-DMS-A | DMS replication subnet group |
 | DMS-B | `10.30.42.0/24` | AZ-B | RT-DMS-B | DMS replication subnet group |
+| DataSync endpoint | `10.30.51.0/24` | AZ-A | RT-DATASYNC-ENDPOINT | VPC service endpoint ENI |
+| DataSync task | `10.30.52.0/24` | AZ-A | RT-DATASYNC-TASK | DataSync task ENIs; same AZ as EFS mount target A |
 
-VPC: `10.30.0.0/16`, Region `us-east-1`, two logical AZs. Resolve AZ-A/AZ-B to account-specific AZ IDs before implementation. The six steady-state subnets and three migration-only subnets are separate network segments. Each /24 has 251 initially assignable IPv4 addresses before ENIs and service consumption; this is not a capacity guarantee. Recheck free IP headroom for ALB, NAT, DMS, MGN and interface endpoint ENIs.
+VPC: `10.30.0.0/16`, Region `us-east-1`, two logical AZs. Resolve AZ-A/AZ-B to account-specific AZ IDs before implementation. The six steady-state subnets and five migration-only subnets are separate network segments. Each /24 has 251 initially assignable IPv4 addresses before ENIs and service consumption; this is not a capacity guarantee. Recheck free IP headroom for ALB, NAT, DMS, MGN and interface endpoint ENIs.
 
 ### 2.2 Customer/on-premises network placeholders
 
@@ -55,15 +57,17 @@ All route tables include the VPC-local route. The table below lists additional i
 |---|---|---|---|
 | RT-PUBLIC-A | Public-A | `0.0.0.0/0 → IGW` | VGW propagated source route |
 | RT-PUBLIC-B | Public-B | `0.0.0.0/0 → IGW` | VGW propagated source route |
-| RT-APP-A | App-A | `0.0.0.0/0 → NAT-A`; S3 prefix-list route → S3 Gateway Endpoint when endpoint is associated | `10.50.0.0/16 → VGW` |
+| RT-APP-A | App-A | `0.0.0.0/0 → NAT-A`; S3 prefix-list route → S3 Gateway Endpoint (associated with App-A, App-B and MGN staging) | `10.50.0.0/16 → VGW` |
 | RT-APP-B | App-B | `0.0.0.0/0 → NAT-B`; S3 prefix-list route → S3 Gateway Endpoint when endpoint is associated | `10.50.0.0/16 → VGW` |
 | RT-DB-A | DB-A | Local route only | Default internet route; VGW propagated route |
 | RT-DB-B | DB-B | Local route only | Default internet route; VGW propagated route |
 | RT-DMS-A | DMS-A | `10.50.0.0/16 → VGW` (BGP propagated); `0.0.0.0/0 → NAT-A`; conditional S3 prefix-list route if the selected DMS workflow requires S3 | Any route propagation beyond this dedicated migration table |
 | RT-DMS-B | DMS-B | `10.50.0.0/16 → VGW` (BGP propagated); `0.0.0.0/0 → NAT-B`; conditional S3 prefix-list route if required | Any route propagation beyond this dedicated migration table |
 | RT-MGN | MGN staging | `10.50.0.0/16 → VGW` (BGP propagated); `0.0.0.0/0 → NAT-A` for regional service HTTPS unless a validated private path is selected | Broad ingress or propagation into application/DB route tables |
+| RT-DATASYNC-ENDPOINT | DataSync endpoint `10.30.51.0/24` | `10.30.0.0/16 → local`; propagated `10.50.0.0/16 → VGW` | No default route; endpoint TCP 1024–1064 return path to agent |
+| RT-DATASYNC-TASK | DataSync task ENIs `10.30.52.0/24` | `10.30.0.0/16 → local`; propagated `10.50.0.0/16 → VGW` | No default route; AZ-A return route for agent TCP 443; task ENI reaches EFS locally |
 
-**Propagation boundary:** enable VGW route propagation only on RT-DMS-A, RT-DMS-B and RT-MGN. Do not propagate the customer aggregate into public, application or DB route tables. The customer gateway advertises the agreed customer prefixes; the VGW advertises the VPC CIDR. Customer-side firewall policy must narrow actual reachability to the required migration flows.
+**Propagation boundary:** enable VGW route propagation only on RT-DMS-A, RT-DMS-B, RT-MGN, RT-DATASYNC-ENDPOINT and RT-DATASYNC-TASK. Do not propagate the customer aggregate into public, application or DB route tables. The customer gateway advertises the agreed customer prefixes; the VGW advertises the VPC CIDR. Customer-side firewall policy must narrow actual reachability to the required migration flows.
 
 **Important route semantics:**
 - Route propagation makes a prefix available in a route table; it does not authorize traffic. Security groups, NACLs and customer firewalls remain separate controls.
@@ -83,7 +87,7 @@ All route tables include the VPC-local route. The table below lists additional i
 | Customer prefixes | `10.50.0.0/16` | Replace with approved actual prefixes |
 | VPN connection | One connection, two AWS tunnels | Business/Network owner approves resilience tier |
 | Customer outside IP | Placeholder only | Exchange securely; never invent |
-| Route propagation | DMS-A, DMS-B, MGN only | Verify exact three route-table associations |
+| Route propagation | DMS-A, DMS-B, MGN, DataSync endpoint and DataSync task only | Verify exact five route-table associations |
 
 Configure both tunnels from AWS-generated configuration for the actual customer gateway vendor/firmware. Do not hard-code outside IPs, tunnel inside CIDRs, pre-shared keys or device commands in this document. Permit asymmetric routing where required by the VGW design and verify return paths.
 
@@ -97,7 +101,7 @@ Security groups are stateful. Prefer SG-to-SG references for VPC-local peers; us
 |---|---|---|---|---|---|
 | SG-01 | ALB ingress | Approved client CIDRs | TCP 443 | Public HTTPS only; ACM certificate and listener confirmed | Security + App; verify TLS/listener |
 | SG-02 | ALB ingress (conditional) | Approved client CIDRs | TCP 80 | Only if HTTP-to-HTTPS redirect is required | Security; otherwise omit |
-| SG-03 | ALB egress | App SG | Actual target protocol/port (8080 provisional) | Listener and health-check target; confirm actual application contract | App; target health test |
+| SG-03 | ALB egress | App SG | TCP 8080 (synthetic application contract) | Listener and health-check target; confirm actual application contract | App; target health test |
 | SG-04 | App ingress | ALB SG | Actual target protocol/port (8080 provisional) | No direct public or on-premises application ingress | App + Security |
 | SG-05 | App egress | RDS SG | TCP 5432 | Application database access | DBA; connection test |
 | SG-06 | App egress | EFS mount-target SG | TCP 2049 | Application shared-file access | Infrastructure; mount test |
@@ -120,6 +124,8 @@ Security groups are stateful. Prefer SG-to-SG references for VPC-local peers; us
 | SG-23 | Interface endpoint ingress (conditional) | Only workload SGs requiring endpoint | TCP 443 | Endpoint SG accepts HTTPS from approved clients only | Security + Operations |
 | SG-24 | DNS (conditional) | Approved resolver | UDP/TCP 53 as required | Use actual VPC/on-prem resolver and forwarding architecture; do not invent resolver IPs | Network + Operations |
 | SG-25 | NTP (conditional) | Approved time source | UDP 123 as required | Confirm source OS, resolver and time policy | Infrastructure |
+| SG-26 | DataSync VPC endpoint ingress | Agent `10.50.20.50/32` | TCP 1024–1064 | Endpoint control plane; dedicated endpoint subnet/route table | Infrastructure + Security |
+| SG-27 | DataSync task ENI ingress | Agent `10.50.20.50/32` | TCP 443 | VPC endpoint data plane; dedicated task subnet has VGW return route | Infrastructure + Security |
 
 **DMS egress decision:** use the AWS-documented all-outbound replication-SG recommendation as the reference baseline rather than publishing the earlier 5432/443/DNS-only list as implementation-ready. This is a design recommendation pending Security/DBA approval. Compensating boundaries are dedicated DMS-A/B subnets, route propagation only on DMS-A/B, no public inbound, source PostgreSQL ingress only from the DMS subnet CIDRs, RDS ingress only from the DMS SG for the migration window, and customer firewall policy. If Security requires narrower egress, that becomes an explicit exception: document the exact supported flow inventory for selected mode/endpoints, verify AWS supportability, and pass endpoint/connectivity tests before replacing this baseline. A generic narrow list is not sufficient evidence.
 
@@ -230,7 +236,7 @@ All tests below are **not run**. Execute only in an approved non-production/test
 2. Replace illustrative values only when supported by dated source evidence; otherwise retain them explicitly as synthetic portfolio assumptions.
 3. Resolve NVR-08 DMS egress, NVR-10 MGN endpoints/inspection, NVR-11 staging AZ/capacity, NVR-14/15 DataSync endpoint/agent design and NVR-07 VPN resilience.
 4. Update the readiness matrix and audit with owner decisions and evidence references.
-5. Only after the HOLD is lifted, derive Terraform variables/modules and an approved implementation plan. Validate a plan output before any apply; AWS changes require explicit change approval.
+5. Continue Terraform modules, static checks, CI, plan review and documentation against the synthetic values. A real AWS apply still requires explicit permission, a verified account/Region and the required runtime inputs.
 
 ## 11. AWS references
 
@@ -246,4 +252,4 @@ All tests below are **not run**. Execute only in an approved non-production/test
 - [Security groups](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html)
 - [Network ACLs](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html)
 
-**Specification decision:** proposed network configuration baseline published for review. Customer inputs, approvals, implementation and live validation remain outstanding.
+**Specification decision:** synthetic network configuration baseline approved and aligned with Terraform. Account-specific execution inputs, live deployment and connectivity validation remain outstanding.

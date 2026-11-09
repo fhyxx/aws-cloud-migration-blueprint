@@ -12,13 +12,13 @@ workloads = (ROOT / "terraform" / "workloads.tf").read_text()
 
 required_subnets = [
     "public_a", "public_b", "app_a", "app_b", "db_a", "db_b",
-    "mgn", "dms_a", "dms_b",
+    "mgn", "dms_a", "dms_b", "datasync_endpoint", "datasync_task",
 ]
 for subnet in required_subnets:
     assert any(line.strip().startswith(subnet) and "=" in line for line in main.splitlines()), f"Missing subnet definition: {subnet}"
 
-assert 'toset(["mgn", "dms_a", "dms_b"])' in main, "VPN propagation scope drifted"
-assert 'route_table_ids = [' in main and '"app_a"' in main and '"app_b"' in main, "S3 endpoint app associations missing"
+assert 'toset(["mgn", "dms_a", "dms_b", "datasync_endpoint", "datasync_task"])' in main, "VPN propagation scope drifted"
+assert 'route_table_ids = [' in main and '"app_a"' in main and '"app_b"' in main and '"mgn"' in main, "S3 endpoint app/MGN associations missing"
 assert 'create_nat_gateways' in variables and 'default     = false' in variables, "NAT must remain opt-in"
 assert 'enable_site_to_site_vpn' in variables and 'default     = false' in variables, "VPN must remain opt-in"
 assert 'ip_protocol       = "-1"' in main and 'cidr_ipv4         = "0.0.0.0/0"' in main, "DMS all-egress baseline missing"
@@ -37,5 +37,10 @@ assert any(line.strip().startswith('manage_master_user_password') and 'true' in 
 assert any(line.strip().startswith('multi_az') and 'true' in line for line in workloads.splitlines()), "RDS Multi-AZ baseline missing"
 assert 'resource "aws_efs_backup_policy" "app"' in workloads, "EFS backup policy missing"
 assert 'resource "aws_autoscaling_policy" "app_cpu"' in workloads, "ASG target tracking policy missing"
+
+
+assert "datasync_endpoint" in main and "datasync_task" in main and 'toset(["mgn", "dms_a", "dms_b", "datasync_endpoint", "datasync_task"])' in main, "DataSync endpoint/task subnet and propagation missing"
+assert "var.datasync_agent_cidr" in main and "from_port         = 1024" in main and "to_port           = 1064" in main, "DataSync VPC endpoint control-plane scope missing"
+assert "from_port         = 443" in main and "var.datasync_agent_cidr" in main, "DataSync task ENI agent path missing"
 
 print("PASS: nine subnets, scoped VPN propagation, S3 endpoint associations, opt-in NAT/VPN, DMS egress, SG boundaries, MGN source scope and acceptance catalogue.")

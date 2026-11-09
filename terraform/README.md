@@ -4,12 +4,12 @@ This directory contains the first IaC implementation layer for the fictional Cla
 
 ## Scope
 
-- VPC and nine subnet layout across two AZs (two public, two application, two database, one MGN staging, two DMS).
+- VPC and eleven subnet layout across two AZs (two public, two application, two database, one MGN staging, two DMS).
 - Dedicated route tables and subnet associations.
 - Internet Gateway and public routes.
 - Optional two-AZ NAT Gateways.
 - S3 Gateway Endpoint for application route tables.
-- Optional VGW, Customer Gateway, dynamic BGP VPN and route propagation restricted to MGN/DMS route tables.
+- Optional VGW, Customer Gateway, dynamic BGP VPN and route propagation restricted to MGN, DMS-A/B and the two DataSync migration route tables.
 - ALB, application, RDS, EFS, DMS, MGN staging and DataSync task security groups.
 
 It also includes an opt-in workload layer (`enable_workload_resources=false` by default) for an HTTPS ALB, two-AZ EC2 Auto Scaling Group, managed PostgreSQL Multi-AZ, encrypted EFS and a synthetic health-check/API service. It does not create DMS replication instances, MGN replication servers, DataSync agents/tasks or customer firewall configuration.

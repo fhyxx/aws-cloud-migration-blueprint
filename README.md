@@ -11,18 +11,18 @@ A cloud migration blueprint for a fictional Nigerian retail/distribution company
 | Region | `us-east-1` |
 | VPC | `10.30.0.0/16`, two AZs |
 | Steady-state subnets | 2 public, 2 private app, 2 isolated DB |
-| Migration subnet | Additional private MGN staging subnet; migration-only |
+| Migration subnets | MGN staging `10.30.31.0/24`, DMS-A/B `10.30.41.0/24` and `10.30.42.0/24`, DataSync endpoint/task `10.30.51.0/24` and `10.30.52.0/24`; five migration-only subnets |
 | Application | 2 Linux servers, 4 vCPU / 16 GiB each, EC2 in a two-AZ Auto Scaling Group |
 | Database | PostgreSQL to RDS PostgreSQL Multi-AZ DB instance deployment; 500 GB source logical-data assumption and separate 500 GB target gp3 provisioned-storage input; primary and standby billed under Multi-AZ pricing |
 | Shared files | 1 TB Regional EFS, mount target in each application AZ |
 | Archives | 500 GB S3 Standard via Gateway Endpoint where appropriate |
-| Hybrid | 1 dynamic-BGP Site-to-Site VPN to VGW; fictional source `10.50.0.0/16`; ASN 65010/64512; two redundant tunnels (no VGW ECMP). Route propagation is limited to dedicated DMS-A/DMS-B and MGN staging route tables. |
+| Hybrid | 1 dynamic-BGP Site-to-Site VPN to VGW; fictional source `10.50.0.0/16`; ASN 65010/64512; two redundant tunnels (no VGW ECMP). Route propagation is limited to DMS-A/DMS-B, MGN staging and the two DataSync migration route tables. S3 Gateway Endpoint routes are associated with app A/B and MGN staging for private service access. |
 | Entry | Public ALB, HTTPS 443; ACM certificate and DNS required |
 | Business targets | 99.9% availability; RTO 4h; RPO 15m—not demonstrated |
 
 ## Architecture
 
-The canonical master Mermaid source is [architecture/target-architecture.mmd](architecture/target-architecture.mmd); inspect it in the [rendered master view](architecture/target-architecture.md). For clearer review, use the focused [runtime/network view](architecture/runtime-network-view.md) (subnet CIDRs, AZ placement, route intent and security-group boundaries) and [migration data-flow view](architecture/migration-data-flow.md) (separate MGN, DMS and DataSync paths). Editable Mermaid sources are provided beside each rendered page. The master and focused views, including the latest DMS subnet-isolation update, have been visually confirmed rendering correctly by the user; the runtime view is unchanged by this update. All views remain proposed design artifacts; implementation and connectivity validation are pending. The master and migration diagrams show dedicated DMS migration subnets `10.30.41.0/24` and `10.30.42.0/24`; ordinary application subnets do not receive the on-premises route.
+The canonical master Mermaid source is [architecture/target-architecture.mmd](architecture/target-architecture.mmd); inspect it in the [rendered master view](architecture/target-architecture.md). For clearer review, use the focused [runtime/network view](architecture/runtime-network-view.md) (subnet CIDRs, AZ placement, route intent and security-group boundaries) and [migration data-flow view](architecture/migration-data-flow.md) (separate MGN, DMS and DataSync paths). Editable Mermaid sources are provided beside each rendered page. The user previously confirmed the earlier master and focused diagrams rendered correctly. The current DataSync endpoint/task subnet additions have since changed all three diagrams; a fresh GitHub rendering check is still required. All views remain proposed design artifacts; implementation and connectivity validation are pending. The master and focused diagrams show dedicated DMS and DataSync migration subnets; only DMS-A/B, MGN staging and the two DataSync migration route tables receive the on-premises route. Ordinary application, public and DB subnets do not.
 
 ## Deliverables
 
@@ -36,8 +36,12 @@ The canonical master Mermaid source is [architecture/target-architecture.mmd](ar
 8. [Assumptions and decisions register](docs/08-assumptions-decisions-register.md)
 9. [Migration readiness matrix](docs/09-migration-readiness-matrix.md)
 10. [Technical architecture audit](docs/10-technical-architecture-audit.md)
-11. [Network implementation preparation pack](docs/11-network-implementation-preparation.md)\n12. [Network implementation review and input validation register](docs/12-network-implementation-review.md)
-
+11. [Network implementation preparation pack](docs/11-network-implementation-preparation.md)
+12. [Network implementation review and input validation register](docs/12-network-implementation-review.md)
+13. [Network configuration specification](docs/13-network-configuration-specification.md)
+14. [Synthetic case-study decisions](docs/14-synthetic-case-study-decisions.md)
+15. [Infrastructure as Code design](docs/15-infrastructure-as-code-design.md)
+16. [Migration service configuration and activation](docs/16-migration-service-configuration.md)
 Additional assets: [Terraform network and workload foundation](terraform/README.md), [synthetic case-study decisions](docs/14-synthetic-case-study-decisions.md), [IaC design notes](docs/15-infrastructure-as-code-design.md), [network implementation preparation pack](docs/11-network-implementation-preparation.md), [network implementation review/input validation register](docs/12-network-implementation-review.md), [network configuration specification](docs/13-network-configuration-specification.md) (route-table associations, SG rule inventory, BGP/VPN preparation, read-only CLI inspection, test catalogue and evidence register); master architecture source/rendered page; [runtime/network source](architecture/runtime-network-view.mmd) and [rendered view](architecture/runtime-network-view.md); [migration-flow source](architecture/migration-data-flow.mmd) and [rendered view](architecture/migration-data-flow.md); `cost/pricing-assumptions.csv`, `evidence/README.md`, `DESIGN-CONSISTENCY.md`.
 
 ## Cost review status

@@ -7,15 +7,17 @@ locals {
   az_b = data.aws_availability_zones.available.names[1]
 
   subnets = {
-    public_a = { cidr = "10.30.1.0/24", az = local.az_a }
-    public_b = { cidr = "10.30.2.0/24", az = local.az_b }
-    app_a    = { cidr = "10.30.11.0/24", az = local.az_a }
-    app_b    = { cidr = "10.30.12.0/24", az = local.az_b }
-    db_a     = { cidr = "10.30.21.0/24", az = local.az_a }
-    db_b     = { cidr = "10.30.22.0/24", az = local.az_b }
-    mgn      = { cidr = "10.30.31.0/24", az = local.az_a }
-    dms_a    = { cidr = "10.30.41.0/24", az = local.az_a }
-    dms_b    = { cidr = "10.30.42.0/24", az = local.az_b }
+    public_a          = { cidr = "10.30.1.0/24", az = local.az_a }
+    public_b          = { cidr = "10.30.2.0/24", az = local.az_b }
+    app_a             = { cidr = "10.30.11.0/24", az = local.az_a }
+    app_b             = { cidr = "10.30.12.0/24", az = local.az_b }
+    db_a              = { cidr = "10.30.21.0/24", az = local.az_a }
+    db_b              = { cidr = "10.30.22.0/24", az = local.az_b }
+    mgn               = { cidr = "10.30.31.0/24", az = local.az_a }
+    dms_a             = { cidr = "10.30.41.0/24", az = local.az_a }
+    dms_b             = { cidr = "10.30.42.0/24", az = local.az_b }
+    datasync_endpoint = { cidr = "10.30.51.0/24", az = local.az_a }
+    datasync_task     = { cidr = "10.30.52.0/24", az = local.az_a }
   }
 }
 
@@ -65,7 +67,7 @@ resource "aws_nat_gateway" "this" {
 resource "aws_route_table" "this" {
   for_each = toset([
     "public_a", "public_b", "app_a", "app_b",
-    "db_a", "db_b", "mgn", "dms_a", "dms_b"
+    "db_a", "db_b", "mgn", "dms_a", "dms_b", "datasync_endpoint", "datasync_task"
   ])
 
   vpc_id = aws_vpc.this.id
@@ -109,7 +111,8 @@ resource "aws_vpc_endpoint" "s3" {
   vpc_endpoint_type = "Gateway"
   route_table_ids = [
     aws_route_table.this["app_a"].id,
-    aws_route_table.this["app_b"].id
+    aws_route_table.this["app_b"].id,
+    aws_route_table.this["mgn"].id
   ]
 
   tags = merge(var.tags, { Name = "${var.name_prefix}-s3-gateway-endpoint" })
@@ -147,14 +150,14 @@ resource "aws_vpn_connection" "this" {
 }
 
 resource "aws_vpn_gateway_route_propagation" "migration" {
-  for_each = var.enable_site_to_site_vpn ? toset(["mgn", "dms_a", "dms_b"]) : toset([])
+  for_each = var.enable_site_to_site_vpn ? toset(["mgn", "dms_a", "dms_b", "datasync_endpoint", "datasync_task"]) : toset([])
 
   vpn_gateway_id = aws_vpn_gateway.this[0].id
   route_table_id = aws_route_table.this[each.key].id
 }
 
 # Security group resources are declared without inline peer rules. Separate
-# aws_security_group_rule resources avoid cyclic SG-to-SG dependencies.
+# dedicated aws_vpc_security_group_ingress_rule and egress_rule resources avoid cyclic SG-to-SG dependencies.
 
 resource "aws_security_group" "alb" {
   name        = "${var.name_prefix}-alb-sg"
@@ -196,6 +199,13 @@ resource "aws_security_group" "mgn_staging" {
   description = "MGN staging replication traffic from synthetic source application subnet."
   vpc_id      = aws_vpc.this.id
   tags        = merge(var.tags, { Name = "${var.name_prefix}-mgn-staging-sg" })
+}
+
+resource "aws_security_group" "datasync_endpoint" {
+  name        = "${var.name_prefix}-datasync-endpoint-sg"
+  description = "DataSync VPC service endpoint accepts control-plane traffic from the synthetic on-prem agent only."
+  vpc_id      = aws_vpc.this.id
+  tags        = merge(var.tags, { Name = "${var.name_prefix}-datasync-endpoint-sg" })
 }
 
 resource "aws_security_group" "datasync_task" {
@@ -306,6 +316,24 @@ resource "aws_vpc_security_group_egress_rule" "mgn_https_egress" {
   security_group_id = aws_security_group.mgn_staging.id
   description       = "MGN service HTTPS and documented service dependencies"
   cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "datasync_endpoint_from_agent" {
+  security_group_id = aws_security_group.datasync_endpoint.id
+  description       = "DataSync VPC endpoint control plane from the activated on-prem agent."
+  cidr_ipv4         = var.datasync_agent_cidr
+  from_port         = 1024
+  to_port           = 1064
+  ip_protocol       = "tcp"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "datasync_task_from_agent" {
+  security_group_id = aws_security_group.datasync_task.id
+  description       = "DataSync agent data-plane connection to task ENI."
+  cidr_ipv4         = var.datasync_agent_cidr
   from_port         = 443
   to_port           = 443
   ip_protocol       = "tcp"

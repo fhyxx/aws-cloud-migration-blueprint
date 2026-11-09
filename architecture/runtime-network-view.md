@@ -17,6 +17,8 @@ flowchart TB
     ALB -.->|"Subnet mapping / ALB ENI — AZ-A"| ALB_A
     ALB -.->|"Subnet mapping / ALB ENI — AZ-B"| ALB_B
     VGW["Virtual Private Gateway<br/>BGP ASN 64512<br/>Site-to-Site VPN"]
+    DS_EP["DataSync VPC service endpoint<br/>TCP 1024–1064 from agent"]
+    DS_TASK["DataSync task ENI<br/>TCP 443 from agent; TCP 2049 to EFS"]
 
     subgraph PUB_A["AZ-A — Public subnet 10.30.1.0/24"]
       ALB_A["ALB node A<br/>HTTPS listener 443"]
@@ -44,6 +46,12 @@ flowchart TB
     end
 
     EFS["Regional EFS<br/>1 TB planning assumption"]
+    subgraph DS_ENDPOINT_SUBNET["AZ-A — DataSync endpoint subnet 10.30.51.0/24"]
+      DS_EP
+    end
+    subgraph DS_TASK_SUBNET["AZ-A — DataSync task subnet 10.30.52.0/24"]
+      DS_TASK
+    end
     S3EP["S3 Gateway Endpoint<br/>prefix-list route"]
     S3["S3 Standard archive target<br/>500 GB capacity assumption"]
     OPS["PrivateLink candidates — conditional<br/>SSM / ssmmessages / Secrets Manager<br/>CloudWatch Logs / Monitoring"]
@@ -58,6 +66,7 @@ flowchart TB
     APP_EC2_A -->|"TCP 2049 — application SG to EFS mount-target SG"| EFS_MTA
     APP_EC2_B -->|"TCP 2049 — application SG to EFS mount-target SG"| EFS_MTB
     EFS_MTA --- EFS
+    DS_TASK -->|"TCP 2049 — task-ENI SG to EFS mount-target SG"| EFS_MTA
     EFS_MTB --- EFS
     APP_EC2_A --> S3EP
     APP_EC2_B --> S3EP
@@ -70,13 +79,17 @@ flowchart TB
     NAT_B --> IGW
   end
 
-  ONPREM["Illustrative on-premises<br/>10.50.0.0/16<br/>App 10.50.10.0/24<br/>DB/NFS 10.50.20.0/24"] ---|"IPsec VPN • BGP ASN 65010 ↔ 64512<br/>two tunnels • VGW no ECMP"| VGW
+  ONPREM["Illustrative on-premises<br/>10.50.0.0/16<br/>App 10.50.10.0/24<br/>DB/NFS 10.50.20.0/24<br/>DataSync agent 10.50.20.50/32"] ---|"IPsec VPN • BGP ASN 65010 ↔ 64512<br/>two tunnels • VGW no ECMP"| VGW
+  ONPREM -->|"TCP 1024–1064 control plane<br/>TCP 443 task data plane over VPN"| VGW
+  VGW --> DS_EP
+  VGW --> DS_TASK
 
   subgraph ROUTING["Route-table intent — proposed, not deployed"]
     R1["Public A/B: default route to IGW"]
     R2["App A/B: same-AZ NAT default<br/>BGP 10.50.0.0/16 → VGW<br/>propagation enabled"]
     R3["DB A/B: VPC-local routes only<br/>No IGW, NAT or VGW propagation"]
     R4["S3 prefix-list route via Gateway Endpoint<br/>MGN 10.30.31.0/24: BGP source route + controlled NAT"]
+    R5["DataSync endpoint 10.30.51.0/24 and task ENI 10.30.52.0/24:<br/>BGP source route only; no default route"]
   end
 
   subgraph SECURITY["Security-group intent — proposed, not deployed"]
@@ -84,6 +97,7 @@ flowchart TB
     SG2["App SG: inbound app port 8080 from ALB SG<br/>port is provisional"]
     SG3["DB SG: TCP 5432 from App SG<br/>and approved DBA path"]
     SG4["EFS mount-target SG: TCP 2049<br/>from App SG and DataSync task-ENI SG"]
+    SG5["DataSync endpoint SG: TCP 1024–1064 from agent /32<br/>Task ENI SG: TCP 443 from agent /32"]
   end
 ```
 

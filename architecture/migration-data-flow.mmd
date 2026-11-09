@@ -4,7 +4,7 @@ flowchart LR
     PG_SRC[("Self-managed PostgreSQL source<br/>10.50.20.0/24")]
     NFS_SRC[("NFS file server<br/>10.50.20.0/24")]
     ARCH_SRC["Archive source<br/>type and location TBD"]
-    DS_AGENT["DataSync agent VM<br/>near NFS source"]
+    DS_AGENT["DataSync agent VM<br/>10.50.20.50/32<br/>near NFS source"]
     NFS_SRC -->|"NFSv4.x TCP 2049<br/>or NFSv3 TCP 111 + 2049"| DS_AGENT
     ARCH_SRC -.->|"Agent and protocol path TBD"| DS_AGENT
   end
@@ -26,7 +26,12 @@ flowchart LR
     RDS[("RDS PostgreSQL target<br/>Multi-AZ DB instance deployment")]
     EFS[("Regional EFS target")]
     S3[("S3 archive target")]
-    DS_ENI["DataSync task ENI<br/>selected subnet in same VPC and AZ<br/>as an EFS mount target"]
+    subgraph DS_VPCE_SUBNET["DataSync endpoint subnet<br/>10.30.51.0/24 • AZ-A"]
+      DS_VPCE["DataSync VPC service endpoint<br/>TCP 1024–1064"]
+    end
+    subgraph DS_TASK_SUBNET["DataSync task ENI subnet<br/>10.30.52.0/24 • AZ-A"]
+      DS_ENI["DataSync task ENI<br/>TCP 443 from agent"]
+    end
     EFS_SG["EFS mount-target SG<br/>allows TCP 2049 from task-ENI SG"]
   end
 
@@ -44,8 +49,13 @@ flowchart LR
   VPN --> PG_SRC
   DMS -->|"Target connection TCP 5432<br/>temporary DB ingress from DMS SG"| RDS
 
-  DS_AGENT -->|"HTTPS TCP 443 for public endpoint<br/>or VPC endpoint-specific ports"| DS_SERVICE
+  DS_AGENT -->|"DataSync control/data plane over IPsec VPN"| VPN
+  VPN --> VGW
+  VGW -->|"TCP 1024–1064 control plane"| DS_VPCE
+  VGW -->|"TCP 443 task data plane"| DS_ENI
   DS_SERVICE -->|"Creates task data-plane ENI"| DS_ENI
   DS_ENI -->|"NFS TCP 2049<br/>task-ENI SG to EFS mount-target SG"| EFS
   DS_ENI --- EFS_SG
+  VGW ---|"BGP source route only; no default route"| DS_VPCE_SUBNET
+  VGW ---|"BGP source route only; no default route"| DS_TASK_SUBNET
   DS_SERVICE -->|"Service-side S3 transfer<br/>bucket policy/IAM required"| S3

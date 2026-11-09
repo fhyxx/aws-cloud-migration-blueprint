@@ -18,11 +18,13 @@ For this portfolio, the Solutions Architect may choose reasonable synthetic inpu
 | AZs | First two available AZs in account; resolve names at deploy time | Avoid hard-coding account-specific AZ IDs |
 | Source network | `10.50.0.0/16` | Fictional private on-premises aggregate |
 | Source app subnet | `10.50.10.0/24` | Two illustrative Linux MGN source VMs |
-| Source DB/NFS subnet | `10.50.20.0/24` | Self-managed PostgreSQL and NFS source |
+| Source DB/NFS subnet | `10.50.20.0/24` | Self-managed PostgreSQL and NFS source; DataSync agent at `10.50.20.50/32` |
 | Customer gateway | Generic BGP-capable edge appliance; public IP supplied only at deployment | Do not invent a real public IP or vendor configuration |
 | BGP | Customer ASN `65010`; VGW ASN `64512` | Private ASNs, distinct |
 | VPN | One VPN connection, two tunnels, BGP | Portfolio-grade tunnel redundancy; not device/ISP redundancy or ECMP |
-| MGN staging | One /24 in AZ-A | Cost-conscious migration-only assumption; not HA |
+| MGN staging | `10.30.31.0/24` in AZ-A | Cost-conscious migration-only assumption; not HA |
+| DataSync VPC endpoint subnet | `10.30.51.0/24` in AZ-A | Dedicated endpoint ENI subnet with source BGP return route |
+| DataSync task ENI subnet | `10.30.52.0/24` in AZ-A | Dedicated task ENI subnet aligned with EFS mount target A and source BGP return route |
 | DMS | Provisioned replication instance initially; dedicated two-AZ subnet group | Simpler reproducible baseline; class remains a later benchmark decision |
 | DMS egress | All outbound from DMS SG | Aligns with AWS DMS network guidance; control exposure through dedicated routes and strict peer ingress |
 | PostgreSQL | TCP 5432; app and DMS source paths only | Synthetic listener contract |
@@ -30,7 +32,7 @@ For this portfolio, the Solutions Architect may choose reasonable synthetic inpu
 | Health endpoint | `/health/ready` returns HTTP 200 when dependencies are ready | Synthetic application contract; implement/test in app later |
 | NFS | NFSv4.1 over TCP 2049 | Simplifies synthetic DataSync source |
 | DataSync | VPC service endpoint for private-agent exercise; separate agent if public endpoint later required | Demonstrates endpoint-specific network design; task mode/agent capacity still subject to service validation |
-| DataSync EFS | Task ENI TCP 2049 to EFS mount target | Same VPC and compatible AZ/mount-target placement |
+| DataSync EFS | Agent TCP 1024–1064 to VPC endpoint; agent TCP 443 to task ENI; task ENI TCP 2049 to EFS mount target | Dedicated endpoint/task subnets; route propagation to both for hybrid return traffic; same AZ as EFS mount target |
 | DNS | VPC-provided Route 53 Resolver; no custom DNS forwarding in base scenario | Add resolver endpoints only if a synthetic hybrid DNS requirement is introduced |
 | NTP | AWS-supported time sync for EC2; source-side time service is customer-managed | No invented resolver IPs |
 | NACL | Default NACLs | SGs provide workload policy; avoid unnecessary stateless complexity |
@@ -64,16 +66,15 @@ Terraform must be safe to inspect and validate without creating chargeable resou
 
 ## 5. Terraform implementation
 
-The first network foundation is being codified in [Terraform](../terraform/README.md), with implementation boundaries and validation notes in [document 15](15-infrastructure-as-code-design.md). The code remains unvalidated until local/CI checks complete; no apply is authorized.
+The network and workload layers are codified in [Terraform](../terraform/README.md). The migration-services layer is being added with DMS and DataSync resources; MGN replication-template onboarding remains a separate activation/configuration step. No apply is authorized.
 
 ## 6. Remaining engineering work
 
 These are implementation/test tasks, not reasons to stop documenting the fictional scenario:
 
-1. Build Terraform network foundation and validate formatting/plan locally.
+1. Validate Terraform network, workload and migration layers in CI and locally.
 2. Add static checks for subnet CIDRs, route propagation scope, SG policy and opt-in cost-bearing resources.
-3. Add CI checks for Terraform formatting, validation and security scanning.
-4. Build service-specific DMS/MGN/DataSync infrastructure only after network foundation passes static and plan review.
-5. Update cost assumptions for any resources intentionally enabled in a scenario.
+3. Complete DMS, DataSync and MGN onboarding configuration and service-specific test plans.
+4. Update cost assumptions for migration resources and measured transfer profiles.
 
 **Decision:** synthetic assumptions are approved for the fictional portfolio scenario. They do not lift the separate prohibition on deploying chargeable AWS resources without explicit permission.

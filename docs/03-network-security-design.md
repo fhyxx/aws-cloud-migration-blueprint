@@ -132,7 +132,7 @@ Security groups are stateful and should reference peer security groups wherever 
 | MGN staging SG | TCP 1500 from illustrative MGN source subnet `10.50.10.0/24` only; no public inbound | TCP 443 to regional MGN service and only documented dependencies |
 | Interface endpoint SG | TCP 443 from only the private workload SGs that need the endpoint | Stateful responses |
 
-The ALB health-check port and application listener port must match the actual target-group configuration; TCP 8080 is still provisional. If database administration is required, prefer a controlled SSM-based or approved private DBA path rather than exposing PostgreSQL publicly. Remove the temporary DMS-to-RDS rule after migration when DMS no longer needs it.
+The ALB health-check port and application listener port must match the actual target-group configuration; TCP 8080 and `/health/ready` are the fixed synthetic application contract; runtime readiness still requires testing. If database administration is required, prefer a controlled SSM-based or approved private DBA path rather than exposing PostgreSQL publicly. Remove the temporary DMS-to-RDS rule after migration when DMS no longer needs it.
 
 Security groups are stateful: response traffic for an allowed flow is automatically permitted. Network ACLs are stateless; if custom NACLs are introduced, explicitly allow both request and return traffic, including the correct ephemeral port ranges for initiating clients and AWS-managed services. Retain default NACLs until a specific subnet-level deny/guardrail requirement justifies custom rules. Do not copy a generic ephemeral range without validating the client OS and service behaviour.
 

@@ -64,6 +64,8 @@ All route tables include the VPC-local route. The table below lists additional i
 | RT-DMS-A | DMS-A | `10.50.0.0/16 → VGW` (BGP propagated); `0.0.0.0/0 → NAT-A`; conditional S3 prefix-list route if the selected DMS workflow requires S3 | Any route propagation beyond this dedicated migration table |
 | RT-DMS-B | DMS-B | `10.50.0.0/16 → VGW` (BGP propagated); `0.0.0.0/0 → NAT-B`; conditional S3 prefix-list route if required | Any route propagation beyond this dedicated migration table |
 | RT-MGN | MGN staging | `10.50.0.0/16 → VGW` (BGP propagated); `0.0.0.0/0 → NAT-A` for regional service HTTPS unless a validated private path is selected | Broad ingress or propagation into application/DB route tables |
+| RT-DATASYNC-ENDPOINT | DataSync endpoint `10.30.51.0/24` | `10.30.0.0/16 → local`; propagated `10.50.0.0/16 → VGW` | No default route; endpoint TCP 1024–1064 return path to agent |
+| RT-DATASYNC-TASK | DataSync task ENIs `10.30.52.0/24` | `10.30.0.0/16 → local`; propagated `10.50.0.0/16 → VGW` | No default route; AZ-A return route for agent TCP 443; task ENI reaches EFS locally |
 
 **Propagation boundary:** enable VGW route propagation only on RT-DMS-A, RT-DMS-B, RT-MGN, RT-DATASYNC-ENDPOINT and RT-DATASYNC-TASK. Do not propagate the customer aggregate into public, application or DB route tables. The customer gateway advertises the agreed customer prefixes; the VGW advertises the VPC CIDR. Customer-side firewall policy must narrow actual reachability to the required migration flows.
 

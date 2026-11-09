@@ -5,6 +5,7 @@ on:
     paths:
       - "terraform/**"
       - "scripts/validate_network_spec.py"
+      - "scripts/validate_migration_spec.py"
       - ".github/workflows/terraform-network-foundation.yml"
       - "docs/09-migration-readiness-matrix.md"
       - "docs/10-technical-architecture-audit.md"
@@ -83,3 +84,6 @@ jobs:
 
       - name: Static network design assertions
         run: python3 scripts/validate_network_spec.py
+
+      - name: Static migration service safety assertions
+        run: python3 scripts/validate_migration_spec.py

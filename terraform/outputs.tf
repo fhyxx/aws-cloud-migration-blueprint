@@ -16,12 +16,12 @@ output "route_table_ids" {
 output "security_group_ids" {
   description = "Network security group IDs."
   value = {
-    alb          = aws_security_group.alb.id
-    app          = aws_security_group.app.id
-    rds          = aws_security_group.rds.id
-    efs          = aws_security_group.efs.id
-    dms          = aws_security_group.dms.id
-    mgn_staging  = aws_security_group.mgn_staging.id
+    alb           = aws_security_group.alb.id
+    app           = aws_security_group.app.id
+    rds           = aws_security_group.rds.id
+    efs           = aws_security_group.efs.id
+    dms           = aws_security_group.dms.id
+    mgn_staging   = aws_security_group.mgn_staging.id
     datasync_task = aws_security_group.datasync_task.id
   }
 }

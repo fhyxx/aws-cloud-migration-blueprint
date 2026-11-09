@@ -178,7 +178,7 @@ See [Network Implementation Review](12-network-implementation-review.md) for the
 6. Retrieve the AWS-generated vendor configuration for the exact device/software version.
 7. Exchange it securely. Never commit tunnel outside IPs, inside tunnel CIDRs, pre-shared keys or device secrets.
 8. Configure both tunnels and BGP peers; confirm both established and only approved prefixes exchanged.
-9. Enable route propagation only on RT-DMS-A, RT-DMS-B and RT-MGN-STAGING.
+9. Enable route propagation only on RT-DMS-A, RT-DMS-B, RT-MGN-STAGING, RT-DATASYNC-ENDPOINT and RT-DATASYNC-TASK.
 10. Confirm the customer device learns the VPC route and AWS migration route tables learn the approved source prefix.
 11. Validate firewall allow-lists and end-to-end probes independently of route presence.
 
@@ -267,7 +267,7 @@ VPN output is sensitive: it may reveal public tunnel endpoints, customer topolog
 |---|---|---|---|
 | NET-P01 | Subnet CIDR/AZ/free-IP inspection | No overlap; approved AZ placement and headroom | Sanitised subnet inventory |
 | NET-P02 | Subnet-to-route-table association | Each subnet uses its named table | Association export |
-| NET-P03 | VGW propagation scope | Enabled only on DMS-A, DMS-B and MGN staging | Route and propagation export |
+| NET-P03 | VGW propagation scope | Enabled only on DMS-A, DMS-B, MGN staging, DataSync endpoint and DataSync task | Route and propagation export |
 | NET-P04 | Source route presence | Source route only in migration tables; absent from App/Public/DB | Effective route exports |
 | NET-P05 | DB isolation | Local route only; no NAT/IGW/VGW/default route | DB route export |
 | NET-P06 | NAT and S3 routes | Correct same-AZ NAT; S3 prefix list only where approved | Route/endpoint export |
@@ -310,7 +310,7 @@ Network implementation is not ready to start until all are true:
 - [ ] Customer ASN, AWS ASN, device model/firmware and BGP/IPsec capabilities are confirmed.
 - [ ] AWS account, Region and AZ IDs are confirmed.
 - [ ] Subnet CIDRs, IP headroom and route-table associations are approved.
-- [ ] Route propagation is limited to DMS-A, DMS-B and MGN staging.
+- [ ] Route propagation is limited to DMS-A, DMS-B, MGN staging, DataSync endpoint and DataSync task.
 - [ ] Customer return routes and firewall policies are approved.
 - [ ] SG peers, app port, health-check path and service egress are confirmed.
 - [ ] NACL posture and DNS/NTP/proxy dependencies are documented.

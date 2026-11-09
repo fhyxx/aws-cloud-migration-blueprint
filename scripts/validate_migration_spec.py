@@ -181,6 +181,24 @@ assert "instance or Serverless" not in target_source + migration_source, (
     "Diagrams must distinguish the provisioned Terraform baseline from an unimplemented Serverless alternative"
 )
 
+# Documentation formatting and current architecture facts must remain clean.
+for doc_path in (
+    ROOT / "docs" / "09-migration-readiness-matrix.md",
+    ROOT / "docs" / "10-technical-architecture-audit.md",
+):
+    doc_text = doc_path.read_text()
+    assert r"\n" not in doc_text, (
+        f"{doc_path.name} contains a literal escaped newline that breaks Markdown layout"
+    )
+
+audit_text = (ROOT / "docs" / "10-technical-architecture-audit.md").read_text()
+assert "nine subnets" not in audit_text, "Audit must reflect the current eleven-subnet baseline"
+assert "feature/terraform-network-foundation" not in audit_text, (
+    "Audit must not describe the merged Terraform foundation as a feature branch"
+)
+for route_table in ("DataSync endpoint", "DataSync task"):
+    assert route_table in audit_text, f"Audit must include {route_table} in migration route propagation scope"
+
 print(
     "PASS: migration flags default off; DMS is private, TLS/Secrets-Manager "
     "backed and stopped; DataSync endpoint, EFS transport and archive prefix "

@@ -1,8 +1,8 @@
 # 03 — Network and Security Design
 
-**ID:** CLI-AWS-NET-003 | **Version:** 1.7 | **Status:** Proposed reference design — implementation review findings open
+**ID:** CLI-AWS-NET-003 | **Version:** 1.7 | **Status:** Synthetic portfolio baseline approved — live AWS execution gated
 
-**Configuration baseline:** [Network Configuration Specification](13-network-configuration-specification.md) (proposed; HOLD remains in force).
+**Configuration baseline:** [Network Configuration Specification](13-network-configuration-specification.md) (approved synthetic baseline; live AWS apply remains gated).
 
 ## Architecture diagrams
 

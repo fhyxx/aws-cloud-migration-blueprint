@@ -161,6 +161,7 @@ resource "aws_security_group" "alb" {
   description = "HTTPS ingress from clients; forwards to application targets."
   vpc_id      = aws_vpc.this.id
   tags        = merge(var.tags, { Name = "${var.name_prefix}-alb-sg" })
+  egress = []
 }
 
 resource "aws_security_group" "app" {
@@ -168,6 +169,7 @@ resource "aws_security_group" "app" {
   description = "Application ingress only from ALB."
   vpc_id      = aws_vpc.this.id
   tags        = merge(var.tags, { Name = "${var.name_prefix}-app-sg" })
+  egress = []
 }
 
 resource "aws_security_group" "rds" {
@@ -175,6 +177,7 @@ resource "aws_security_group" "rds" {
   description = "PostgreSQL accepts application and migration traffic only."
   vpc_id      = aws_vpc.this.id
   tags        = merge(var.tags, { Name = "${var.name_prefix}-rds-sg" })
+  egress = []
 }
 
 resource "aws_security_group" "efs" {
@@ -182,6 +185,7 @@ resource "aws_security_group" "efs" {
   description = "NFS only from application and DataSync task ENIs."
   vpc_id      = aws_vpc.this.id
   tags        = merge(var.tags, { Name = "${var.name_prefix}-efs-sg" })
+  egress = []
 }
 
 resource "aws_security_group" "dms" {
@@ -196,6 +200,7 @@ resource "aws_security_group" "mgn_staging" {
   description = "MGN staging replication traffic from synthetic source application subnet."
   vpc_id      = aws_vpc.this.id
   tags        = merge(var.tags, { Name = "${var.name_prefix}-mgn-staging-sg" })
+  egress = []
 }
 
 resource "aws_security_group" "datasync_task" {
@@ -203,6 +208,7 @@ resource "aws_security_group" "datasync_task" {
   description = "DataSync task ENIs access EFS over NFS."
   vpc_id      = aws_vpc.this.id
   tags        = merge(var.tags, { Name = "${var.name_prefix}-datasync-task-sg" })
+  egress = []
 }
 
 resource "aws_security_group_rule" "alb_https_ingress" {

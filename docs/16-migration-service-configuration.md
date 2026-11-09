@@ -1,6 +1,6 @@
 # 16 — Migration Service Configuration and Activation Runbook
 
-**ID:** CLI-AWS-MSA-016 | **Version:** 1.4 | **Status:** Prepared for synthetic portfolio execution — no service activation or migration run  
+**ID:** CLI-AWS-MSA-016 | **Version:** 1.5 | **Status:** Prepared for synthetic portfolio execution — no service activation or migration run  
 **Related:** [Terraform network/workload/migration foundation](../terraform/README.md), [Migration strategy](04-data-migration-strategy.md), [Migration runbook](05-migration-runbook.md), [Network configuration](13-network-configuration-specification.md), [Synthetic decisions](14-synthetic-case-study-decisions.md)
 
 ## 1. Purpose
@@ -58,13 +58,13 @@ The archive bucket and S3 location are provisioned only when DataSync resources 
 
 ## 5. MGN service initialization and templates
 
-Enable `enable_mgn_resources=true` only after the VPC, VPN and MGN staging network are ready. Terraform creates the eight IAM roles and managed-policy attachments specified by current AWS initialization guidance: replication server, conversion server, MGH, launch with DRS, launch with SSM, FSx proxy, FSx proxy link and agent. The agent role trust restricts `sts:SourceIdentity` to `s-*` and `aws:SourceAccount` to the configured account. These are IAM resources only; no MGN replication server or source agent is launched.
+Enable `enable_mgn_resources=true` only after the VPC, VPN and MGN staging network are ready. Terraform creates the eight IAM roles under the required `/service-role/` IAM path and attaches the managed policies specified by current AWS initialization guidance: replication server, conversion server, MGH, launch with DRS, launch with SSM, FSx proxy, FSx proxy link and agent. The agent role trust restricts `sts:SourceIdentity` to `s-*` and `aws:SourceAccount` to the configured account. These are IAM resources only; no MGN replication server or source agent is launched.
 
 After the Terraform IAM roles are applied, run the guarded script with `-InitializeService -Execute` once per account/Region. It invokes `aws mgn initialize-service`, then creates the replication and launch configuration templates. It refuses to create duplicates if either template already exists. The launch template uses `STOPPED`, disables public IP assignment and does not copy the source private IP. Template instance sizing and migration execution remain operator-reviewed.
 
 ## 6. MGN replication configuration template
 
-The script [configure-mgn-replication-template.ps1](../scripts/configure-mgn-replication-template.ps1) creates a replication configuration template only. It does not install MGN agents, register source servers, launch test instances, start replication or cut over.
+The script [configure-mgn-replication-template.ps1](../scripts/configure-mgn-replication-template.ps1) creates both replication and launch configuration templates after optional service initialization. It does not install MGN agents, register source servers, launch test instances, start replication or cut over.
 
 Default script behaviour is dry-run. It requires explicit `-Execute` to call AWS and uses PowerShell `ShouldProcess` confirmation. Use `-InitializeService` only for first-time regional initialization after the MGN IAM role layer is deployed. It configures both MGN templates. The replication template configures:
 
@@ -75,7 +75,7 @@ Default script behaviour is dry-run. It requires explicit `-Execute` to call AWS
 - No dedicated replication server by default.
 - An operator-supplied replication server instance type and bandwidth throttle.
 
-Example dry-run after Terraform network outputs exist:
+Example dry-run after Terraform network and MGN IAM outputs exist (include `-InitializeService` only for the first initialization in this Region):
 
 ```powershell
 .\scripts\configure-mgn-replication-template.ps1 `
@@ -83,10 +83,11 @@ Example dry-run after Terraform network outputs exist:
   -ReplicationSecurityGroupId "sg-REPLACE_WITH_OUTPUT" `
   -ReplicationServerInstanceType "REPLACE_AFTER_SOURCE_PROFILE" `
   -Profile "portfolio" `
-  -Region "us-east-1"
+  -Region "us-east-1" `
+  -InitializeService
 ```
 
-Only after reviewing the displayed account, Region, subnet, SG and instance type should an operator use `-Execute`. The script will then request PowerShell confirmation. Choose the replication server instance type after source disk/change-rate profiling; no class is asserted as production-sized.
+Only after reviewing the displayed account, Region, subnet, SG and instance type should an operator use `-Execute`. The script requests PowerShell confirmation for service initialization and template creation. It checks for existing templates and stops rather than creating duplicates. Choose the replication server instance type after source disk/change-rate profiling; no class is asserted as production-sized.
 
 ## 7. Ordered migration validation
 

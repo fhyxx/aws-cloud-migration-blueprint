@@ -23,7 +23,7 @@ Never fabricate console screenshots, CLI output, customer measurements, successf
 | Runtime/network architecture | [Runtime source](../architecture/runtime-network-view.mmd) and [rendered page](../architecture/runtime-network-view.md) | Eleven-subnet layout, AZ placement, route intent and SG boundaries | Live route tables, SGs, VPN/BGP or traffic tests |
 | Migration data flow | [Migration source](../architecture/migration-data-flow.mmd) and [rendered page](../architecture/migration-data-flow.md) | Separate MGN, DMS and DataSync flows and protocols | Activated MGN/DMS/DataSync services or data movement |
 | Terraform baseline | [Terraform directory](../terraform/) and [IaC design](../docs/15-infrastructure-as-code-design.md) | Opt-in infrastructure definitions and safe defaults | Any AWS resource creation or account-specific plan |
-| CI validation | [PR #26 validation run](https://github.com/fhyxx/aws-cloud-migration-blueprint/actions/runs/42643625418) | Terraform fmt/init/validate, safe-default and full synthetic no-refresh plans, network/migration assertions and cost-model checks passed | Live AWS API calls, deployment, service quotas, permissions, prices or connectivity |
+| CI validation | [latest main validation run #104](https://github.com/fhyxx/aws-cloud-migration-blueprint/actions/runs/42644692954) | Terraform fmt/init/validate, safe-default and full synthetic no-refresh plans, network/migration assertions and cost-model checks passed | Live AWS API calls, deployment, service quotas, permissions, prices or connectivity |
 | Migration-period cost model | [Cost model](../docs/17-migration-cost-model.md) and [pricing assumptions](../cost/pricing-assumptions.csv) | Reproducible formulas, conditional sensitivities and explicit unpriced gates | Approved quantities, benchmark results or a migration total |
 | Saved Pricing Calculator estimate | [Evidence record](aws-pricing-calculator-2026-11-09.md), [PDF](aws-pricing-calculator-2026-11-09.pdf), [CSV](aws-pricing-calculator-2026-11-09.csv) | Six-service partial steady-state subtotal of $1,930.76/month and $23,169.12 annualised, plus documented calculator inputs and open assumptions | Complete monthly bill, approved budget, actual usage or migration-period cost |
 
@@ -34,8 +34,8 @@ The committed evidence record contains a public AWS Pricing Calculator share URL
 ## Visual rendering status
 
 - The user previously confirmed that the master architecture and migration data-flow diagrams rendered correctly in GitHub.
-- The runtime/network diagram and its Mermaid source are synchronised, and CI verifies the embedded Mermaid block exactly matches the source. The latest updated GitHub visual rendering of that focused view remains pending confirmation.
-- CI source synchronisation is a text-integrity check; it is not a substitute for visual inspection of GitHub's rendered diagram.
+- The user confirmed that the updated runtime/network diagram renders correctly in GitHub. Its Mermaid source is synchronised, and CI verifies the embedded Mermaid block exactly matches the source.
+- Visual confirmation establishes that the diagram is readable and rendered; it does not validate deployed route tables, security groups, VPN/BGP or traffic.
 
 ## Live evidence still required for a real implementation
 

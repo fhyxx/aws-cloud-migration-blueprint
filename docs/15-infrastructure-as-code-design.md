@@ -35,14 +35,14 @@ Even the default configuration creates real AWS resources if applied. Do not app
 
 ## 3. Network invariants encoded
 
-1. Exactly nine logical subnet keys: public A/B, app A/B, DB A/B, MGN staging and DMS A/B.
+1. Exactly eleven logical subnet keys: public A/B, app A/B, DB A/B, MGN staging, DMS A/B and dedicated DataSync endpoint/task subnets.
 2. Application and DB route tables never receive VGW route propagation.
-3. VPN propagation is limited to MGN, DMS-A and DMS-B route tables.
+3. VPN propagation is limited to MGN, DMS-A/B and the dedicated DataSync endpoint/task route tables.
 4. DMS uses a dedicated security group with all outbound permitted per the documented DMS network recommendation; source/target ingress remains scoped.
 5. MGN staging TCP 1500 ingress is restricted to the synthetic source application CIDR.
 6. RDS TCP 5432 ingress is SG-referenced from application and temporary DMS peers.
 7. EFS TCP 2049 ingress is SG-referenced from application and DataSync task ENIs.
-8. S3 Gateway Endpoint is associated only with application route tables in this first layer.
+8. S3 Gateway Endpoint is associated with App-A, App-B and MGN staging route tables.
 9. NAT and VPN are disabled by default.
 
 ## 4. Engineering review notes
@@ -67,7 +67,7 @@ The GitHub Actions workflow runs on Terraform-related pull requests and main-bra
 4. Python static assertions for subnet count, route propagation scope, opt-in cost controls and security-group boundaries.
 5. A no-refresh Terraform plan using dummy credentials and all cost-bearing feature flags disabled; this validates the resource graph without querying or changing an AWS account.
 
-CI now runs formatting, init, validate, static assertions and a no-refresh plan with dummy credentials and all NAT/VPN/workload/migration flags disabled. This checks the default resource graph without an AWS account; it does not validate enabled service plans or replace a real account-specific plan. Local Windows validation is still required to verify the exact provider lock, formatted HCL and a no-refresh plan against the intended provider version. The first plan should use `create_nat_gateways=false` and `enable_site_to_site_vpn=false`.
+CI runs formatting, init, validate, static assertions, a default no-refresh plan with all cost-bearing flags disabled, and a second full synthetic feature plan with NAT, VPN, ALB/ASG, RDS/EFS, DMS and DataSync flags enabled. Both plans use dummy credentials, synthetic AMI/certificate/secret/agent identifiers and no refresh, so they validate Terraform's resource graph without calling AWS. They do not validate service-side existence, account quotas, prices or live connectivity. Local Windows validation is still required to verify the exact provider lock, formatted HCL and a no-refresh plan against the intended provider version. The first plan should use `create_nat_gateways=false` and `enable_site_to_site_vpn=false`.
 
 ## 6. Next implementation layers
 

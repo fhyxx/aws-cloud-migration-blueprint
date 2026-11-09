@@ -1,6 +1,6 @@
 # 15 — Infrastructure as Code Design and Implementation Notes
 
-**ID:** CLI-AWS-IAC-015 | **Version:** 1.0 | **Status:** Network, workload and migration Terraform validated in CI — live account validation and deployment not performed  
+**ID:** CLI-AWS-IAC-015 | **Version:** 1.2 | **Status:** Network, workload and migration Terraform validated in CI — live account validation and deployment not performed  
 **Related:** [Synthetic case-study decisions](14-synthetic-case-study-decisions.md), [Network configuration specification](13-network-configuration-specification.md), [Terraform network foundation](../terraform/README.md)
 
 ## 1. Implementation scope
@@ -8,18 +8,18 @@
 The Terraform layers codify the fictional network, workload and migration-service foundations:
 
 - VPC, DNS support/hostnames and Internet Gateway.
-- Eleven subnets across two account-resolved Availability Zones (six steady-state and five migration-only).
+- Eleven subnets across two explicitly configured AZ name aliases (six steady-state and five migration-only). The synthetic defaults are `us-east-1a` and `us-east-1b`; resolve physical AZ IDs before real deployment.
 - Dedicated route tables and explicit subnet associations.
 - Public IGW routes and optional private-subnet NAT routes.
-- S3 Gateway Endpoint for the two application route tables.
-- Dedicated DataSync VPC service-endpoint and task-ENI subnets, each with a BGP source return route and no default route.
+- S3 Gateway Endpoint for App-A, App-B and MGN staging route tables.
+- Dedicated DataSync VPC service-endpoint and task-ENI subnets, each with a BGP source return route and no default route; an opt-in AWS DataSync Interface VPC endpoint is created in the endpoint subnet.
 - Optional VGW, Customer Gateway, dynamic BGP Site-to-Site VPN and restricted route propagation.
 - ALB, application, RDS, EFS, DMS, MGN staging and DataSync task security groups.
 - Optional HTTPS ALB, EC2 Auto Scaling Group, RDS PostgreSQL Multi-AZ, encrypted EFS and synthetic health/API service.
 - Optional DMS provisioned replication instance, Secrets Manager-backed PostgreSQL endpoints and stopped full-load-and-CDC task.
 - Optional DataSync NFSv4.1-to-EFS task, private S3 archive bucket/location and task logging.
 
-The opt-in workload layer creates the ALB, EC2 ASG, RDS and EFS when enabled. The opt-in migration layer creates DMS replication/endpoints/task and DataSync locations/task when enabled. It does not activate the DataSync appliance, install MGN source agents, register source servers, start migration tasks or perform cutover.
+The opt-in workload layer creates the ALB, EC2 ASG, RDS and EFS when enabled. The opt-in migration layer creates DMS replication/endpoints/task, the DataSync Interface VPC endpoint, DataSync locations/task and private S3 archive destination when enabled. It does not activate the DataSync appliance, install MGN source agents, register source servers, start migration tasks or perform cutover.
 
 ## 2. Cost and deployment safety
 
@@ -50,7 +50,7 @@ Even the default configuration creates real AWS resources if applied. Do not app
 ## 4. Engineering review notes
 
 - Security-group peer rules use the dedicated `aws_vpc_security_group_ingress_rule` and `aws_vpc_security_group_egress_rule` resources (rather than legacy inline rules or the older aggregate rule resource). This avoids cyclic dependencies between ALB/App, App/RDS, App/EFS and EFS/DataSync SGs and follows current AWS provider guidance.
-- AZ names are resolved from the first two available AZs in the selected account. Confirm their AZ IDs and ensure they match the intended regional deployment before applying.
+- The synthetic defaults use the AZ name aliases `us-east-1a` and `us-east-1b`. AZ names map to different physical AZ IDs across accounts; resolve and confirm the intended AZ IDs before applying in a real account.
 - The current route model sends DMS-A through NAT-A, DMS-B through NAT-B and MGN staging through NAT-A when NAT is enabled. DataSync endpoint and task ENI subnets have no default route; both receive the source BGP route to preserve return traffic to the on-premises agent. This is an illustrative same-AZ egress model; validate service endpoint reachability and cost.
 - The DMS endpoint secret role uses the regional DMS service principal with SourceAccount/SourceArn conditions, exact secret ARNs and optional exact source CMK decrypt. The DMS egress policy is intentionally broad outbound. It is not broad inbound. Security approval and selected DMS mode review remain mandatory.
 - The MGN SG allows TCP 443 egress to regional service dependencies and TCP 1500 ingress from source app CIDR. Validate the current regional service requirements before agent installation.
@@ -67,21 +67,19 @@ The GitHub Actions workflow runs on Terraform-related pull requests and main-bra
 2. Terraform initialization with backend disabled.
 3. Terraform validation.
 4. Python static assertions for subnet count, route propagation scope, opt-in cost controls and security-group boundaries.
-5. A no-refresh Terraform plan using dummy credentials and all cost-bearing feature flags disabled; this validates the resource graph without querying or changing an AWS account.
+5. A safe-default no-refresh Terraform plan with all chargeable flags disabled.
+6. A full synthetic no-refresh plan with NAT, VPN, workload, DMS and DataSync enabled using dummy credentials and reserved/example identifiers. Neither plan calls AWS or applies resources.
 
-CI runs formatting, init, validate, static assertions, a default no-refresh plan with all cost-bearing flags disabled (61 resources), and a full synthetic feature plan with NAT, VPN, ALB/ASG, RDS/EFS, DMS and DataSync enabled (122 resources). Both use dummy credentials, synthetic AMI/certificate/secret/agent identifiers and no refresh, so they validate the Terraform resource graph without calling AWS. They do not validate service-side existence, account quotas, actual pricing or live connectivity. Local Windows validation is still required to verify the exact provider lock, formatted HCL and a no-refresh plan against the intended provider version. The first plan should use `create_nat_gateways=false` and `enable_site_to_site_vpn=false`.
+CI runs formatting, init, validate, static assertions, a default no-refresh plan with all cost-bearing flags disabled (61 resources), and a full synthetic feature plan with NAT, VPN, ALB/ASG, RDS/EFS, DMS and DataSync enabled (123 resources). Both use dummy credentials, synthetic AMI/certificate/secret/agent identifiers and no refresh, so they validate the Terraform resource graph without calling AWS. They do not validate service-side existence, account quotas, actual pricing or live connectivity. Local Windows validation is still required to verify the exact provider lock, formatted HCL and a no-refresh plan against the intended provider version. The first plan should use `create_nat_gateways=false` and `enable_site_to_site_vpn=false`.
 
-## 6. Next implementation layers
+## 6. Remaining engineering work
 
-Proceed without waiting for synthetic customer input:
+1. Complete CI verification for the new DataSync Interface VPC endpoint and merge the endpoint change after checks pass.
+2. Commit/pin the Terraform provider lock file and run local Windows `fmt`, `init`, `validate` and no-refresh plan review.
+3. Add MGN replication configuration as a reproducible resource if the selected Terraform provider exposes a supported resource; otherwise retain the guarded AWS CLI workflow and test it in an approved lab.
+4. Review whether the single-AZ MGN staging subnet is sufficient for the synthetic recovery objectives; document a deliberate multi-AZ/HA option and its cost/operational trade-off.
+5. Add automated security scanning (Terraform static analysis, secret scanning, dependency review) and a cost estimate for the opt-in migration resources.
+6. Refresh all three Mermaid renderings after the DataSync endpoint change and obtain visual confirmation of the changed diagrams.
+7. Complete approved lab connectivity tests for DMS, MGN and DataSync; do not describe static plans as live service validation.
 
-1. Complete local `terraform fmt`, `init -backend=false`, `validate` and static plan review.
-2. Correct any HCL/provider issues revealed by CI or local validation.
-3. Add ALB, ACM/DNS assumptions, launch template/ASG and application health-check contract.
-4. Add RDS subnet group/parameter and option groups, encryption, backup/monitoring and deletion protection.
-5. Add EFS, mount targets, encryption and backup policy.
-6. Add DMS replication configuration only after source/target versions and migration-mode assumptions are explicitly represented.
-7. Add MGN and DataSync service resources with endpoint-specific network paths.
-8. Add test harnesses, security scanning, cost scenarios and operational runbooks.
-
-**Current truth:** Terraform network, workload and migration-service layers and CI checks are drafted on a feature branch. They are not locally validated, not yet merged, and not deployed.
+**Current truth:** network, workload and migration Terraform is implemented and earlier CI plans passed. The latest DataSync endpoint addition is under review; no AWS resources have been applied and no migration has run.

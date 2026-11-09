@@ -101,6 +101,19 @@ resource "aws_route" "migration_nat_default" {
   nat_gateway_id         = aws_nat_gateway.this[each.value].id
 }
 
+resource "aws_vpc_endpoint" "datasync" {
+  count = var.enable_datasync_resources ? 1 : 0
+
+  vpc_id              = aws_vpc.this.id
+  service_name        = "com.amazonaws.${var.aws_region}.datasync"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [aws_subnet.this["datasync_endpoint"].id]
+  security_group_ids  = [aws_security_group.datasync_endpoint.id]
+  private_dns_enabled = false
+
+  tags = merge(var.tags, { Name = "${var.name_prefix}-datasync-vpc-endpoint" })
+}
+
 resource "aws_vpc_endpoint" "s3" {
   vpc_id            = aws_vpc.this.id
   service_name      = "com.amazonaws.${var.aws_region}.s3"

@@ -1,6 +1,6 @@
 # 13 — Network Configuration Specification
 
-**ID:** CLI-AWS-NCS-013 | **Version:** 1.1 | **Status:** Approved synthetic configuration baseline — live AWS execution gated  
+**ID:** CLI-AWS-NCS-013 | **Version:** 1.2 | **Status:** Approved synthetic configuration baseline — live AWS execution gated  
 **Project:** Clafoke Investors Ltd (fictional portfolio case study)  
 **Related:** [Network and security design](03-network-security-design.md), [Network implementation preparation](11-network-implementation-preparation.md), [Network implementation review](12-network-implementation-review.md), [Migration readiness matrix](09-migration-readiness-matrix.md), [Technical architecture audit](10-technical-architecture-audit.md)
 

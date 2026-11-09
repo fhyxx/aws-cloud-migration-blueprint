@@ -7,9 +7,9 @@
 
 This runbook closes the gap between Terraform-managed network resources and migration services that require appliance activation, secret material or explicit task lifecycle control.
 
-Terraform now models optional DMS and DataSync resources. MGN replication-template creation is handled by a guarded AWS CLI PowerShell script because source-server onboarding and agent activation remain a separate MGN service workflow.
+Terraform now models optional DMS and DataSync resources, including the actual DataSync Interface VPC service endpoint. MGN replication-template creation is handled by a guarded AWS CLI PowerShell script because source-server onboarding and agent activation remain a separate MGN service workflow.
 
-**Safety:** all migration Terraform flags default to false. No source secret, DataSync activation key, MGN agent install, task start, replication start or AWS apply has been executed.
+**Safety:** all migration Terraform flags default to false. No source secret, DataSync activation key, DataSync agent activation, MGN agent install, task start, replication start or AWS apply has been executed.
 
 ## 2. Migration service Terraform flags
 
@@ -48,9 +48,9 @@ The synthetic private DataSync topology is:
 - Task ENI SG: inbound TCP 443 from agent /32; outbound TCP 2049 to EFS mount-target SG.
 - EFS mount target A is in AZ-A; the task ENI subnet is also AZ-A.
 
-The Terraform outputs `datasync_endpoint_subnet_id`, `datasync_endpoint_security_group_id` and `datasync_task_subnet_id` are the activation inputs. The DataSync appliance must be activated with the VPC endpoint type and the selected subnet/security group. Activation key and agent credentials are not stored in Terraform.
+Terraform creates `aws_vpc_endpoint.datasync` in the dedicated endpoint subnet with the dedicated endpoint SG when `enable_datasync_resources=true`. Its service name is `com.amazonaws.<region>.datasync`; private DNS is disabled because the agent is explicitly associated to the endpoint ID. The outputs `datasync_vpc_endpoint_id`, `datasync_vpc_endpoint_network_interface_ids`, `datasync_endpoint_subnet_arn` and `datasync_endpoint_security_group_arn` supply the activation details. The `datasync_endpoint_subnet_id`, `datasync_endpoint_security_group_id` and `datasync_task_subnet_id` outputs are also available for inspection. Activation key and agent credentials are not stored in Terraform.
 
-After activation, supply the returned agent ARN as `datasync_agent_arn`, and the synthetic/actual NFS host and export as `nfs_source_hostname` and `nfs_source_subdirectory`. The task is Basic-mode by default and uses NFSv4.1/TLS 1.2 to EFS. Confirm the selected task mode and agent compatibility in the current Region before enabling it.
+To locate the endpoint private IP, use `aws ec2 describe-network-interfaces --network-interface-ids <eni-id> --query 'NetworkInterfaces[0].PrivateIpAddress' --output text` for an ID from `datasync_vpc_endpoint_network_interface_ids`. Obtain the agent activation key from the agent local console or the documented HTTP activation-key flow, then create the agent using the AWS Console or `aws datasync create-agent` with the endpoint ID, subnet ARN and SG ARN. Do not commit the activation key, place it in `.tfvars`, or paste it into shell history. After activation, supply the returned agent ARN as `datasync_agent_arn`, and the synthetic/actual NFS host and export as `nfs_source_hostname` and `nfs_source_subdirectory`. The task is Basic-mode by default and uses NFSv4.1/TLS 1.2 to EFS. Confirm the selected task mode and agent compatibility in the current Region before enabling it.
 
 The archive bucket and S3 location are provisioned only when DataSync resources are enabled. No archive transfer task is created because the archive source type/location is not part of the synthetic discovery baseline.
 

@@ -16,6 +16,8 @@ Inventory OS, packages, runtime, ports, services, jobs, database version/extensi
 
 ## Phase 2 — AWS readiness
 
+Use the [Network Implementation Preparation Pack](11-network-implementation-preparation.md) as the detailed pre-build reference for subnet/route-table associations, SG/firewall intent, VPN/BGP customer inputs, read-only inspection commands, network test catalogue and evidence/redaction controls. This pack is not deployment approval; all customer-specific inputs and change approvals remain prerequisites.
+
 Validate VPC `10.30.0.0/16`, six steady-state subnets/two AZs, additional private MGN staging subnet, dedicated DMS migration subnets `10.30.41.0/24` and `10.30.42.0/24` across two AZs with route propagation limited to those subnets and MGN staging, IGW, two NAT Gateways, VGW VPN, ALB, ACM certificate, DNS, private EC2, isolated RDS, EFS mount targets in both app AZs, S3 Gateway Endpoint, IAM, Secrets Manager, Systems Manager, endpoints, encryption and CloudWatch. Confirm DMS source/target TCP 5432 paths and the DataSync agent/service/EFS paths. Exit: infrastructure/security approval.
 
 ## Phase 3 — MGN

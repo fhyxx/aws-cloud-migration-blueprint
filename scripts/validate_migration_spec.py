@@ -207,8 +207,8 @@ assert expected_route_scope in consistency_doc, "Design consistency register mus
 assert "RT-DATASYNC-ENDPOINT" in preparation_doc and "RT-DATASYNC-TASK" in preparation_doc, (
     "Network preparation steps must include both DataSync migration route tables"
 )
-assert "updated GitHub visual rendering remains pending confirmation" in consistency_doc, (
-    "Do not overstate visual confirmation of the latest runtime diagram"
+assert "The user has now confirmed that the updated runtime/network view" in consistency_doc, (
+    "Design consistency register must reflect user-confirmed runtime diagram rendering"
 )
 runbook_text = (ROOT / "docs" / "05-migration-runbook.md").read_text()
 review_text = (ROOT / "docs" / "12-network-implementation-review.md").read_text()

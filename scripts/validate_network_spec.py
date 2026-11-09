@@ -20,7 +20,7 @@ assert 'toset(["mgn", "dms_a", "dms_b"])' in main, "VPN propagation scope drifte
 assert 'route_table_ids = [' in main and '"app_a"' in main and '"app_b"' in main, "S3 endpoint app associations missing"
 assert 'create_nat_gateways' in variables and 'default     = false' in variables, "NAT must remain opt-in"
 assert 'enable_site_to_site_vpn' in variables and 'default     = false' in variables, "VPN must remain opt-in"
-assert 'protocol          = "-1"' in main and 'cidr_blocks       = ["0.0.0.0/0"]' in main, "DMS all-egress baseline missing"
+assert 'ip_protocol       = "-1"' in main and 'cidr_ipv4         = "0.0.0.0/0"' in main, "DMS all-egress baseline missing"
 assert 'referenced_security_group_id = aws_security_group.alb.id' in main, "App ingress must be ALB SG-only"
 assert 'referenced_security_group_id = aws_security_group.dms.id' in main, "Temporary RDS ingress must be DMS SG-only"
 assert 'cidr_blocks       = [var.source_app_cidr]' in main, "MGN staging source scope missing"

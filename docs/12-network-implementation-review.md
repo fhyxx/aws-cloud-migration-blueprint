@@ -118,16 +118,15 @@ No evidence ID is considered complete merely because a value is filled into this
 
 The fictional design has a usable reference baseline. The following are required only before live AWS execution, not before continuing code, static tests or documentation:
 
-1. Actual source CIDRs and overlap review.
-2. AWS account/VPC/AZ ID confirmation.
-3. Customer Gateway model, ASN, BGP/IPsec capability and customer-side route/firewall design.
-4. Explicit VPN resilience tier.
-5. DMS egress decision reconciled with current AWS guidance.
-6. MGN regional endpoint and SSL-inspection policy.
-7. Application listener/health-check contract.
-8. DataSync NFS version, archive source, endpoint type and agent topology.
-9. DNS/NTP/proxy/NACL and endpoint/NAT decisions.
-10. Approved change, rollback and evidence governance.
+1. For live execution, replace synthetic source CIDRs with an actual IPAM inventory and verify overlap.
+2. Resolve account-specific VPC/AZ IDs and the customer gateway's real public outside IP/device configuration.
+3. Use the approved synthetic VPN tier for portfolio validation; obtain a real change window only if this becomes a customer deployment.
+4. Retain DMS all-outbound SG egress with tightly scoped peer ingress, or document and test a supported exception.
+5. Validate current MGN regional endpoints and preserve the no-SSL-inspection requirement.
+6. Supply the external ACM certificate ARN, exact RDS engine version, DMS source secret and benchmark-selected DMS class when enabling those layers.
+7. Activate the DataSync appliance with the dedicated endpoint subnet/SG outputs and supply its ARN, NFS hostname and export.
+8. Identify archive source only if an archive transfer task is to be configured; the private S3 target is already modelled.
+9. Keep DNS/NTP/NACL defaults for the synthetic case unless a named dependency requires an extension.
 
 Use the synthetic values for Terraform validation, plan review and portfolio testing. If the case study is ever converted into a real customer engagement, replace the fictional values with evidence. Any live AWS apply still requires explicit user permission and a verified account/region.
 

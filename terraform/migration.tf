@@ -144,7 +144,6 @@ resource "aws_dms_endpoint" "source_postgres" {
   endpoint_type                   = "source"
   engine_name                     = "postgres"
   database_name                   = var.database_name
-  port                            = 5432
   ssl_mode                        = "require"
   secrets_manager_arn             = var.source_db_secret_arn
   secrets_manager_access_role_arn = aws_iam_role.dms_endpoint_access[0].arn

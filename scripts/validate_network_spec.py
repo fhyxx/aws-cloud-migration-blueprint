@@ -23,7 +23,7 @@ assert 'enable_site_to_site_vpn' in variables and 'default     = false' in varia
 assert 'ip_protocol       = "-1"' in main and 'cidr_ipv4         = "0.0.0.0/0"' in main, "DMS all-egress baseline missing"
 assert 'referenced_security_group_id = aws_security_group.alb.id' in main, "App ingress must be ALB SG-only"
 assert 'referenced_security_group_id = aws_security_group.dms.id' in main, "Temporary RDS ingress must be DMS SG-only"
-assert 'cidr_blocks       = [var.source_app_cidr]' in main, "MGN staging source scope missing"
+assert 'cidr_ipv4         = var.source_app_cidr' in main, "MGN staging source scope missing"
 assert "No public SSH" in decisions, "Synthetic security decisions missing"
 assert "NCS-21" in spec, "Network acceptance catalogue missing"
 assert "terraform apply" in decisions, "No-apply safety rule missing"

@@ -79,4 +79,7 @@ assert 'AWSApplicationMigrationAgentPolicy_v2' in mgn and 'sts:SetSourceIdentity
 assert 'AWSApplicationMigrationFsxProxyRole' in mgn and 'AWSApplicationMigrationFsxProxyLinkRole' in mgn, "MGN FSx proxy roles missing from service initialization baseline"
 assert 'path = "/service-role/"' in mgn, "MGN roles must use the AWS-required service-role path"
 
+runbook = (ROOT / "docs" / "16-migration-service-configuration.md").read_text()
+assert "AWSApplicationMigrationAgentInstallationPolicy" in runbook and "not the installation credential" in runbook, "MGN installer identity must be distinct from service-side agent role"
+
 print("PASS: eleven subnets, scoped VPN propagation, S3 endpoint associations, opt-in NAT/VPN/workloads/migration services, DMS IAM hardening, DataSync Interface endpoint, SG boundaries and acceptance catalogue.")

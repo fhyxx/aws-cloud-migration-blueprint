@@ -1,26 +1,3 @@
-data "aws_ami" "amazon_linux_2023" {
-  count       = var.enable_workload_resources ? 1 : 0
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["al2023-ami-2023.*-x86_64"]
-  }
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-
 resource "terraform_data" "workload_prerequisites" {
   count = var.enable_workload_resources ? 1 : 0
   input = true
@@ -31,8 +8,8 @@ resource "terraform_data" "workload_prerequisites" {
       error_message = "Enable NAT or implement and validate the required private service endpoints before enabling workload resources."
     }
     precondition {
-      condition     = var.acm_certificate_arn != null && var.rds_engine_version != null
-      error_message = "Set a validated ACM certificate ARN and exact PostgreSQL engine version before enabling workload resources."
+      condition     = var.acm_certificate_arn != null && var.rds_engine_version != null && var.ami_id != null
+      error_message = "Set a validated ACM certificate ARN, exact PostgreSQL engine version and Amazon Linux 2023 AMI ID before enabling workload resources."
     }
   }
 }
@@ -126,7 +103,7 @@ resource "aws_launch_template" "app" {
   count = var.enable_workload_resources ? 1 : 0
 
   name_prefix   = "${var.name_prefix}-app-"
-  image_id      = data.aws_ami.amazon_linux_2023[0].id
+  image_id      = var.ami_id
   instance_type = var.app_instance_type
 
   iam_instance_profile {

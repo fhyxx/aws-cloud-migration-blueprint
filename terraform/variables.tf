@@ -76,3 +76,77 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "enable_workload_resources" {
+  description = "Opt in to ALB, application ASG, Multi-AZ RDS and EFS resources. Requires NAT, ACM certificate ARN and exact RDS engine version."
+  type        = bool
+  default     = false
+}
+
+variable "acm_certificate_arn" {
+  description = "Validated ACM certificate ARN in the ALB Region; required when workload resources are enabled."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "rds_engine_version" {
+  description = "Exact supported PostgreSQL engine version selected for the fictional target."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "app_instance_type" {
+  description = "Application EC2 instance type; synthetic 4 vCPU / 16 GiB baseline."
+  type        = string
+  default     = "m6i.xlarge"
+}
+
+variable "app_asg_min_size" {
+  description = "Minimum application ASG capacity."
+  type        = number
+  default     = 2
+}
+
+variable "app_asg_desired_capacity" {
+  description = "Desired application ASG capacity."
+  type        = number
+  default     = 2
+}
+
+variable "app_asg_max_size" {
+  description = "Maximum application ASG capacity."
+  type        = number
+  default     = 6
+}
+
+variable "rds_instance_class" {
+  description = "Synthetic Multi-AZ PostgreSQL instance class."
+  type        = string
+  default     = "db.m6i.2xlarge"
+}
+
+variable "rds_allocated_storage" {
+  description = "Initial PostgreSQL gp3 storage in GiB."
+  type        = number
+  default     = 500
+}
+
+variable "rds_iops" {
+  description = "Synthetic PostgreSQL gp3 provisioned IOPS."
+  type        = number
+  default     = 12000
+}
+
+variable "rds_storage_throughput" {
+  description = "Synthetic PostgreSQL gp3 throughput in MiB/s."
+  type        = number
+  default     = 500
+}
+
+variable "db_master_username" {
+  description = "Non-secret PostgreSQL master username; password is managed by RDS Secrets Manager integration."
+  type        = string
+  default     = "clafoke_admin"
+}

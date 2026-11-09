@@ -16,6 +16,7 @@ locals {
     mgn      = { cidr = "10.30.31.0/24", az = local.az_a }
     dms_a    = { cidr = "10.30.41.0/24", az = local.az_a }
     dms_b    = { cidr = "10.30.42.0/24", az = local.az_b }
+    datasync_endpoint = { cidr = "10.30.51.0/24", az = local.az_a }
   }
 }
 
@@ -65,7 +66,7 @@ resource "aws_nat_gateway" "this" {
 resource "aws_route_table" "this" {
   for_each = toset([
     "public_a", "public_b", "app_a", "app_b",
-    "db_a", "db_b", "mgn", "dms_a", "dms_b"
+    "db_a", "db_b", "mgn", "dms_a", "dms_b", "datasync_endpoint"
   ])
 
   vpc_id = aws_vpc.this.id
@@ -147,7 +148,7 @@ resource "aws_vpn_connection" "this" {
 }
 
 resource "aws_vpn_gateway_route_propagation" "migration" {
-  for_each = var.enable_site_to_site_vpn ? toset(["mgn", "dms_a", "dms_b"]) : toset([])
+  for_each = var.enable_site_to_site_vpn ? toset(["mgn", "dms_a", "dms_b", "datasync_endpoint"]) : toset([])
 
   vpn_gateway_id = aws_vpn_gateway.this[0].id
   route_table_id = aws_route_table.this[each.key].id

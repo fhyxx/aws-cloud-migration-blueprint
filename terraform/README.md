@@ -63,7 +63,7 @@ GitHub Actions runs:
 5. Safe-default no-refresh plan with chargeable feature flags disabled.
 6. Full synthetic no-refresh plan with NAT, VPN, workload, DMS and DataSync enabled, using dummy credentials and reserved/example identifiers.
 
-The AWS provider is pinned to `5.100.0` to match the validated CI provider schema. A reviewed `.terraform.lock.hcl` with platform checksums should still be generated and committed from the controlled local/CI environment. The no-refresh plans do not call AWS APIs. They validate Terraform graph structure and provider schema, not actual resource availability, IAM acceptance, quota, pricing, endpoint activation, network connectivity or application behaviour.
+The AWS provider is pinned to `5.100.0` to match the validated CI provider schema. CI now generates a cross-platform `.terraform.lock.hcl` for Linux AMD64 and Windows AMD64 and uploads it as a short-lived `terraform-provider-lock` artifact. The generated file must be reviewed and committed to `terraform/.terraform.lock.hcl` before the next local or live deployment workflow. The no-refresh plans do not call AWS APIs. They validate Terraform graph structure and provider schema, not actual resource availability, IAM acceptance, quota, pricing, endpoint activation, network connectivity or application behaviour.
 
 ## Local validation — Windows PowerShell
 

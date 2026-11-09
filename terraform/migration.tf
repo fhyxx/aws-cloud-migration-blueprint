@@ -1,7 +1,3 @@
-data "aws_caller_identity" "current" {
-  count = var.enable_dms_resources || var.enable_datasync_resources ? 1 : 0
-}
-
 resource "terraform_data" "dms_prerequisites" {
   count = var.enable_dms_resources ? 1 : 0
   input = true
@@ -12,8 +8,8 @@ resource "terraform_data" "dms_prerequisites" {
       error_message = "DMS requires the workload target, NAT service egress and the synthetic Site-to-Site VPN path to be enabled."
     }
     precondition {
-      condition     = var.source_db_secret_arn != null && var.dms_replication_instance_class != null
-      error_message = "Set the source PostgreSQL Secrets Manager ARN and a benchmark-selected DMS replication class."
+      condition     = var.source_db_secret_arn != null && var.dms_replication_instance_class != null && var.aws_account_id != null
+      error_message = "Set the source PostgreSQL Secrets Manager ARN, benchmark-selected DMS replication class and 12-digit AWS account ID."
     }
   }
 }
@@ -28,7 +24,7 @@ resource "aws_iam_role" "dms_vpc" {
       Effect    = "Allow"
       Principal = { Service = "dms.amazonaws.com" }
       Action    = "sts:AssumeRole"
-      Condition = { StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current[0].account_id } }
+      Condition = { StringEquals = { "aws:SourceAccount" = var.aws_account_id } }
     }]
   })
   tags = var.tags
@@ -217,8 +213,8 @@ resource "terraform_data" "datasync_prerequisites" {
       error_message = "The synthetic private DataSync path requires the workload EFS target and approved hybrid connectivity."
     }
     precondition {
-      condition     = var.datasync_agent_arn != null && var.nfs_source_hostname != null && var.nfs_source_subdirectory != null
-      error_message = "Supply an activated VPC-endpoint DataSync agent ARN, NFS source host and exported subdirectory."
+      condition     = var.datasync_agent_arn != null && var.nfs_source_hostname != null && var.nfs_source_subdirectory != null && var.aws_account_id != null
+      error_message = "Supply an activated VPC-endpoint DataSync agent ARN, NFS source host/export and 12-digit AWS account ID."
     }
   }
 }

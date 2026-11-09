@@ -140,7 +140,9 @@ Implementation notes:
 - Document DNS, NTP, proxy, certificate, SSM, logging and service dependencies from actual workload requirements. Do not add broad 0.0.0.0/0 egress as a substitute. Security groups cannot express FQDN-based egress allow-lists; where service destinations are dynamic, use an approved proxy, AWS Network Firewall or other egress-control design and document its routing, policy and cost. Interface endpoint SG references apply only to traffic using those endpoints.
 - Custom NACLs are stateless and require explicit request and return paths. Retain default NACLs unless a documented requirement justifies custom rules.
 
-See [Network Implementation Review](12-network-implementation-review.md) for the DMS egress, MGN TLS-inspection and DataSync endpoint findings that must be resolved before implementation.\n\n## 5. Customer Gateway, VGW and BGP preparation
+See [Network Implementation Review](12-network-implementation-review.md) for the DMS egress, MGN TLS-inspection and DataSync endpoint findings that must be resolved before implementation.
+
+## 5. Customer Gateway, VGW and BGP preparation
 
 ### 5.1 Reference topology
 

@@ -39,7 +39,7 @@ assert 'resource "aws_efs_backup_policy" "app"' in workloads, "EFS backup policy
 assert 'resource "aws_autoscaling_policy" "app_cpu"' in workloads, "ASG target tracking policy missing"
 
 
-assert "datasync_endpoint" in main and "datasync_task" in main and 'toset(["mgn", "dms_a", "dms_b", "datasync_endpoint"])' in main, "DataSync endpoint subnet/propagation missing"
+assert "datasync_endpoint" in main and "datasync_task" in main and 'toset(["mgn", "dms_a", "dms_b", "datasync_endpoint", "datasync_task"])' in main, "DataSync endpoint/task subnet and propagation missing"
 assert "var.datasync_agent_cidr" in main and "from_port         = 1024" in main and "to_port           = 1064" in main, "DataSync VPC endpoint control-plane scope missing"
 assert "from_port         = 443" in main and "var.datasync_agent_cidr" in main, "DataSync task ENI agent path missing"
 

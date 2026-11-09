@@ -125,7 +125,7 @@ Implementation notes:
 - DMS initiates connections to both PostgreSQL endpoints; no unsolicited DMS inbound is required.
 - On-premises and host firewalls must allow TCP 5432 only from 10.30.41.0/24 and 10.30.42.0/24 to the actual PostgreSQL source.
 - On-premises firewall must allow TCP 1500 only from approved MGN source VM addresses to the staging replication servers.
-- Document DNS, NTP, proxy, certificate, SSM, logging and service dependencies from actual workload requirements. Do not add broad 0.0.0.0/0 egress as a substitute.
+- Document DNS, NTP, proxy, certificate, SSM, logging and service dependencies from actual workload requirements. Do not add broad 0.0.0.0/0 egress as a substitute. Security groups cannot express FQDN-based egress allow-lists; where service destinations are dynamic, use an approved proxy, AWS Network Firewall or other egress-control design and document its routing, policy and cost. Interface endpoint SG references apply only to traffic using those endpoints.
 - Custom NACLs are stateless and require explicit request and return paths. Retain default NACLs unless a documented requirement justifies custom rules.
 
 ## 5. Customer Gateway, VGW and BGP preparation
@@ -170,7 +170,7 @@ Implementation notes:
 10. Confirm the customer device learns the VPC route and AWS migration route tables learn the approved source prefix.
 11. Validate firewall allow-lists and end-to-end probes independently of route presence.
 
-AWS VGW does not support ECMP. Two tunnels provide redundancy/failover, not combined active-active bandwidth. A VPN reporting UP or a propagated route remaining visible does not by itself prove end-to-end reachability.
+AWS VGW does not support ECMP. Two tunnels provide redundancy/failover, not combined active-active bandwidth. A VPN reporting UP or a propagated route remaining visible does not by itself prove end-to-end reachability. **Resilience limitation:** both tunnels in one VPN connection still terminate on one logical customer gateway/device path. This reference is a basic dual-tunnel design, not proof of site/ISP/device-level redundancy. For production-grade resilience, assess a second VPN connection terminating on a separate customer device and diverse ISP path; this changes routing, cost and operational scope and is not included in the current one-connection calculator assumption.
 
 ### 5.4 Tunnel failover test
 
@@ -317,6 +317,7 @@ All items are planning gates, not completed checkboxes. The reference design is 
 - [Site-to-Site VPN dynamic and static routing](https://docs.aws.amazon.com/vpn/latest/s2svpn/vpn-static-dynamic.html)
 - [Site-to-Site VPN route priority and VGW ECMP limitation](https://docs.aws.amazon.com/vpn/latest/s2svpn/vpn-route-priority.html)
 - [Site-to-Site VPN tunnel architecture](https://docs.aws.amazon.com/vpn/latest/s2svpn/how_it_works.html)
+- [AWS networking best practices for hybrid connectivity](https://aws.github.io/aws-networking-best-practices/connectivity/hybrid-multicloud/)
 - [Customer Gateway options](https://docs.aws.amazon.com/vpn/latest/s2svpn/cgw-options.html)
 - [Security groups](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html)
 - [Network ACLs](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html)

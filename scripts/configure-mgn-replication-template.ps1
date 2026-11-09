@@ -109,25 +109,35 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "Unable to inspect MGN launch templates. Confirm service initialization and IAM permissions."
     }
-    if (($existingReplication | Measure-Object).Count -gt 0 -or ($existingLaunch | Measure-Object).Count -gt 0) {
-        throw "An MGN template already exists. Inspect and update the existing template rather than creating a duplicate."
+    $existingReplicationIds = @($existingReplication | Where-Object { $_ })
+    $existingLaunchIds = @($existingLaunch | Where-Object { $_ })
+
+    if ($existingReplicationIds.Count -gt 0) {
+        Write-Host "Replication template already exists; leaving it unchanged: $($existingReplicationIds -join ', ')"
+    }
+    else {
+        [System.IO.File]::WriteAllText($tempFile, ($replicationPayload | ConvertTo-Json -Depth 8), [System.Text.UTF8Encoding]::new($false))
+        $replicationResult = aws mgn create-replication-configuration-template --profile $Profile --region $Region --cli-input-json "file://$tempFile" | ConvertFrom-Json
+        if ($LASTEXITCODE -ne 0) {
+            throw "MGN replication configuration template creation failed. Review AWS CLI output."
+        }
+        Write-Host "Created replication template: $($replicationResult.replicationConfigurationTemplateID)"
     }
 
-    [System.IO.File]::WriteAllText($tempFile, ($replicationPayload | ConvertTo-Json -Depth 8), [System.Text.UTF8Encoding]::new($false))
-    $replicationResult = aws mgn create-replication-configuration-template --profile $Profile --region $Region --cli-input-json "file://$tempFile" | ConvertFrom-Json
-    if ($LASTEXITCODE -ne 0) {
-        throw "MGN replication configuration template creation failed. Review AWS CLI output."
+    if ($existingLaunchIds.Count -gt 0) {
+        Write-Host "Launch template already exists; leaving it unchanged: $($existingLaunchIds -join ', ')"
+    }
+    else {
+        [System.IO.File]::WriteAllText($tempFile, ($launchPayload | ConvertTo-Json -Depth 8), [System.Text.UTF8Encoding]::new($false))
+        $launchResult = aws mgn create-launch-configuration-template --profile $Profile --region $Region --cli-input-json "file://$tempFile" | ConvertFrom-Json
+        if ($LASTEXITCODE -ne 0) {
+            throw "MGN launch configuration template creation failed. Review AWS CLI output."
+        }
+        Write-Host "Created launch template: $($launchResult.launchConfigurationTemplateID)"
     }
 
-    [System.IO.File]::WriteAllText($tempFile, ($launchPayload | ConvertTo-Json -Depth 8), [System.Text.UTF8Encoding]::new($false))
-    $launchResult = aws mgn create-launch-configuration-template --profile $Profile --region $Region --cli-input-json "file://$tempFile" | ConvertFrom-Json
-    if ($LASTEXITCODE -ne 0) {
-        throw "MGN launch configuration template creation failed. Review AWS CLI output."
-    }
-
-    Write-Host "Created replication template: $($replicationResult.replicationConfigurationTemplateID)"
-    Write-Host "Created launch template: $($launchResult.launchConfigurationTemplateID)"
-    Write-Host "Both templates keep launchDisposition STOPPED and disable public IP assignment."
+    Write-Host "Existing templates are never overwritten. Review their settings in AWS before source onboarding."
+    Write-Host "The launch configuration template must retain STOPPED launch disposition and disable public IP assignment."
 }
 finally {
     Remove-Item -LiteralPath $tempFile -Force -ErrorAction SilentlyContinue

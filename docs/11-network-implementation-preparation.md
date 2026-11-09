@@ -78,7 +78,7 @@ A /24 has 251 initially assignable IPv4 addresses after AWS reserves five. This 
 | RT-DB-B | DB-B | VPC local only | Disabled |
 | RT-DMS-A | DMS-A | VPC local; propagated 10.50.0.0/16 → VGW; 0.0.0.0/0 → NAT-A; S3 prefix list only if required | Enabled |
 | RT-DMS-B | DMS-B | VPC local; propagated 10.50.0.0/16 → VGW; 0.0.0.0/0 → NAT-B; S3 prefix list only if required | Enabled |
-| RT-MGN-STAGING | MGN-STAGING | VPC local; propagated 10.50.0.0/16 → VGW; 0.0.0.0/0 → NAT-A | Enabled |
+| RT-MGN-STAGING | MGN-STAGING | VPC local; propagated 10.50.0.0/16 → VGW; 0.0.0.0/0 → NAT-A; S3 prefix-list route → S3 Gateway Endpoint | Enabled |
 | RT-DATASYNC-ENDPOINT | DataSync endpoint | VPC local; propagated 10.50.0.0/16 → VGW; no default route | Enabled |
 | RT-DATASYNC-TASK | DataSync task ENIs | VPC local; propagated 10.50.0.0/16 → VGW; no default route | Enabled |
 | RT-DATASYNC-ENDPOINT | DataSync endpoint | VPC local; propagated 10.50.0.0/16 → VGW; no default route | Enabled |

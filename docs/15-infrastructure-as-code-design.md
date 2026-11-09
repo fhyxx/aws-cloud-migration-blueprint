@@ -42,7 +42,7 @@ Even the default configuration creates real AWS resources if applied. Do not app
 
 ## 4. Engineering review notes
 
-- Security-group peer rules are separate resources to avoid cyclic dependencies between ALB/App, App/RDS, App/EFS and EFS/DataSync SGs.
+- Security-group peer rules use the dedicated `aws_vpc_security_group_ingress_rule` and `aws_vpc_security_group_egress_rule` resources (rather than legacy inline rules or the older aggregate rule resource). This avoids cyclic dependencies between ALB/App, App/RDS, App/EFS and EFS/DataSync SGs and follows current AWS provider guidance.
 - AZ names are resolved from the first two available AZs in the selected account. Confirm their AZ IDs and ensure they match the intended regional deployment before applying.
 - The current route model sends DMS-A through NAT-A, DMS-B through NAT-B and MGN staging through NAT-A when NAT is enabled. This is an illustrative same-AZ egress model; validate service endpoint reachability and cost.
 - The DMS egress policy is intentionally broad outbound. It is not broad inbound. Security approval and selected DMS mode review remain mandatory.

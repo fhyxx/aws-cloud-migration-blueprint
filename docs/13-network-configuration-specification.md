@@ -1,6 +1,6 @@
 # 13 — Network Configuration Specification
 
-**ID:** CLI-AWS-NCS-013 | **Version:** 1.0 | **Status:** Proposed configuration baseline — customer inputs and approvals outstanding  
+**ID:** CLI-AWS-NCS-013 | **Version:** 1.1 | **Status:** Proposed configuration baseline — customer inputs and approvals outstanding  
 **Project:** Clafoke Investors Ltd (fictional portfolio case study)  
 **Related:** [Network and security design](03-network-security-design.md), [Network implementation preparation](11-network-implementation-preparation.md), [Network implementation review](12-network-implementation-review.md), [Migration readiness matrix](09-migration-readiness-matrix.md), [Technical architecture audit](10-technical-architecture-audit.md)
 
@@ -32,8 +32,12 @@ This document is the configuration-level handoff between the architecture/prepar
 | DB-A | `10.30.21.0/24` | AZ-A | RT-DB-A | RDS subnet group |
 | DB-B | `10.30.22.0/24` | AZ-B | RT-DB-B | RDS subnet group |
 | MGN staging | `10.30.31.0/24` | AZ-A (provisional) | RT-MGN | MGN replication servers |
+| RT-DATASYNC-ENDPOINT | DataSync endpoint `10.30.51.0/24` | `10.30.0.0/16 → local`; propagated `10.50.0.0/16 → VGW` | No default route; endpoint TCP 1024–1064 return path to the on-prem agent |
+| RT-DATASYNC-TASK | DataSync task ENIs `10.30.52.0/24` | `10.30.0.0/16 → local`; propagated `10.50.0.0/16 → VGW` | No default route; task ENIs in AZ-A with EFS mount target A; agent TCP 443 return path |
 | DMS-A | `10.30.41.0/24` | AZ-A | RT-DMS-A | DMS replication subnet group |
 | DMS-B | `10.30.42.0/24` | AZ-B | RT-DMS-B | DMS replication subnet group |
+| DataSync endpoint | `10.30.51.0/24` | AZ-A | RT-DATASYNC-ENDPOINT | VPC service endpoint ENI |
+| DataSync task | `10.30.52.0/24` | AZ-A | RT-DATASYNC-TASK | DataSync task ENIs; same AZ as EFS mount target A |
 
 VPC: `10.30.0.0/16`, Region `us-east-1`, two logical AZs. Resolve AZ-A/AZ-B to account-specific AZ IDs before implementation. The six steady-state subnets and three migration-only subnets are separate network segments. Each /24 has 251 initially assignable IPv4 addresses before ENIs and service consumption; this is not a capacity guarantee. Recheck free IP headroom for ALB, NAT, DMS, MGN and interface endpoint ENIs.
 
@@ -63,7 +67,7 @@ All route tables include the VPC-local route. The table below lists additional i
 | RT-DMS-B | DMS-B | `10.50.0.0/16 → VGW` (BGP propagated); `0.0.0.0/0 → NAT-B`; conditional S3 prefix-list route if required | Any route propagation beyond this dedicated migration table |
 | RT-MGN | MGN staging | `10.50.0.0/16 → VGW` (BGP propagated); `0.0.0.0/0 → NAT-A` for regional service HTTPS unless a validated private path is selected | Broad ingress or propagation into application/DB route tables |
 
-**Propagation boundary:** enable VGW route propagation only on RT-DMS-A, RT-DMS-B and RT-MGN. Do not propagate the customer aggregate into public, application or DB route tables. The customer gateway advertises the agreed customer prefixes; the VGW advertises the VPC CIDR. Customer-side firewall policy must narrow actual reachability to the required migration flows.
+**Propagation boundary:** enable VGW route propagation only on RT-DMS-A, RT-DMS-B, RT-MGN, RT-DATASYNC-ENDPOINT and RT-DATASYNC-TASK. Do not propagate the customer aggregate into public, application or DB route tables. The customer gateway advertises the agreed customer prefixes; the VGW advertises the VPC CIDR. Customer-side firewall policy must narrow actual reachability to the required migration flows.
 
 **Important route semantics:**
 - Route propagation makes a prefix available in a route table; it does not authorize traffic. Security groups, NACLs and customer firewalls remain separate controls.
@@ -120,6 +124,8 @@ Security groups are stateful. Prefer SG-to-SG references for VPC-local peers; us
 | SG-23 | Interface endpoint ingress (conditional) | Only workload SGs requiring endpoint | TCP 443 | Endpoint SG accepts HTTPS from approved clients only | Security + Operations |
 | SG-24 | DNS (conditional) | Approved resolver | UDP/TCP 53 as required | Use actual VPC/on-prem resolver and forwarding architecture; do not invent resolver IPs | Network + Operations |
 | SG-25 | NTP (conditional) | Approved time source | UDP 123 as required | Confirm source OS, resolver and time policy | Infrastructure |
+| SG-26 | DataSync VPC endpoint ingress | Agent `10.50.20.50/32` | TCP 1024–1064 | Endpoint control plane; dedicated endpoint subnet/route table | Infrastructure + Security |
+| SG-27 | DataSync task ENI ingress | Agent `10.50.20.50/32` | TCP 443 | VPC endpoint data plane; dedicated task subnet has VGW return route | Infrastructure + Security |
 
 **DMS egress decision:** use the AWS-documented all-outbound replication-SG recommendation as the reference baseline rather than publishing the earlier 5432/443/DNS-only list as implementation-ready. This is a design recommendation pending Security/DBA approval. Compensating boundaries are dedicated DMS-A/B subnets, route propagation only on DMS-A/B, no public inbound, source PostgreSQL ingress only from the DMS subnet CIDRs, RDS ingress only from the DMS SG for the migration window, and customer firewall policy. If Security requires narrower egress, that becomes an explicit exception: document the exact supported flow inventory for selected mode/endpoints, verify AWS supportability, and pass endpoint/connectivity tests before replacing this baseline. A generic narrow list is not sufficient evidence.
 

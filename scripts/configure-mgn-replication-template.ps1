@@ -101,6 +101,18 @@ try {
         return
     }
 
+    $existingReplication = aws mgn describe-replication-configuration-templates --profile $Profile --region $Region --query "items[].replicationConfigurationTemplateID" --output json | ConvertFrom-Json
+    if ($LASTEXITCODE -ne 0) {
+        throw "Unable to inspect MGN replication templates. Confirm service initialization and IAM permissions."
+    }
+    $existingLaunch = aws mgn describe-launch-configuration-templates --profile $Profile --region $Region --query "items[].launchConfigurationTemplateID" --output json | ConvertFrom-Json
+    if ($LASTEXITCODE -ne 0) {
+        throw "Unable to inspect MGN launch templates. Confirm service initialization and IAM permissions."
+    }
+    if (($existingReplication | Measure-Object).Count -gt 0 -or ($existingLaunch | Measure-Object).Count -gt 0) {
+        throw "An MGN template already exists. Inspect and update the existing template rather than creating a duplicate."
+    }
+
     [System.IO.File]::WriteAllText($tempFile, ($replicationPayload | ConvertTo-Json -Depth 8), [System.Text.UTF8Encoding]::new($false))
     $replicationResult = aws mgn create-replication-configuration-template --profile $Profile --region $Region --cli-input-json "file://$tempFile" | ConvertFrom-Json
     if ($LASTEXITCODE -ne 0) {

@@ -22,8 +22,8 @@ output "security_group_ids" {
     efs           = aws_security_group.efs.id
     dms           = aws_security_group.dms.id
     mgn_staging   = aws_security_group.mgn_staging.id
-    datasync_task     = aws_security_group.datasync_task.id
-    datasync_endpoint = aws_security_group.datasync_endpoint.id
+    datasync_task      = aws_security_group.datasync_task.id
+    datasync_endpoint  = aws_security_group.datasync_endpoint.id
   }
 }
 

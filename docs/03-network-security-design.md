@@ -1,6 +1,6 @@
 # 03 — Network and Security Design
 
-**ID:** CLI-AWS-NET-003 | **Version:** 1.5 | **Status:** Proposed reference design — fictional source network
+**ID:** CLI-AWS-NET-003 | **Version:** 1.6 | **Status:** Proposed reference design — implementation review findings open
 
 ## Architecture diagrams
 
@@ -128,7 +128,7 @@ The ALB health-check port and application listener port must match the actual ta
 
 Security groups are stateful: response traffic for an allowed flow is automatically permitted. Network ACLs are stateless; if custom NACLs are introduced, explicitly allow both request and return traffic, including the correct ephemeral port ranges for initiating clients and AWS-managed services. Retain default NACLs until a specific subnet-level deny/guardrail requirement justifies custom rules. Do not copy a generic ephemeral range without validating the client OS and service behaviour.
 
-No public SSH or PostgreSQL.
+### Service-specific egress and endpoint review gates\n\n- **DMS egress:** the narrow outbound matrix above is a design proposal, not a confirmed universal DMS rule set. Current AWS DMS networking guidance recommends allowing all outbound traffic from the replication-instance security group so it can reach source/target endpoints and required services. Before deployment, confirm the selected provisioned/Serverless mode, endpoint types, Secrets Manager/logging/DNS dependencies and current AWS guidance. Either adopt the documented service guidance with compensating ingress, routing and endpoint controls, or retain narrower egress only with a validated, supported flow inventory and successful endpoint tests. Do not claim the TCP 5432/443/DNS-only proposal is implementation-ready.\n- **MGN:** source agents require TCP 443 to the regional MGN API as well as TCP 1500 to staging; staging replication servers require TCP 443 to MGN service endpoints and may require S3 access according to the current regional requirements. Do not apply SSL interception/deep packet inspection to the documented source/replication-server MGN API paths. Confirm the current endpoint allow-list for the chosen Region.\n- **DataSync:** an agent uses one service-endpoint type. Public/FIPS and VPC/FIPS endpoints have different port and routing requirements; for a VPC endpoint, validate agent-to-service TCP 1024–1064 and agent-to-task-ENI TCP 443. For public endpoints, validate the current endpoint-specific TCP 443 allow-list and Basic-mode bootstrap dependencies. TCP 22 is an optional support channel, not a normal transfer requirement. If workflows require different endpoint types, plan separate agents.\n\nNo public SSH or PostgreSQL.
 ## Migration traffic and security validation matrix
 
 The following paths are the intended allow-list for the fictional reference design. A route only establishes network reachability; security groups, on-premises firewall policy and host firewalls must independently permit the flow. Return traffic must be routable in both directions.
@@ -210,7 +210,7 @@ N01 AZ IDs; N02 source CIDR implementation and overlap validation (reference `10
 
 ## AWS service network references
 
-- [AWS DMS replication instance VPC and subnet-group requirements](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.VPC.html)
+- [AWS DMS replication instance VPC and subnet-group requirements](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.VPC.html)\n- [AWS MGN current network requirements](https://docs.aws.amazon.com/mgn/latest/ug/preparing-environments.html)\n- [AWS DataSync endpoint selection](https://docs.aws.amazon.com/datasync/latest/userguide/choose-service-endpoint.html)
 - [AWS MGN network requirements](https://docs.aws.amazon.com/pdfs/mgn/latest/ug/user-guide.pdf)
 - [AWS DataSync network requirements](https://docs.aws.amazon.com/datasync/latest/userguide/datasync-network.html)
 - [AWS DataSync network architecture and traffic flows](https://docs.aws.amazon.com/datasync/latest/userguide/networking-datasync.html)

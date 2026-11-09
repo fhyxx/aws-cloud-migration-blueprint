@@ -155,9 +155,14 @@ for cidr in (
 assert "No VGW propagation" in runtime_source, (
     "Application route tables must not receive the on-premises BGP aggregate"
 )
-assert "DMS reuses the two private application subnets" not in runtime_view, (
+assert "dedicated DMS-A/B subnets in two AZs" in migration_view, (
+    "Migration view must identify the dedicated DMS subnet group"
+)
+assert "DMS reuses the two private application subnets" not in runtime_view + migration_view, (
     "Obsolete DMS/application subnet statement remains in runtime view"
 )
+assert "non-Multi-AZ Terraform baseline" in target_source
+assert "non-Multi-AZ" in migration_source
 assert "Provisioned DMS replication instance" in target_source
 assert "Provisioned AWS DMS replication instance" in migration_source
 assert "`0.0.0.0/0` (public HTTPS baseline)" in network_spec, (
@@ -170,5 +175,6 @@ assert "instance or Serverless" not in target_source + migration_source, (
 print(
     "PASS: migration flags default off; DMS is private, TLS/Secrets-Manager "
     "backed and stopped; DataSync endpoint, EFS transport and archive prefix "
-    "are constrained; MGN bootstrap is guarded, resumable and private."
+    "are constrained; MGN bootstrap is guarded, resumable and private; "
+    "all three architecture diagrams match their sources and route boundaries."
 )

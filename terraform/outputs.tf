@@ -30,3 +30,13 @@ output "vpn_connection_id" {
   description = "VPN connection ID when Site-to-Site VPN is enabled; otherwise null."
   value       = try(aws_vpn_connection.this[0].id, null)
 }
+
+output "datasync_endpoint_subnet_id" {
+  description = "Dedicated subnet for the DataSync VPC service endpoint."
+  value       = aws_subnet.this["datasync_endpoint"].id
+}
+
+output "datasync_endpoint_security_group_id" {
+  description = "Security group to attach when activating the DataSync VPC service endpoint."
+  value       = aws_security_group.datasync_endpoint.id
+}

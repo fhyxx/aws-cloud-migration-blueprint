@@ -1,14 +1,14 @@
 # 12 — Network Implementation Review and Input Validation Register
 
-**ID:** CLI-AWS-NIV-012 | **Version:** 1.0 | **Status:** Review findings recorded — customer inputs and approvals outstanding  
+**ID:** CLI-AWS-NIV-012 | **Version:** 1.1 | **Status:** Review findings recorded — customer inputs and approvals outstanding  
 **Project:** Clafoke Investors Ltd (fictional portfolio case study)  
 **Related:** [Network and security design](03-network-security-design.md), [Network implementation preparation](11-network-implementation-preparation.md), [Migration readiness matrix](09-migration-readiness-matrix.md), [Technical architecture audit](10-technical-architecture-audit.md), [Network configuration specification](13-network-configuration-specification.md)
 
-> This register separates documented design assumptions from facts that must be supplied by a real customer or confirmed in the intended AWS account. The case study does not contain verified source-network details, customer gateway inventory, live AWS subnet IDs/AZ IDs, or customer security approvals. Blank/unknown values must not be replaced with guesses. No network implementation or live connectivity test is claimed.
+> This register separates documented design assumptions from facts that must be supplied by a real customer or confirmed in the intended AWS account. The case study is synthetic. Fictional network details are deliberately specified in document 14 and Terraform variables. They are not customer-discovered facts. Real account-specific IDs, an activated DataSync agent and source credentials remain runtime inputs, not blockers to repository engineering. No network implementation or live connectivity test is claimed.
 
 ## 1. Review decision
 
-**Decision: design is reviewable, but implementation inputs are incomplete.**
+**Decision: synthetic portfolio baseline is approved for continued Terraform design and validation. Live AWS deployment remains separately gated.**
 
 The reference network is internally structured for a fictional migration: VPC `10.30.0.0/16`, six steady-state subnets, dedicated DMS-A/DMS-B subnets, a separate MGN staging subnet, selective VGW route propagation, and explicit migration traffic paths. These are portfolio design values, not customer-discovered facts.
 
@@ -30,9 +30,9 @@ The review found one material implementation caveat: the current least-privilege
 | NVR-10 | MGN service access | TCP 443 to MGN API; TCP 1500 source-to-staging; staging TCP 443 | Not validated | Confirm current Region-specific MGN endpoints and required S3/EC2 service access, DNS, firewall/proxy policy, no SSL interception/DPI on documented MGN API/replication paths, and source-to-staging route. Infrastructure Lead, Security Lead |
 | NVR-11 | MGN staging availability and scale | `10.30.31.0/24`, AZ-A | Single-AZ planning assumption | Confirm replication-server count, expected IP/throughput use, staging subnet free IPs, AZ failure implications, recovery expectations and whether a multi-AZ staging design is required. Infrastructure Lead, Migration Lead |
 | NVR-12 | Application listener and health check | TCP 8080 and `/health/ready` are provisional | Not supplied | Application owner confirms bind address, listener, protocol, health path, expected status/body, dependencies, startup time and ALB health-check thresholds. Application Lead |
-| NVR-13 | DataSync NFS source | NFS; version unknown | Not supplied | Confirm NFS 3.x/4.0/4.1/4.2, exports, server IPs, mount options, source firewall, permissions, locking/writer behaviour and measured used bytes. Infrastructure Lead, Application Lead |
-| NVR-14 | DataSync service endpoint type | Public/VPC/FIPS undecided | Not selected | Choose endpoint type per agent. An agent uses one endpoint type; if separate tasks require different endpoint types, plan separate agents. Validate public endpoint allow-list or VPC endpoint TCP 1024–1064 control-plane and TCP 443 task data-plane paths; dedicated endpoint subnet `10.30.51.0/24`, task subnet `10.30.52.0/24`, route propagation to both, and endpoint/task SG ingress limited to synthetic agent `10.50.20.50/32`. Infrastructure Lead, Security Lead |
-| NVR-15 | DataSync agent mode and support channel | Basic/Enhanced and TCP 22 undecided | Not selected | Select supported agent/mode for task type. TCP 22 is a support channel, not a normal transfer prerequisite; enable only if deliberately approved. For Basic public-endpoint agents, validate pre-activation CloudFront bootstrap requirement. Infrastructure Lead |
+| NVR-13 | DataSync NFS source | NFSv4.1 over TCP 2049 | Not supplied | Confirm NFS 3.x/4.0/4.1/4.2, exports, server IPs, mount options, source firewall, permissions, locking/writer behaviour and measured used bytes. Infrastructure Lead, Application Lead |
+| NVR-14 | DataSync service endpoint type | VPC endpoint selected; endpoint subnet `10.30.51.0/24`, task subnet `10.30.52.0/24`; agent `10.50.20.50/32` | Synthetic decision recorded | Choose endpoint type per agent. An agent uses one endpoint type; if separate tasks require different endpoint types, plan separate agents. Validate public endpoint allow-list or VPC endpoint TCP 1024–1064 control-plane and TCP 443 task data-plane paths; dedicated endpoint subnet `10.30.51.0/24`, task subnet `10.30.52.0/24`, route propagation to both, and endpoint/task SG ingress limited to synthetic agent `10.50.20.50/32`. Infrastructure Lead, Security Lead |
+| NVR-15 | DataSync agent mode and support channel | Basic-mode VPC-endpoint agent; TCP 22 disabled | Synthetic decision recorded | Select supported agent/mode for task type. TCP 22 is a support channel, not a normal transfer prerequisite; enable only if deliberately approved. For Basic public-endpoint agents, validate pre-activation CloudFront bootstrap requirement. Infrastructure Lead |
 | NVR-16 | Archive source | Unknown; 500 GB S3 is target capacity only | Not supplied | Identify actual source platform/location, eligible bytes/objects, access method, agent requirement, encryption and retention. Data Owner, Application Lead |
 | NVR-17 | DNS, NTP, proxy and TLS inspection | Not specified | Not supplied | Identify resolvers, forwarding, private DNS zones, NTP, outbound proxy, certificate inspection and exception policy for MGN/DataSync endpoints. Security Lead, Infrastructure Lead |
 | NVR-18 | NACL posture | Default NACLs proposed | Not approved | Confirm default NACL retention or document exact subnet-level deny requirement, ephemeral return-port policy and test evidence. Security Lead |
@@ -114,9 +114,9 @@ No evidence ID is considered complete merely because a value is filled into this
 
 ## 6. Readiness decision
 
-**Current outcome: HOLD — do not begin AWS network implementation yet.**
+**Current outcome: APPROVED TO CONTINUE PORTFOLIO ENGINEERING; LIVE AWS APPLY REMAINS GATED.**
 
-The design has a useful reference baseline, but the following are hard blockers:
+The fictional design has a usable reference baseline. The following are required only before live AWS execution, not before continuing code, static tests or documentation:
 
 1. Actual source CIDRs and overlap review.
 2. AWS account/VPC/AZ ID confirmation.
@@ -129,7 +129,7 @@ The design has a useful reference baseline, but the following are hard blockers:
 9. DNS/NTP/proxy/NACL and endpoint/NAT decisions.
 10. Approved change, rollback and evidence governance.
 
-Once the source inputs are available, update this register with actual values, attach evidence references and obtain owner approval. Only then should the implementation plan be converted into Terraform or AWS Console/CLI changes.
+Use the synthetic values for Terraform validation, plan review and portfolio testing. If the case study is ever converted into a real customer engagement, replace the fictional values with evidence. Any live AWS apply still requires explicit user permission and a verified account/region.
 
 ## 7. AWS references reviewed
 

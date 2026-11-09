@@ -51,5 +51,29 @@ jobs:
           TF_VAR_enable_datasync_resources: "false"
         run: terraform -chdir=terraform plan -refresh=false -input=false -no-color
 
+      - name: Full synthetic feature plan (no AWS calls)
+        env:
+          AWS_ACCESS_KEY_ID: testing
+          AWS_SECRET_ACCESS_KEY: testing
+          AWS_DEFAULT_REGION: us-east-1
+          TF_VAR_skip_credentials_validation: "true"
+          TF_VAR_skip_requesting_account_id: "true"
+          TF_VAR_create_nat_gateways: "true"
+          TF_VAR_enable_site_to_site_vpn: "true"
+          TF_VAR_customer_gateway_ip: "198.51.100.10"
+          TF_VAR_enable_workload_resources: "true"
+          TF_VAR_ami_id: "ami-0123456789abcdef0"
+          TF_VAR_acm_certificate_arn: "arn:aws:acm:us-east-1:111122223333:certificate/00000000-0000-0000-0000-000000000000"
+          TF_VAR_rds_engine_version: "16.4"
+          TF_VAR_enable_dms_resources: "true"
+          TF_VAR_aws_account_id: "111122223333"
+          TF_VAR_source_db_secret_arn: "arn:aws:secretsmanager:us-east-1:111122223333:secret:synthetic-source-db"
+          TF_VAR_dms_replication_instance_class: "dms.t3.medium"
+          TF_VAR_enable_datasync_resources: "true"
+          TF_VAR_datasync_agent_arn: "arn:aws:datasync:us-east-1:111122223333:agent/agent-0123456789abcdef0"
+          TF_VAR_nfs_source_hostname: "10.50.20.25"
+          TF_VAR_nfs_source_subdirectory: "/exports/orders"
+        run: terraform -chdir=terraform plan -refresh=false -input=false -no-color
+
       - name: Static network design assertions
         run: python3 scripts/validate_network_spec.py

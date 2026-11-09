@@ -24,7 +24,7 @@ When `enable_dms_resources=true`, Terraform creates DMS service roles, the dedic
 
 When `enable_datasync_resources=true`, Terraform creates the regional DataSync Interface VPC endpoint in `10.30.51.0/24`, NFSv4.1 and EFS locations, a stopped NFS-to-EFS task, task log group and a private S3 archive bucket/location. The VPC endpoint ID, endpoint ENI IDs, endpoint subnet ARN and endpoint security-group ARN are outputs for agent activation. Agent activation remains a separate operator step because activation keys must not be stored in Terraform state or Git. No archive transfer task is created until a source archive system is specified.
 
-MGN replication-template creation is handled by the guarded PowerShell script `scripts/configure-mgn-replication-template.ps1`. It is dry-run by default and creates only the template when explicitly executed; it does not install agents, register source servers, start replication or cut over.
+When `enable_mgn_resources=true`, Terraform creates the eight AWS-required MGN IAM roles and managed-policy attachments under `/service-role/`. After those roles are applied, the guarded PowerShell script can initialize the regional MGN service and create both replication and launch configuration templates. It refuses to create duplicate templates; launch disposition is STOPPED and public IP assignment is disabled. It does not install source agents, register source servers, start replication or cut over.
 
 ## Cost and safety controls
 
@@ -35,8 +35,10 @@ The following feature flags default to false:
 - `enable_workload_resources`
 - `enable_dms_resources`
 - `enable_datasync_resources`
+- `enable_mgn_resources`
+- `enable_mgn_resources`
 
-The default Terraform configuration still creates real resources if applied: VPC, subnets, route tables, IGW, S3 Gateway Endpoint and security groups. Do not apply without explicit permission. Enabling NAT, VPN, workload, DMS or DataSync adds chargeable resources. The 61-resource default plan and 123-resource full synthetic plan are graph-validation outputs, not cost estimates or deployment approvals. The DataSync interface endpoint also incurs hourly and data-processing charges when enabled.
+The default Terraform configuration still creates real resources if applied: VPC, subnets, route tables, IGW, S3 Gateway Endpoint and security groups. Do not apply without explicit permission. Enabling NAT, VPN, workload, DMS or DataSync adds chargeable resources. The 61-resource default plan and 141-resource full synthetic plan are graph-validation outputs, not cost estimates or deployment approvals. The DataSync interface endpoint also incurs hourly and data-processing charges when enabled.
 
 Never commit AWS credentials, database passwords, Secrets Manager values, VPN tunnel secrets, DataSync activation keys or generated Terraform state/plan files. Keep source secrets in Secrets Manager and use a controlled remote state backend with encryption, versioning and locking before team use.
 
@@ -49,7 +51,7 @@ Never commit AWS credentials, database passwords, Secrets Manager values, VPN tu
 - NAT/VPN/workload/DMS/DataSync features are disabled by default.
 - Workload enablement requires an account-valid ACM certificate ARN, exact RDS engine version and Amazon Linux 2023 AMI ID.
 - VPN enablement requires the intended customer gateway outside IPv4 address.
-- DMS enablement requires account ID, source secret ARN and benchmark-selected DMS replication class.
+- DMS enablement requires account ID, source secret ARN and benchmark-selected DMS replication class. MGN IAM enablement requires the 12-digit account ID and an approved regional initialization window; template creation requires staging subnet/SG IDs and a benchmark-selected replication server type.
 - DataSync enablement requires account ID, an activated VPC-endpoint agent ARN and NFS source hostname/export.
 
 ## CI validation

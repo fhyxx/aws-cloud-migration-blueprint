@@ -1,6 +1,6 @@
 # 15 — Infrastructure as Code Design and Implementation Notes
 
-**ID:** CLI-AWS-IAC-015 | **Version:** 1.3 | **Status:** Network, workload and migration Terraform validated in CI — live account validation and deployment not performed  
+**ID:** CLI-AWS-IAC-015 | **Version:** 1.4 | **Status:** Network, workload and migration Terraform validated in CI — live account validation and deployment not performed  
 **Related:** [Synthetic case-study decisions](14-synthetic-case-study-decisions.md), [Network configuration specification](13-network-configuration-specification.md), [Terraform network foundation](../terraform/README.md)
 
 ## 1. Implementation scope
@@ -82,4 +82,4 @@ CI runs formatting, init, validate, static assertions, a default no-refresh plan
 6. Obtain a fresh visual check of all three Mermaid renderings after the DataSync endpoint/subnet updates.
 7. Complete approved lab connectivity tests for DMS, MGN and DataSync; do not describe static plans as live service validation.
 
-**Current truth:** the network, workload and migration Terraform layers, including the actual DataSync Interface VPC endpoint and hardened DMS/DataSync IAM trust policies, are merged to `main`. CI passed Terraform fmt, init, validate, static assertions, the 61-resource safe-default plan and the 123-resource full synthetic plan. No AWS resources have been applied, no DataSync agent has been activated, and no migration has run.
+**Current truth:** the network, workload and migration Terraform layers, including the actual DataSync Interface VPC endpoint and hardened DMS/DataSync IAM trust policies, are merged to `main`. CI passed Terraform fmt, init, validate, static assertions, the 61-resource safe-default plan and the 141-resource full synthetic plan. No AWS resources have been applied, no DataSync agent has been activated, and no migration has run.

@@ -6,6 +6,7 @@ on:
       - "terraform/**"
       - "scripts/validate_network_spec.py"
       - "scripts/validate_migration_spec.py"
+      - "architecture/**"
       - ".github/workflows/terraform-network-foundation.yml"
       - "docs/09-migration-readiness-matrix.md"
       - "docs/10-technical-architecture-audit.md"
@@ -17,6 +18,9 @@ on:
     paths:
       - "terraform/**"
       - "scripts/validate_network_spec.py"
+      - "scripts/validate_migration_spec.py"
+      - "architecture/**"
+      - "docs/13-network-configuration-specification.md"
       - ".github/workflows/terraform-network-foundation.yml"
 
 permissions:

@@ -77,5 +77,6 @@ assert 'variable "enable_mgn_resources"' in variables and 'default     = false' 
 assert 'AWSApplicationMigrationReplicationServerRole' in mgn and 'AWSApplicationMigrationAgentRole' in mgn, "MGN service roles missing"
 assert 'AWSApplicationMigrationAgentPolicy_v2' in mgn and 'sts:SetSourceIdentity' in mgn and 'sts:SourceIdentity' in mgn, "MGN agent trust/policy missing"
 assert 'AWSApplicationMigrationFSxProxyRole' in mgn and 'AWSApplicationMigrationFSxProxyLinkRole' in mgn, "MGN FSx proxy roles missing from service initialization baseline"
+assert 'path = "/service-role/"' in mgn, "MGN roles must use the AWS-required service-role path"
 
 print("PASS: eleven subnets, scoped VPN propagation, S3 endpoint associations, opt-in NAT/VPN/workloads/migration services, DMS IAM hardening, DataSync Interface endpoint, SG boundaries and acceptance catalogue.")

@@ -2,6 +2,7 @@
 """Static assertions for the fictional Clafoke network/Terraform baseline."""
 
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 main = (ROOT / "terraform" / "main.tf").read_text()
@@ -14,7 +15,7 @@ required_subnets = [
     "mgn", "dms_a", "dms_b",
 ]
 for subnet in required_subnets:
-    assert f"{subnet} =" in main, f"Missing subnet definition: {subnet}"
+    assert re.search(rf"^\\s*{re.escape(subnet)}\\s*=", main, re.MULTILINE), f"Missing subnet definition: {subnet}"
 
 assert 'toset(["mgn", "dms_a", "dms_b"])' in main, "VPN propagation scope drifted"
 assert 'route_table_ids = [' in main and '"app_a"' in main and '"app_b"' in main, "S3 endpoint app associations missing"

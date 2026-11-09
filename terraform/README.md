@@ -36,7 +36,7 @@ The following feature flags default to false:
 - `enable_dms_resources`
 - `enable_datasync_resources`
 
-The default Terraform configuration still creates real resources if applied: VPC, subnets, route tables, IGW, S3 Gateway Endpoint and security groups. Do not apply without explicit permission. Enabling NAT, VPN, workload, DMS or DataSync adds chargeable resources. The 61-resource default plan and 122-resource full synthetic plan are graph-validation outputs, not cost estimates or deployment approvals. The DataSync interface endpoint also incurs hourly and data-processing charges when enabled.
+The default Terraform configuration still creates real resources if applied: VPC, subnets, route tables, IGW, S3 Gateway Endpoint and security groups. Do not apply without explicit permission. Enabling NAT, VPN, workload, DMS or DataSync adds chargeable resources. The 61-resource default plan and 123-resource full synthetic plan are graph-validation outputs, not cost estimates or deployment approvals. The DataSync interface endpoint also incurs hourly and data-processing charges when enabled.
 
 Never commit AWS credentials, database passwords, Secrets Manager values, VPN tunnel secrets, DataSync activation keys or generated Terraform state/plan files. Keep source secrets in Secrets Manager and use a controlled remote state backend with encryption, versioning and locking before team use.
 

@@ -70,7 +70,7 @@ The GitHub Actions workflow runs on Terraform-related pull requests and main-bra
 5. A safe-default no-refresh Terraform plan with all chargeable flags disabled.
 6. A full synthetic no-refresh plan with NAT, VPN, workload, DMS and DataSync enabled using dummy credentials and reserved/example identifiers. Neither plan calls AWS or applies resources.
 
-CI runs formatting, init, validate, static assertions, a default no-refresh plan with all cost-bearing flags disabled (61 resources), and a full synthetic feature plan with NAT, VPN, ALB/ASG, RDS/EFS, DMS and DataSync enabled (123 resources). Both use dummy credentials, synthetic AMI/certificate/secret/agent identifiers and no refresh, so they validate the Terraform resource graph without calling AWS. They do not validate service-side existence, account quotas, actual pricing or live connectivity. Local Windows validation is still required to verify the exact provider lock, formatted HCL and a no-refresh plan against the intended provider version. The first plan should use `create_nat_gateways=false` and `enable_site_to_site_vpn=false`.
+CI runs formatting, init, validate, static assertions, a default no-refresh plan with all cost-bearing flags disabled (61 resources), and a full synthetic feature plan with NAT, VPN, ALB/ASG, RDS/EFS, DMS, DataSync and MGN enabled (141 resources). Both use dummy credentials, synthetic AMI/certificate/secret/agent identifiers and no refresh, so they validate the Terraform resource graph without calling AWS. They do not validate service-side existence, account quotas, actual pricing or live connectivity. Local Windows validation is still recommended as an independent environment check against the committed provider lock. The first plan should use `create_nat_gateways=false` and `enable_site_to_site_vpn=false`.
 
 ## 6. Remaining engineering work
 
@@ -79,7 +79,7 @@ CI runs formatting, init, validate, static assertions, a default no-refresh plan
 3. MGN service IAM roles and policy attachments are now opt-in Terraform; the guarded CLI workflow initializes MGN and creates both templates. Verify initialization and template creation in an approved lab, then test source-agent onboarding separately.
 4. Review whether the single-AZ MGN staging subnet is sufficient for the synthetic recovery objectives; document a deliberate multi-AZ/HA option and its cost/operational trade-off.
 5. Add automated security scanning (Terraform static analysis, secret scanning, dependency review) and complete the migration-period cost model, including the DataSync endpoint and traffic.
-6. Obtain a fresh visual check of all three Mermaid renderings after the DataSync endpoint/subnet updates.
+6. Visual rendering check is complete: the user confirmed all three current GitHub Mermaid views, including the updated DataSync endpoint/task subnets.
 7. Complete approved lab connectivity tests for DMS, MGN and DataSync; do not describe static plans as live service validation.
 
 **Current truth:** the network, workload and migration Terraform layers, including the actual DataSync Interface VPC endpoint and hardened DMS/DataSync IAM trust policies, are merged to `main`. CI passed Terraform fmt, init, validate, static assertions, the 61-resource safe-default plan and the 141-resource full synthetic plan. No AWS resources have been applied, no DataSync agent has been activated, and no migration has run.

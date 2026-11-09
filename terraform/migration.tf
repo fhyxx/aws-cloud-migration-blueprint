@@ -85,8 +85,8 @@ resource "aws_iam_role_policy" "dms_endpoint_secrets" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"]
+        Effect = "Allow"
+        Action = ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"]
         Resource = [
           var.source_db_secret_arn,
           aws_db_instance.app[0].master_user_secret[0].secret_arn
@@ -121,15 +121,15 @@ resource "aws_dms_replication_subnet_group" "this" {
 resource "aws_dms_replication_instance" "this" {
   count = var.enable_dms_resources ? 1 : 0
 
-  replication_instance_id       = "${var.name_prefix}-dms-replication"
-  replication_instance_class    = var.dms_replication_instance_class
-  allocated_storage             = var.dms_allocated_storage
-  publicly_accessible           = false
-  multi_az                      = false
-  auto_minor_version_upgrade    = true
-  apply_immediately             = false
-  replication_subnet_group_id   = aws_dms_replication_subnet_group.this[0].id
-  vpc_security_group_ids        = [aws_security_group.dms.id]
+  replication_instance_id     = "${var.name_prefix}-dms-replication"
+  replication_instance_class  = var.dms_replication_instance_class
+  allocated_storage           = var.dms_allocated_storage
+  publicly_accessible         = false
+  multi_az                    = false
+  auto_minor_version_upgrade  = true
+  apply_immediately           = false
+  replication_subnet_group_id = aws_dms_replication_subnet_group.this[0].id
+  vpc_security_group_ids      = [aws_security_group.dms.id]
 
   tags = merge(var.tags, { Name = "${var.name_prefix}-dms-replication" })
 
@@ -176,13 +176,13 @@ resource "aws_dms_endpoint" "target_postgres" {
 resource "aws_dms_replication_task" "postgres_full_load_cdc" {
   count = var.enable_dms_resources ? 1 : 0
 
-  replication_task_id       = "${var.name_prefix}-postgres-full-load-cdc"
-  migration_type            = "full-load-and-cdc"
-  replication_instance_arn  = aws_dms_replication_instance.this[0].replication_instance_arn
-  source_endpoint_arn       = aws_dms_endpoint.source_postgres[0].endpoint_arn
-  target_endpoint_arn       = aws_dms_endpoint.target_postgres[0].endpoint_arn
-  start_replication_task    = false
-  table_mappings            = jsonencode({
+  replication_task_id      = "${var.name_prefix}-postgres-full-load-cdc"
+  migration_type           = "full-load-and-cdc"
+  replication_instance_arn = aws_dms_replication_instance.this[0].replication_instance_arn
+  source_endpoint_arn      = aws_dms_endpoint.source_postgres[0].endpoint_arn
+  target_endpoint_arn      = aws_dms_endpoint.target_postgres[0].endpoint_arn
+  start_replication_task   = false
+  table_mappings = jsonencode({
     rules = [
       {
         "rule-type" = "selection"
@@ -274,18 +274,18 @@ resource "aws_datasync_task" "nfs_to_efs" {
   cloudwatch_log_group_arn = aws_cloudwatch_log_group.datasync[0].arn
 
   options {
-    atime                          = "BEST_EFFORT"
-    mtime                          = "PRESERVE"
-    uid                            = "INT_VALUE"
-    gid                            = "INT_VALUE"
-    preserve_deleted_files         = "PRESERVE"
-    preserve_devices               = "NONE"
-    posix_permissions              = "PRESERVE"
-    verify_mode                    = "ONLY_FILES_TRANSFERRED"
-    overwrite_mode                 = "ALWAYS"
-    task_queueing                  = "ENABLED"
-    transfer_mode                  = "CHANGED"
-    log_level                      = "BASIC"
+    atime                  = "BEST_EFFORT"
+    mtime                  = "PRESERVE"
+    uid                    = "INT_VALUE"
+    gid                    = "INT_VALUE"
+    preserve_deleted_files = "PRESERVE"
+    preserve_devices       = "NONE"
+    posix_permissions      = "PRESERVE"
+    verify_mode            = "ONLY_FILES_TRANSFERRED"
+    overwrite_mode         = "ALWAYS"
+    task_queueing          = "ENABLED"
+    transfer_mode          = "CHANGED"
+    log_level              = "BASIC"
   }
 
   tags = merge(var.tags, { Name = "${var.name_prefix}-nfs-to-efs" })
@@ -380,8 +380,8 @@ resource "aws_iam_role_policy" "datasync_s3" {
 resource "aws_datasync_location_s3" "archive" {
   count = var.enable_datasync_resources ? 1 : 0
 
-  s3_bucket_arn = aws_s3_bucket.archive[0].arn
-  subdirectory  = "/archives"
+  s3_bucket_arn    = aws_s3_bucket.archive[0].arn
+  subdirectory     = "/archives"
   s3_storage_class = "STANDARD"
 
   s3_config {

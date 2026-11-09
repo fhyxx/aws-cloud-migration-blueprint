@@ -161,7 +161,7 @@ assert "dedicated DMS-A/B subnets in two AZs" in migration_view, (
 assert "DMS reuses the two private application subnets" not in runtime_view + migration_view, (
     "Obsolete DMS/application subnet statement remains in runtime view"
 )
-assert "non-Multi-AZ Terraform baseline" in target_source
+assert "current Terraform baseline; non-Multi-AZ" in target_source
 assert "non-Multi-AZ" in migration_source
 assert "Provisioned DMS replication instance" in target_source
 assert "Provisioned AWS DMS replication instance" in migration_source

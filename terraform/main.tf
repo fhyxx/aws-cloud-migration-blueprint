@@ -111,7 +111,8 @@ resource "aws_vpc_endpoint" "s3" {
   vpc_endpoint_type = "Gateway"
   route_table_ids = [
     aws_route_table.this["app_a"].id,
-    aws_route_table.this["app_b"].id
+    aws_route_table.this["app_b"].id,
+    aws_route_table.this["mgn"].id
   ]
 
   tags = merge(var.tags, { Name = "${var.name_prefix}-s3-gateway-endpoint" })
@@ -156,7 +157,7 @@ resource "aws_vpn_gateway_route_propagation" "migration" {
 }
 
 # Security group resources are declared without inline peer rules. Separate
-# aws_security_group_rule resources avoid cyclic SG-to-SG dependencies.
+# dedicated aws_vpc_security_group_ingress_rule and egress_rule resources avoid cyclic SG-to-SG dependencies.
 
 resource "aws_security_group" "alb" {
   name        = "${var.name_prefix}-alb-sg"

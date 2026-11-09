@@ -75,6 +75,7 @@ jobs:
           TF_VAR_source_db_secret_arn: "arn:aws:secretsmanager:us-east-1:111122223333:secret:synthetic-source-db"
           TF_VAR_dms_replication_instance_class: "dms.t3.medium"
           TF_VAR_enable_datasync_resources: "true"
+          TF_VAR_enable_mgn_resources: "true"
           TF_VAR_datasync_agent_arn: "arn:aws:datasync:us-east-1:111122223333:agent/agent-0123456789abcdef0"
           TF_VAR_nfs_source_hostname: "10.50.20.25"
           TF_VAR_nfs_source_subdirectory: "/exports/orders"

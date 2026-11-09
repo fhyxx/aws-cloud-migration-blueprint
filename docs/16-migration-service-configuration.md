@@ -1,6 +1,6 @@
 # 16 — Migration Service Configuration and Activation Runbook
 
-**ID:** CLI-AWS-MSA-016 | **Version:** 1.3 | **Status:** Prepared for synthetic portfolio execution — no service activation or migration run  
+**ID:** CLI-AWS-MSA-016 | **Version:** 1.4 | **Status:** Prepared for synthetic portfolio execution — no service activation or migration run  
 **Related:** [Terraform network/workload/migration foundation](../terraform/README.md), [Migration strategy](04-data-migration-strategy.md), [Migration runbook](05-migration-runbook.md), [Network configuration](13-network-configuration-specification.md), [Synthetic decisions](14-synthetic-case-study-decisions.md)
 
 ## 1. Purpose
@@ -9,7 +9,7 @@ This runbook closes the gap between Terraform-managed network resources and migr
 
 Terraform now models optional DMS and DataSync resources, including the actual DataSync Interface VPC service endpoint. MGN replication-template creation is handled by a guarded AWS CLI PowerShell script because source-server onboarding and agent activation remain a separate MGN service workflow.
 
-**Safety:** all migration Terraform flags default to false. No source secret, DataSync activation key, DataSync agent activation, MGN agent install, task start, replication start or AWS apply has been executed.
+**Safety:** all migration Terraform flags default to false. No source secret, DataSync activation key, DataSync agent activation, MGN service initialization, MGN template creation, MGN agent install, task start, replication start or AWS apply has been executed.
 
 ## 2. Migration service Terraform flags
 
@@ -17,7 +17,7 @@ Terraform now models optional DMS and DataSync resources, including the actual D
 |---|---:|---|---|
 | `enable_dms_resources` | false | DMS VPC/CloudWatch roles, endpoint secret role, two-AZ replication subnet group, private replication instance, PostgreSQL source/target endpoints and stopped full-load-and-CDC task | Workload/RDS target enabled; NAT and VPN enabled; source Secrets Manager ARN; benchmark-selected DMS class |
 | `enable_datasync_resources` | false | NFSv4.1 source location, EFS destination, stopped NFS-to-EFS task, CloudWatch log group, private S3 archive bucket/location and S3 access role | Workload/EFS enabled; VPN enabled; activated VPC-endpoint DataSync agent ARN; NFS hostname/export |
-| MGN template | external script | Replication configuration template only | Terraform-created MGN staging subnet and SG IDs; selected replication server type; valid AWS profile |
+| MGN service initialization | opt-in Terraform + guarded PowerShell script | Eight AWS-required IAM roles/policy attachments, MGN service initialization, replication configuration template and launch configuration template | `enable_mgn_resources=true`; account ID; Terraform-created staging subnet and SG IDs; selected replication server type; valid AWS profile |
 
 Do not enable these flags merely to make a plan look complete. Each creates chargeable resources or migration configuration. The DMS replication task is created stopped; the DataSync task is created but not started.
 
@@ -56,11 +56,17 @@ To locate the endpoint private IP, use `aws ec2 describe-network-interfaces --ne
 
 The archive bucket and S3 location are provisioned only when DataSync resources are enabled. The S3 location prefix is `archives` (no leading slash), which is compatible with DataSync Basic-mode prefix restrictions. No archive transfer task is created because the archive source type/location is not part of the synthetic discovery baseline.
 
-## 5. MGN replication configuration template
+## 5. MGN service initialization and templates
+
+Enable `enable_mgn_resources=true` only after the VPC, VPN and MGN staging network are ready. Terraform creates the eight IAM roles and managed-policy attachments specified by current AWS initialization guidance: replication server, conversion server, MGH, launch with DRS, launch with SSM, FSx proxy, FSx proxy link and agent. The agent role trust restricts `sts:SourceIdentity` to `s-*` and `aws:SourceAccount` to the configured account. These are IAM resources only; no MGN replication server or source agent is launched.
+
+After the Terraform IAM roles are applied, run the guarded script with `-InitializeService -Execute` once per account/Region. It invokes `aws mgn initialize-service`, then creates the replication and launch configuration templates. It refuses to create duplicates if either template already exists. The launch template uses `STOPPED`, disables public IP assignment and does not copy the source private IP. Template instance sizing and migration execution remain operator-reviewed.
+
+## 6. MGN replication configuration template
 
 The script [configure-mgn-replication-template.ps1](../scripts/configure-mgn-replication-template.ps1) creates a replication configuration template only. It does not install MGN agents, register source servers, launch test instances, start replication or cut over.
 
-Default script behaviour is dry-run. It requires explicit `-Execute` to call AWS and uses PowerShell `ShouldProcess` confirmation. It configures:
+Default script behaviour is dry-run. It requires explicit `-Execute` to call AWS and uses PowerShell `ShouldProcess` confirmation. Use `-InitializeService` only for first-time regional initialization after the MGN IAM role layer is deployed. It configures both MGN templates. The replication template configures:
 
 - Staging subnet and custom replication-server security group.
 - Private-IP data-plane routing and no public IP.
@@ -82,7 +88,7 @@ Example dry-run after Terraform network outputs exist:
 
 Only after reviewing the displayed account, Region, subnet, SG and instance type should an operator use `-Execute`. The script will then request PowerShell confirmation. Choose the replication server instance type after source disk/change-rate profiling; no class is asserted as production-sized.
 
-## 6. Ordered migration validation
+## 7. Ordered migration validation
 
 1. Confirm VPC route tables and VPN/BGP state; source routes must reach only DMS, MGN and DataSync migration subnets.
 2. Confirm MGN source TCP 443, source-to-staging TCP 1500, staging service TCP 443 and required S3 access; ensure no SSL interception on documented MGN paths.
@@ -93,7 +99,7 @@ Only after reviewing the displayed account, Region, subnet, SG and instance type
 7. Reconcile PostgreSQL schema objects and sequences after CDC stops; DMS does not continuously synchronize sequence state.
 8. Keep all tasks stopped until the migration plan, rollback, data owner and business go/no-go are approved.
 
-## 7. References
+## 8. References
 
 - [AWS DMS IAM roles and confused-deputy guidance](https://docs.aws.amazon.com/dms/latest/userguide/security-iam.html)
 - [AWS DMS Secrets Manager endpoint authentication](https://docs.aws.amazon.com/dms/latest/userguide/security_iam_secretsmanager.html)

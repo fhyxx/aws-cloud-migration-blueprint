@@ -66,9 +66,12 @@ resource "aws_iam_role" "dms_endpoint_access" {
     Version = "2012-10-17"
     Statement = [{
       Effect    = "Allow"
-      Principal = { Service = "dms.amazonaws.com" }
+      Principal = { Service = "dms.${var.aws_region}.amazonaws.com" }
       Action    = "sts:AssumeRole"
-      Condition = { StringEquals = { "aws:SourceAccount" = var.aws_account_id } }
+      Condition = {
+        StringEquals = { "aws:SourceAccount" = var.aws_account_id }
+        ArnLike      = { "aws:SourceArn" = "arn:aws:dms:${var.aws_region}:${var.aws_account_id}:endpoint:*" }
+      }
     }]
   })
   tags = var.tags
@@ -81,7 +84,7 @@ resource "aws_iam_role_policy" "dms_endpoint_secrets" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
+    Statement = concat([
       {
         Effect = "Allow"
         Action = ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"]
@@ -90,17 +93,12 @@ resource "aws_iam_role_policy" "dms_endpoint_secrets" {
           aws_db_instance.app[0].master_user_secret[0].secret_arn
         ]
       },
-      {
-        Effect   = "Allow"
-        Action   = ["kms:Decrypt"]
-        Resource = "*"
-        Condition = {
-          StringEquals = {
-            "kms:ViaService" = "secretsmanager.${var.aws_region}.amazonaws.com"
-          }
-        }
-      }
-    ]
+
+    ], var.source_secret_kms_key_arn == null ? [] : [{
+      Effect   = "Allow"
+      Action   = ["kms:Decrypt"]
+      Resource = var.source_secret_kms_key_arn
+    }])
   })
 }
 

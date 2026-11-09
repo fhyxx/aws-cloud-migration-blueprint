@@ -95,11 +95,11 @@ resource "aws_iam_role_policy" "dms_endpoint_secrets" {
         ]
       },
 
-    ], var.source_secret_kms_key_arn == null ? [] : [{
-      Effect   = "Allow"
-      Action   = ["kms:Decrypt"]
-      Resource = var.source_secret_kms_key_arn
-    }])
+      ], var.source_secret_kms_key_arn == null ? [] : [{
+        Effect   = "Allow"
+        Action   = ["kms:Decrypt"]
+        Resource = var.source_secret_kms_key_arn
+      }])
   })
 }
 

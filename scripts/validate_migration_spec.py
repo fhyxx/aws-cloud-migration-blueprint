@@ -58,7 +58,7 @@ assert "secrets_manager_arn" in migration
 assert "secrets_manager_access_role_arn" in migration
 assert '"secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"' in migration
 assert "aws:SourceAccount" in migration and "aws:SourceArn" in migration
-assert 'dms.\${var.aws_region}.amazonaws.com' in migration, (
+assert 'dms.${' + 'var.aws_region}.amazonaws.com' in migration, (
     "DMS endpoint secret role must use the regional service principal"
 )
 assert '"kms:ViaService"' in migration
@@ -92,7 +92,7 @@ assert 'status = "Enabled"' in migration
 assert 'subdirectory     = "archives"' in migration, (
     "Basic-mode S3 destination prefix must be the relative archives prefix"
 )
-assert '"\${aws_s3_bucket.archive[0].arn}/archives/*"' in migration, (
+assert '"${' + 'aws_s3_bucket.archive[0].arn}/archives/*"' in migration, (
     "DataSync object permissions must be restricted to the archive prefix"
 )
 assert "aws:SourceAccount" in migration and "aws:SourceArn" in migration

@@ -68,4 +68,8 @@ assert 'vpc_endpoint_type   = "Interface"' in main and 'aws_security_group.datas
 assert '"kms:ViaService"' in migration and '"kms:EncryptionContext:SecretARN"' in migration, "DMS CMK use must be Secrets Manager-only and secret-scoped"
 assert 'subdirectory     = "archives"' in migration, "DataSync Basic-mode S3 prefix must not begin with slash"
 
+assert 'datasync_agent_cidr must be one valid IPv4 /32 host address' in variables, "DataSync agent must be a single host"
+assert 'source_db_secret_arn must be a Secrets Manager secret ARN' in variables, "DMS source secret ARN validation missing"
+assert 'source_secret_kms_key_arn must be a customer-managed KMS key ARN' in variables, "DMS source CMK ARN validation missing"
+
 print("PASS: eleven subnets, scoped VPN propagation, S3 endpoint associations, opt-in NAT/VPN/workloads/migration services, DMS IAM hardening, DataSync Interface endpoint, SG boundaries and acceptance catalogue.")

@@ -61,6 +61,8 @@ AZ-A and AZ-B are logical labels. Implementation must record the actual AZ IDs f
 | DMS-B | 10.30.42.0/24 | AZ-B | RT-DMS-B | DMS replication ENIs |
 | DataSync endpoint | 10.30.51.0/24 | AZ-A | RT-DATASYNC-ENDPOINT | DataSync VPC service endpoint ENI |
 | DataSync task | 10.30.52.0/24 | AZ-A | RT-DATASYNC-TASK | DataSync task ENIs; same AZ as EFS mount target A |
+| DataSync endpoint | 10.30.51.0/24 | AZ-A | RT-DATASYNC-ENDPOINT | DataSync VPC service endpoint ENI |
+| DataSync task | 10.30.52.0/24 | AZ-A | RT-DATASYNC-TASK | DataSync task ENIs; same AZ as EFS mount target A |
 
 A /24 has 251 initially assignable IPv4 addresses after AWS reserves five. This is not a capacity guarantee. The scenario now has six steady-state subnets and five migration-only subnets. Capture available IP counts before and during deployment, especially in public, DMS and MGN staging subnets.
 
@@ -77,6 +79,8 @@ A /24 has 251 initially assignable IPv4 addresses after AWS reserves five. This 
 | RT-DMS-A | DMS-A | VPC local; propagated 10.50.0.0/16 → VGW; 0.0.0.0/0 → NAT-A; S3 prefix list only if required | Enabled |
 | RT-DMS-B | DMS-B | VPC local; propagated 10.50.0.0/16 → VGW; 0.0.0.0/0 → NAT-B; S3 prefix list only if required | Enabled |
 | RT-MGN-STAGING | MGN-STAGING | VPC local; propagated 10.50.0.0/16 → VGW; 0.0.0.0/0 → NAT-A | Enabled |
+| RT-DATASYNC-ENDPOINT | DataSync endpoint | VPC local; propagated 10.50.0.0/16 → VGW; no default route | Enabled |
+| RT-DATASYNC-TASK | DataSync task ENIs | VPC local; propagated 10.50.0.0/16 → VGW; no default route | Enabled |
 | RT-DATASYNC-ENDPOINT | DataSync endpoint | VPC local; propagated 10.50.0.0/16 → VGW; no default route | Enabled |
 | RT-DATASYNC-TASK | DataSync task | VPC local; propagated 10.50.0.0/16 → VGW; no default route | Enabled |
 
@@ -121,6 +125,8 @@ These are rule intents, not deployed rules. Use security-group references for sa
 | SG-MGN-STAGING | Outbound | TCP 443 | Regional MGN service path and required AWS dependencies (including S3 where current service guidance requires) | Controlled NAT/private path; no SSL interception on documented MGN API paths |
 | SG-DATASYNC-ENDPOINT | Inbound | TCP 1024–1064 | 10.50.20.50/32 | VPC service endpoint control-plane from the single synthetic DataSync agent |
 | SG-DATASYNC-TASK-ENI | Inbound | TCP 443 | 10.50.20.50/32 | DataSync agent data-plane to task ENI |
+| SG-DATASYNC-ENDPOINT | Inbound | TCP 1024–1064 | 10.50.20.50/32 | VPC service endpoint control plane from the synthetic agent |
+| SG-DATASYNC-TASK-ENI | Inbound | TCP 443 | 10.50.20.50/32 | DataSync agent data plane to task ENI |
 | SG-DATASYNC-TASK-ENI | Outbound | TCP 2049 | SG-EFS | DataSync task data-plane to EFS |
 | SG-ENDPOINT | Inbound | TCP 443 | Only workload SGs needing that endpoint | Define per interface endpoint |
 

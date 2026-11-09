@@ -1,0 +1,2 @@
+# Generate the real provider lock file with terraform init on the local workstation.
+# This placeholder is documentation only and is not consumed by Terraform.

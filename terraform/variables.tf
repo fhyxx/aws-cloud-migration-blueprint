@@ -244,3 +244,22 @@ variable "skip_requesting_account_id" {
   type        = bool
   default     = false
 }
+
+variable "ami_id" {
+  description = "Validated Amazon Linux 2023 AMI ID for the selected Region; required when workloads are enabled."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "aws_account_id" {
+  description = "12-digit AWS account ID used in service-role trust conditions; required when DMS or DataSync is enabled."
+  type        = string
+  default     = null
+  nullable    = true
+
+  validation {
+    condition     = var.aws_account_id == null || can(regex("^[0-9]{12}$", var.aws_account_id))
+    error_message = "aws_account_id must be a 12-digit account ID."
+  }
+}

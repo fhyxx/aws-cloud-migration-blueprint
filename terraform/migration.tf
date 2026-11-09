@@ -1,7 +1,3 @@
-data "aws_caller_identity" "current" {
-  count = var.enable_dms_resources || var.enable_datasync_resources ? 1 : 0
-}
-
 resource "terraform_data" "dms_prerequisites" {
   count = var.enable_dms_resources ? 1 : 0
   input = true
@@ -28,7 +24,7 @@ resource "aws_iam_role" "dms_vpc" {
       Effect    = "Allow"
       Principal = { Service = "dms.amazonaws.com" }
       Action    = "sts:AssumeRole"
-      Condition = { StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current[0].account_id } }
+      Condition = { StringEquals = { "aws:SourceAccount" = var.aws_account_id } }
     }]
   })
   tags = var.tags

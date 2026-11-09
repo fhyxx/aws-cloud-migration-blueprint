@@ -215,3 +215,9 @@ variable "nfs_source_subdirectory" {
   default     = null
   nullable    = true
 }
+
+variable "datasync_agent_cidr" {
+  description = "Single synthetic on-premises DataSync agent address; only this host may reach the VPC endpoint and task ENI."
+  type        = string
+  default     = "10.50.20.50/32"
+}

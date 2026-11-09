@@ -36,7 +36,6 @@ The following feature flags default to false:
 - `enable_dms_resources`
 - `enable_datasync_resources`
 - `enable_mgn_resources`
-- `enable_mgn_resources`
 
 The default Terraform configuration still creates real resources if applied: VPC, subnets, route tables, IGW, S3 Gateway Endpoint and security groups. Do not apply without explicit permission. Enabling NAT, VPN, workload, DMS or DataSync adds chargeable resources. The 61-resource default plan and 141-resource full synthetic plan are graph-validation outputs, not cost estimates or deployment approvals. The DataSync interface endpoint also incurs hourly and data-processing charges when enabled.
 
@@ -62,8 +61,9 @@ GitHub Actions runs:
 2. `terraform init -backend=false`
 3. `terraform validate`
 4. Python static assertions for subnet count, route propagation, security-group boundaries, DMS IAM trust and DataSync endpoint configuration.
-5. Safe-default no-refresh plan with chargeable feature flags disabled.
-6. Full synthetic no-refresh plan with NAT, VPN, workload, DMS and DataSync enabled, using dummy credentials and reserved/example identifiers.
+5. Migration-service assertions for DMS stopped/TLS/secret boundaries, DataSync endpoint/archive controls, and guarded MGN bootstrap behaviour.
+6. Safe-default no-refresh plan with chargeable feature flags disabled.
+7. Full synthetic no-refresh plan with NAT, VPN, workload, DMS and DataSync enabled, using dummy credentials and reserved/example identifiers.
 
 The AWS provider is pinned to `5.100.0` to match the validated CI provider schema. A reviewed `terraform/.terraform.lock.hcl` is committed with AWS provider 5.100.0 checksums for Linux AMD64 and Windows AMD64. CI initializes with `-lockfile=readonly`, so it fails rather than silently changing provider checksums. The no-refresh plans do not call AWS APIs. They validate Terraform graph structure and provider schema, not actual resource availability, IAM acceptance, quota, pricing, endpoint activation, network connectivity or application behaviour.
 

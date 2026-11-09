@@ -99,6 +99,12 @@ resource "aws_iam_role_policy" "dms_endpoint_secrets" {
         Effect   = "Allow"
         Action   = ["kms:Decrypt"]
         Resource = var.source_secret_kms_key_arn
+        Condition = {
+          StringEquals = {
+            "kms:ViaService"                  = "secretsmanager.${var.aws_region}.amazonaws.com"
+            "kms:EncryptionContext:SecretARN" = var.source_db_secret_arn
+          }
+        }
     }])
   })
 }
@@ -380,7 +386,7 @@ resource "aws_datasync_location_s3" "archive" {
   count = var.enable_datasync_resources ? 1 : 0
 
   s3_bucket_arn    = aws_s3_bucket.archive[0].arn
-  subdirectory     = "/archives"
+  subdirectory     = "archives"
   s3_storage_class = "STANDARD"
 
   s3_config {

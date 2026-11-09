@@ -39,6 +39,17 @@ jobs:
       - name: Terraform init (no backend)
         run: terraform -chdir=terraform init -backend=false
 
+      - name: Generate cross-platform provider lock file
+        run: terraform -chdir=terraform providers lock -platform=linux_amd64 -platform=windows_amd64
+
+      - name: Upload Terraform provider lock file
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-provider-lock
+          path: terraform/.terraform.lock.hcl
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Terraform validate
         run: terraform -chdir=terraform validate
 

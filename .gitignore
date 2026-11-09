@@ -2,7 +2,11 @@
 Thumbs.db
 *.tfstate
 *.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
 .terraform/
+.terraform.tfstate.lock.info
 .env
 .env.*
 !.env.example

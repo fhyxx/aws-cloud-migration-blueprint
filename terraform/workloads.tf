@@ -225,34 +225,34 @@ resource "aws_iam_role_policy_attachment" "rds_monitoring" {
 resource "aws_db_instance" "app" {
   count = var.enable_workload_resources ? 1 : 0
 
-  identifier                     = "${var.name_prefix}-postgres"
-  engine                         = "postgres"
-  engine_version                 = var.rds_engine_version
-  instance_class                 = var.rds_instance_class
-  allocated_storage              = var.rds_allocated_storage
-  storage_type                   = "gp3"
-  iops                           = var.rds_iops
+  identifier                      = "${var.name_prefix}-postgres"
+  engine                          = "postgres"
+  engine_version                  = var.rds_engine_version
+  instance_class                  = var.rds_instance_class
+  allocated_storage               = var.rds_allocated_storage
+  storage_type                    = "gp3"
+  iops                            = var.rds_iops
   storage_throughput              = var.rds_storage_throughput
-  username                       = var.db_master_username
-  manage_master_user_password    = true
-  db_subnet_group_name           = aws_db_subnet_group.app[0].name
-  vpc_security_group_ids         = [aws_security_group.rds.id]
-  multi_az                       = true
-  publicly_accessible            = false
-  storage_encrypted              = true
-  backup_retention_period        = 7
-  auto_minor_version_upgrade     = true
-  deletion_protection            = true
-  copy_tags_to_snapshot          = true
-  performance_insights_enabled   = true
-  monitoring_interval            = 60
-  monitoring_role_arn            = aws_iam_role.rds_monitoring[0].arn
-  apply_immediately              = false
-  skip_final_snapshot            = false
-  final_snapshot_identifier      = "${var.name_prefix}-postgres-final"
+  username                        = var.db_master_username
+  manage_master_user_password     = true
+  db_subnet_group_name            = aws_db_subnet_group.app[0].name
+  vpc_security_group_ids          = [aws_security_group.rds.id]
+  multi_az                        = true
+  publicly_accessible             = false
+  storage_encrypted               = true
+  backup_retention_period         = 7
+  auto_minor_version_upgrade      = true
+  deletion_protection             = true
+  copy_tags_to_snapshot           = true
+  performance_insights_enabled    = true
+  monitoring_interval             = 60
+  monitoring_role_arn             = aws_iam_role.rds_monitoring[0].arn
+  apply_immediately               = false
+  skip_final_snapshot             = false
+  final_snapshot_identifier       = "${var.name_prefix}-postgres-final"
   enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
 
-  tags = merge(var.tags, { Name = "${var.name_prefix}-postgres" })
+  tags       = merge(var.tags, { Name = "${var.name_prefix}-postgres" })
   depends_on = [aws_iam_role_policy_attachment.rds_monitoring]
 }
 

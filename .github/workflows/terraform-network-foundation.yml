@@ -1,0 +1,41 @@
+name: Terraform Network Foundation
+
+on:
+  pull_request:
+    paths:
+      - "terraform/**"
+      - "scripts/validate_network_spec.py"
+      - ".github/workflows/terraform-network-foundation.yml"
+  push:
+    branches: [main]
+    paths:
+      - "terraform/**"
+      - "scripts/validate_network_spec.py"
+      - ".github/workflows/terraform-network-foundation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: Terraform format
+        run: terraform -chdir=terraform fmt -check -recursive
+
+      - name: Terraform init (no backend)
+        run: terraform -chdir=terraform init -backend=false
+
+      - name: Terraform validate
+        run: terraform -chdir=terraform validate
+
+      - name: Static network design assertions
+        run: python3 scripts/validate_network_spec.py

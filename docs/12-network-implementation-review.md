@@ -2,7 +2,7 @@
 
 **ID:** CLI-AWS-NIV-012 | **Version:** 1.0 | **Status:** Review findings recorded — customer inputs and approvals outstanding  
 **Project:** Clafoke Investors Ltd (fictional portfolio case study)  
-**Related:** [Network and security design](03-network-security-design.md), [Network implementation preparation](11-network-implementation-preparation.md), [Migration readiness matrix](09-migration-readiness-matrix.md), [Technical architecture audit](10-technical-architecture-audit.md)
+**Related:** [Network and security design](03-network-security-design.md), [Network implementation preparation](11-network-implementation-preparation.md), [Migration readiness matrix](09-migration-readiness-matrix.md), [Technical architecture audit](10-technical-architecture-audit.md), [Network configuration specification](13-network-configuration-specification.md)
 
 > This register separates documented design assumptions from facts that must be supplied by a real customer or confirmed in the intended AWS account. The case study does not contain verified source-network details, customer gateway inventory, live AWS subnet IDs/AZ IDs, or customer security approvals. Blank/unknown values must not be replaced with guesses. No network implementation or live connectivity test is claimed.
 

@@ -82,18 +82,23 @@ flowchart TB
     NAT_B --> IGW
 
     MGN_REPL -->|"Controlled TCP 443 service egress"| NAT_A
-    DMS_SUBNET_A --- DMS
-    DMS_SUBNET_B --- DMS
+    DMS_SUBNET_A -.->|subnet-group membership; placement is one AZ| DMS
+    DMS_SUBNET_B -.->|subnet-group membership; placement is one AZ| DMS
     DMS -->|"TCP 5432 — temporary target access"| DB_PRIMARY
     DMS -->|"Source TCP 5432 over VPN"| VGW
   end
 
-  ONPREM["Illustrative on-premises<br/>10.50.0.0/16<br/>App 10.50.10.0/24<br/>DB/NFS 10.50.20.0/24<br/>DataSync agent 10.50.20.50/32"] ---|"IPsec VPN • BGP ASN 65010 ↔ 64512<br/>two tunnels • VGW no ECMP"| VGW
-  ONPREM -->|"MGN replication TCP 1500"| VGW
-  VGW -->|"BGP source route"| MGN_REPL
-  VGW -->|"DMS source TCP 5432"| DMS
-  ONPREM -->|"TCP 1024–1064 control plane<br/>TCP 443 task data plane"| VGW
+  ONPREM["Illustrative on-premises network<br/>10.50.0.0/16"] ---|"IPsec VPN • BGP ASN 65010 ↔ 64512<br/>two tunnels • VGW no ECMP"| VGW
+  SRC_APP["Source application VMs<br/>10.50.10.0/24"] --- ONPREM
+  PG_SRC["Self-managed PostgreSQL source<br/>10.50.20.0/24"] --- ONPREM
+  DS_AGENT["DataSync agent<br/>10.50.20.50/32"] --- ONPREM
+  SRC_APP -->|"MGN replication TCP 1500 over VPN"| VGW
+  VGW -->|"TCP 1500 to staging"| MGN_REPL
+  DMS -->|"Source PostgreSQL TCP 5432 over VPN"| VGW
+  VGW -->|"TCP 5432"| PG_SRC
+  DS_AGENT -->|"TCP 1024–1064 control plane"| VGW
   VGW --> DS_EP
+  DS_AGENT -->|"TCP 443 task data plane"| VGW
   VGW --> DS_TASK
 
   subgraph ROUTING["Route-table intent — proposed, not deployed"]

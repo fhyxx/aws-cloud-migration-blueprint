@@ -2,7 +2,7 @@
 
 **ID:** CLI-AWS-NIP-011 | **Version:** 1.0 | **Status:** Prepared for implementation review — not deployed  
 **Project:** Clafoke Investors Ltd (fictional portfolio case study)  
-**Related:** [Network and security design](03-network-security-design.md), [Migration runbook](05-migration-runbook.md), [Migration readiness matrix](09-migration-readiness-matrix.md), [Technical architecture audit](10-technical-architecture-audit.md)
+**Related:** [Network and security design](03-network-security-design.md), [Migration runbook](05-migration-runbook.md), [Migration readiness matrix](09-migration-readiness-matrix.md), [Technical architecture audit](10-technical-architecture-audit.md), [Network configuration specification](13-network-configuration-specification.md)
 
 > This is an implementation-preparation artifact, not an approved change plan. CIDRs, ASNs and topology remain illustrative until reconciled with actual customer network facts and approved by accountable owners. No AWS resources, VPN tunnels, routes, security rules or connectivity tests have been created or executed.
 

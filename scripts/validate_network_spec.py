@@ -58,6 +58,7 @@ assert "aws_ami" not in workloads and "aws_caller_identity" not in (ROOT / "terr
 assert 'dms.${var.aws_region}.amazonaws.com' in migration, "DMS secret role must use regional service principal"
 assert 'var.source_secret_kms_key_arn' in migration and 'Resource = "*"' not in migration, "DMS KMS decrypt must be scoped to an optional exact key"
 assert 'var.aws_account_id' in migration and 'aws:SourceAccount' in migration, "DMS service trust must be account-scoped"
+assert 'arn:aws:datasync:${var.aws_region}:${var.aws_account_id}:*' in migration and 'aws:SourceArn' in migration, "DataSync role trust must be Region/account-scoped"
 
 
 assert 'resource "aws_vpc_endpoint" "datasync"' in main, "Private DataSync interface endpoint resource missing"

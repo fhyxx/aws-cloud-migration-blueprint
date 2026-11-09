@@ -263,3 +263,10 @@ variable "aws_account_id" {
     error_message = "aws_account_id must be a 12-digit account ID."
   }
 }
+
+variable "source_secret_kms_key_arn" {
+  description = "Optional customer-managed KMS key ARN for the source DMS secret. Leave null when the AWS-managed Secrets Manager key is used."
+  type        = string
+  default     = null
+  nullable    = true
+}

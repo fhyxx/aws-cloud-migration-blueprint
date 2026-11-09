@@ -1,6 +1,6 @@
 # 16 — Migration Service Configuration and Activation Runbook
 
-**ID:** CLI-AWS-MSA-016 | **Version:** 1.5 | **Status:** Prepared for synthetic portfolio execution — no service activation or migration run  
+**ID:** CLI-AWS-MSA-016 | **Version:** 1.6 | **Status:** Prepared for synthetic portfolio execution — no service activation or migration run  
 **Related:** [Terraform network/workload/migration foundation](../terraform/README.md), [Migration strategy](04-data-migration-strategy.md), [Migration runbook](05-migration-runbook.md), [Network configuration](13-network-configuration-specification.md), [Synthetic decisions](14-synthetic-case-study-decisions.md)
 
 ## 1. Purpose
@@ -62,6 +62,14 @@ Enable `enable_mgn_resources=true` only after the VPC, VPN and MGN staging netwo
 
 After the Terraform IAM roles are applied, run the guarded script with `-InitializeService -Execute` once per account/Region. It invokes `aws mgn initialize-service`, then creates the replication and launch configuration templates. It refuses to create duplicates if either template already exists. The launch template uses `STOPPED`, disables public IP assignment and does not copy the source private IP. Template instance sizing and migration execution remain operator-reviewed.
 
+
+
+### Separate agent-installation permissions
+
+The Terraform MGN service-role layer does **not** grant the operator credentials used to install the AWS Replication Agent on source servers. For the installation window, use a dedicated operator role or temporary session with the AWS-managed `AWSApplicationMigrationAgentInstallationPolicy` attached. Do not use root credentials or long-lived IAM user access keys. Scope the session to the source onboarding window, use temporary credentials, and remove/detach the installation policy after all intended source agents are installed. The service-side `AWSApplicationMigrationAgentRole` created by Terraform is a different role assumed by MGN after source registration; it is not an installation credential.
+
+The principal running Terraform and the PowerShell setup script also needs narrowly approved permissions to create the MGN IAM roles/policy attachments, pass the roles to the required AWS services, initialize MGN, and create the two account-level templates. Those operator permissions are not embedded in this repository.
+
 ## 6. MGN replication configuration template
 
 The script [configure-mgn-replication-template.ps1](../scripts/configure-mgn-replication-template.ps1) creates both replication and launch configuration templates after optional service initialization. It does not install MGN agents, register source servers, launch test instances, start replication or cut over.
@@ -109,6 +117,7 @@ Only after reviewing the displayed account, Region, subnet, SG and instance type
 - [AWS DataSync service endpoint selection](https://docs.aws.amazon.com/datasync/latest/userguide/choose-service-endpoint.html)
 - [AWS DataSync cross-service confused deputy prevention](https://docs.aws.amazon.com/datasync/latest/userguide/cross-service-confused-deputy-prevention.html)
 - [AWS MGN API initialization sequence and required roles](https://docs.aws.amazon.com/mgn/latest/ug/mgn-initialize-api.html)
+- [AWS MGN managed policies, including agent installation policy](https://docs.aws.amazon.com/mgn/latest/ug/security-iam-awsmanpol.html)
 - [AWS MGN replication configuration template CLI](https://docs.aws.amazon.com/cli/latest/reference/mgn/create-replication-configuration-template.html)
 - [AWS MGN launch configuration template CLI](https://docs.aws.amazon.com/cli/latest/reference/mgn/create-launch-configuration-template.html)
 - [AWS MGN network requirements](https://docs.aws.amazon.com/mgn/latest/ug/preparing-environments.html)

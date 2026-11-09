@@ -35,6 +35,7 @@ The following feature flags default to false:
 - `enable_workload_resources`
 - `enable_dms_resources`
 - `enable_datasync_resources`
+- `enable_mgn_resources`
 
 The default Terraform configuration still creates real resources if applied: VPC, subnets, route tables, IGW, S3 Gateway Endpoint and security groups. Do not apply without explicit permission. Enabling NAT, VPN, workload, DMS or DataSync adds chargeable resources. The 61-resource default plan and 123-resource full synthetic plan are graph-validation outputs, not cost estimates or deployment approvals. The DataSync interface endpoint also incurs hourly and data-processing charges when enabled.
 

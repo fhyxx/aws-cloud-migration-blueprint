@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 main = (ROOT / "terraform" / "main.tf").read_text()
 variables = (ROOT / "terraform" / "variables.tf").read_text()
+provider = (ROOT / "terraform" / "versions.tf").read_text()
 decisions = (ROOT / "docs" / "14-synthetic-case-study-decisions.md").read_text()
 spec = (ROOT / "docs" / "13-network-configuration-specification.md").read_text()
 workloads = (ROOT / "terraform" / "workloads.tf").read_text()
@@ -42,5 +43,10 @@ assert 'resource "aws_autoscaling_policy" "app_cpu"' in workloads, "ASG target t
 assert "datasync_endpoint" in main and "datasync_task" in main and 'toset(["mgn", "dms_a", "dms_b", "datasync_endpoint", "datasync_task"])' in main, "DataSync endpoint/task subnet and propagation missing"
 assert "var.datasync_agent_cidr" in main and "from_port         = 1024" in main and "to_port           = 1064" in main, "DataSync VPC endpoint control-plane scope missing"
 assert "from_port         = 443" in main and "var.datasync_agent_cidr" in main, "DataSync task ENI agent path missing"
+
+
+assert 'default     = ["us-east-1a", "us-east-1b"]' in variables, "Synthetic two-AZ defaults missing"
+assert "skip_credentials_validation" in provider and "skip_requesting_account_id" in provider, "CI no-refresh provider switches missing"
+assert "aws_availability_zones" not in main, "Plan should not require live AZ discovery"
 
 print("PASS: nine subnets, scoped VPN propagation, S3 endpoint associations, opt-in NAT/VPN, DMS egress, SG boundaries, MGN source scope and acceptance catalogue.")

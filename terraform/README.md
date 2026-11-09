@@ -12,7 +12,7 @@ This directory contains the first IaC implementation layer for the fictional Cla
 - Optional VGW, Customer Gateway, dynamic BGP VPN and route propagation restricted to MGN/DMS route tables.
 - ALB, application, RDS, EFS, DMS, MGN staging and DataSync task security groups.
 
-It does not create ALB, EC2, RDS, EFS, DMS replication instances, MGN replication servers, DataSync agents/tasks, customer firewall configuration or application resources.
+It also includes an opt-in workload layer (`enable_workload_resources=false` by default) for an HTTPS ALB, two-AZ EC2 Auto Scaling Group, managed PostgreSQL Multi-AZ, encrypted EFS and a synthetic health-check/API service. It does not create DMS replication instances, MGN replication servers, DataSync agents/tasks or customer firewall configuration.
 
 ## Cost and safety defaults
 

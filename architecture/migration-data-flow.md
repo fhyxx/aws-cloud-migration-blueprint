@@ -29,7 +29,7 @@ flowchart LR
     end
 
     subgraph DMS_SUBNETS["Dedicated private DMS migration subnets<br/>10.30.41.0/24 • AZ-A and 10.30.42.0/24 • AZ-B"]
-      DMS["AWS DMS replication<br/>instance or Serverless<br/>dedicated DMS SG"]
+      DMS["Provisioned AWS DMS replication instance<br/>current Terraform option; non-Multi-AZ<br/>dedicated DMS SG"]
     end
 
     RDS[("RDS PostgreSQL target<br/>Multi-AZ DB instance deployment")]
@@ -75,7 +75,7 @@ flowchart LR
 | Workstream | Source to destination | Main path / protocol | Important boundary |
 |---|---|---|---|
 | AWS MGN | Two Linux application VMs to MGN staging replication servers | Source-to-staging TCP 1500 over approved VPN route; source and staging service connectivity TCP 443 | Dedicated private staging subnet; controlled service egress; staging CIDR/AZ and sizing pending |
-| AWS DMS | Self-managed PostgreSQL to RDS PostgreSQL | DMS-to-source TCP 5432 over VPN; DMS-to-target TCP 5432 | DMS replication subnet group spans private app subnets in two AZs; dedicated DMS SG; temporary RDS ingress from DMS SG |
+| AWS DMS | Self-managed PostgreSQL to RDS PostgreSQL | DMS-to-source TCP 5432 over VPN; DMS-to-target TCP 5432 | DMS replication subnet group spans dedicated DMS-A/B subnets in two AZs; current provisioned replication instance is non-Multi-AZ; dedicated DMS SG; temporary RDS ingress from DMS SG |
 | DataSync NFS | On-premises NFS to Regional EFS | Agent-to-NFS TCP 2049 for NFSv4.x or TCP 111 + 2049 for NFSv3; DataSync task ENI to EFS TCP 2049 | Agent near source; task ENI in same VPC and AZ as selected EFS mount target; dedicated task-ENI SG |
 | DataSync archive | Archive source to S3 | DataSync service-side transfer | Archive source type/location and agent requirement are unknown; do not assume NFS or a particular source connector |
 

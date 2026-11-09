@@ -1,6 +1,6 @@
 # 15 — Infrastructure as Code Design and Implementation Notes
 
-**ID:** CLI-AWS-IAC-015 | **Version:** 1.0 | **Status:** Network foundation code drafted — local Terraform validation pending  
+**ID:** CLI-AWS-IAC-015 | **Version:** 1.0 | **Status:** Network, workload and migration Terraform validated in CI — live account validation and deployment not performed  
 **Related:** [Synthetic case-study decisions](14-synthetic-case-study-decisions.md), [Network configuration specification](13-network-configuration-specification.md), [Terraform network foundation](../terraform/README.md)
 
 ## 1. Implementation scope
@@ -19,7 +19,7 @@ The Terraform layers codify the fictional network, workload and migration-servic
 - Optional DMS provisioned replication instance, Secrets Manager-backed PostgreSQL endpoints and stopped full-load-and-CDC task.
 - Optional DataSync NFSv4.1-to-EFS task, private S3 archive bucket/location and task logging.
 
-It intentionally does not create compute, database, file-system, load-balancer, DMS, MGN or DataSync workload resources. Those belong in later layers after this network foundation is formatted, validated, reviewed and planned.
+The opt-in workload layer creates the ALB, EC2 ASG, RDS and EFS when enabled. The opt-in migration layer creates DMS replication/endpoints/task and DataSync locations/task when enabled. It does not activate the DataSync appliance, install MGN source agents, register source servers, start migration tasks or perform cutover.
 
 ## 2. Cost and deployment safety
 
@@ -30,6 +30,8 @@ Potentially material network and workload resources are opt-in:
 | `create_nat_gateways` | `false` | Creates two NAT Gateways and two Elastic IPs; hourly and data-processing charges apply |
 | `enable_site_to_site_vpn` | `false` | Creates VGW, Customer Gateway and VPN connection; VPN hourly/tunnel/public IPv4 charges apply |
 | `enable_workload_resources` | `false` | Creates ALB, EC2 ASG, RDS Multi-AZ and EFS; compute, database, load balancer and storage charges apply |
+| `enable_dms_resources` | `false` | Creates DMS replication instance, endpoints and stopped task; DMS instance/storage charges apply |
+| `enable_datasync_resources` | `false` | Creates DataSync locations/task, log group and private S3 archive bucket; transfer/storage/log charges apply |
 
 Even the default configuration creates real AWS resources if applied. Do not apply without explicit permission. This repository work has not applied Terraform or created resources.
 
@@ -67,7 +69,7 @@ The GitHub Actions workflow runs on Terraform-related pull requests and main-bra
 4. Python static assertions for subnet count, route propagation scope, opt-in cost controls and security-group boundaries.
 5. A no-refresh Terraform plan using dummy credentials and all cost-bearing feature flags disabled; this validates the resource graph without querying or changing an AWS account.
 
-CI runs formatting, init, validate, static assertions, a default no-refresh plan with all cost-bearing flags disabled, and a second full synthetic feature plan with NAT, VPN, ALB/ASG, RDS/EFS, DMS and DataSync flags enabled. Both plans use dummy credentials, synthetic AMI/certificate/secret/agent identifiers and no refresh, so they validate Terraform's resource graph without calling AWS. They do not validate service-side existence, account quotas, prices or live connectivity. Local Windows validation is still required to verify the exact provider lock, formatted HCL and a no-refresh plan against the intended provider version. The first plan should use `create_nat_gateways=false` and `enable_site_to_site_vpn=false`.
+CI runs formatting, init, validate, static assertions, a default no-refresh plan with all cost-bearing flags disabled (61 resources), and a full synthetic feature plan with NAT, VPN, ALB/ASG, RDS/EFS, DMS and DataSync enabled (122 resources). Both use dummy credentials, synthetic AMI/certificate/secret/agent identifiers and no refresh, so they validate the Terraform resource graph without calling AWS. They do not validate service-side existence, account quotas, actual pricing or live connectivity. Local Windows validation is still required to verify the exact provider lock, formatted HCL and a no-refresh plan against the intended provider version. The first plan should use `create_nat_gateways=false` and `enable_site_to_site_vpn=false`.
 
 ## 6. Next implementation layers
 

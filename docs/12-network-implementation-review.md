@@ -1,6 +1,6 @@
 # 12 — Network Implementation Review and Input Validation Register
 
-**ID:** CLI-AWS-NIV-012 | **Version:** 1.1 | **Status:** Review findings recorded — customer inputs and approvals outstanding  
+**ID:** CLI-AWS-NIV-012 | **Version:** 1.2 | **Status:** Synthetic baseline approved for continued engineering — live AWS execution separately gated  
 **Project:** Clafoke Investors Ltd (fictional portfolio case study)  
 **Related:** [Network and security design](03-network-security-design.md), [Network implementation preparation](11-network-implementation-preparation.md), [Migration readiness matrix](09-migration-readiness-matrix.md), [Technical architecture audit](10-technical-architecture-audit.md), [Network configuration specification](13-network-configuration-specification.md)
 
@@ -141,4 +141,4 @@ Use the synthetic values for Terraform validation, plan review and portfolio tes
 - [AWS Networking Best Practices — Hybrid and multi-cloud connectivity](https://aws.github.io/aws-networking-best-practices/connectivity/hybrid-multicloud/)
 - [AWS Site-to-Site VPN — Route priority and tunnel selection](https://docs.aws.amazon.com/vpn/latest/s2svpn/vpn-route-priority.html)
 
-**Review record:** input validation register published; all customer-specific inputs and implementation gates remain open. No AWS resource deployment or network validation is claimed.
+**Review record:** synthetic values are approved for repository engineering, CI validation and portfolio demonstration. Actual customer inputs are not blockers in this fictional case. Live AWS execution still requires account-specific IDs, agent/source credentials, approved change scope and explicit user permission. No AWS resource deployment or network validation is claimed.

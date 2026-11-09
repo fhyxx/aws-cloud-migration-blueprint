@@ -76,7 +76,7 @@ CI runs formatting, init, validate, static assertions, a default no-refresh plan
 
 1. The AWS provider is pinned to `5.100.0`; `terraform/.terraform.lock.hcl` is committed with Linux/Windows checksums and CI uses `-lockfile=readonly`.
 2. Run local Windows `fmt`, `init -backend=false`, `validate`, Python static checks and a no-refresh plan; compare provider version with CI.
-3. Retain the guarded MGN replication-template CLI workflow unless a supported Terraform provider resource is confirmed; then test template creation in an approved lab.
+3. MGN service IAM roles and policy attachments are now opt-in Terraform; the guarded CLI workflow initializes MGN and creates both templates. Verify initialization and template creation in an approved lab, then test source-agent onboarding separately.
 4. Review whether the single-AZ MGN staging subnet is sufficient for the synthetic recovery objectives; document a deliberate multi-AZ/HA option and its cost/operational trade-off.
 5. Add automated security scanning (Terraform static analysis, secret scanning, dependency review) and complete the migration-period cost model, including the DataSync endpoint and traffic.
 6. Obtain a fresh visual check of all three Mermaid renderings after the DataSync endpoint/subnet updates.

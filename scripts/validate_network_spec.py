@@ -82,4 +82,9 @@ assert 'path = "/service-role/"' in mgn, "MGN roles must use the AWS-required se
 assert '"kms:ViaService"' in migration and '"kms:EncryptionContext:SecretARN"' in migration, "DMS CMK use must be Secrets Manager-only and source-secret-scoped"
 assert 'subdirectory     = "archives"' in migration, "DataSync Basic-mode S3 prefix must not begin with slash"
 
+mgn_script = (ROOT / "scripts" / "configure-mgn-replication-template.ps1").read_text()
+assert "Replication template already exists; leaving it unchanged" in mgn_script, "MGN bootstrap must resume safely when replication template exists"
+assert "Launch template already exists; leaving it unchanged" in mgn_script, "MGN bootstrap must resume safely when launch template exists"
+assert "Existing templates are never overwritten" in mgn_script, "MGN bootstrap must not overwrite existing templates"
+
 print("PASS: eleven subnets, scoped VPN propagation, S3 endpoint associations, opt-in NAT/VPN/workloads/migration services, DMS IAM hardening, DataSync Interface endpoint, SG boundaries and acceptance catalogue.")

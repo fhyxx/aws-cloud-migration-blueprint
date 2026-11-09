@@ -14,17 +14,19 @@ The first Terraform layer codifies the fictional network foundation:
 - S3 Gateway Endpoint for the two application route tables.
 - Optional VGW, Customer Gateway, dynamic BGP Site-to-Site VPN and restricted route propagation.
 - ALB, application, RDS, EFS, DMS, MGN staging and DataSync task security groups.
+- Optional HTTPS ALB, EC2 Auto Scaling Group, RDS PostgreSQL Multi-AZ, encrypted EFS and synthetic health/API service.
 
 It intentionally does not create compute, database, file-system, load-balancer, DMS, MGN or DataSync workload resources. Those belong in later layers after this network foundation is formatted, validated, reviewed and planned.
 
 ## 2. Cost and deployment safety
 
-Two potentially material network cost groups are opt-in:
+Potentially material network and workload resources are opt-in:
 
 | Variable | Default | Effect when enabled |
 |---|---:|---|
 | `create_nat_gateways` | `false` | Creates two NAT Gateways and two Elastic IPs; hourly and data-processing charges apply |
 | `enable_site_to_site_vpn` | `false` | Creates VGW, Customer Gateway and VPN connection; VPN hourly/tunnel/public IPv4 charges apply |
+| `enable_workload_resources` | `false` | Creates ALB, EC2 ASG, RDS Multi-AZ and EFS; compute, database, load balancer and storage charges apply |
 
 Even the default configuration creates real AWS resources if applied. Do not apply without explicit permission. This repository work has not applied Terraform or created resources.
 

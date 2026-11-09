@@ -18,7 +18,7 @@ for subnet in required_subnets:
     assert any(line.strip().startswith(subnet) and "=" in line for line in main.splitlines()), f"Missing subnet definition: {subnet}"
 
 assert 'toset(["mgn", "dms_a", "dms_b", "datasync_endpoint", "datasync_task"])' in main, "VPN propagation scope drifted"
-assert 'route_table_ids = [' in main and '"app_a"' in main and '"app_b"' in main, "S3 endpoint app associations missing"
+assert 'route_table_ids = [' in main and '"app_a"' in main and '"app_b"' in main and '"mgn"' in main, "S3 endpoint app/MGN associations missing"
 assert 'create_nat_gateways' in variables and 'default     = false' in variables, "NAT must remain opt-in"
 assert 'enable_site_to_site_vpn' in variables and 'default     = false' in variables, "VPN must remain opt-in"
 assert 'ip_protocol       = "-1"' in main and 'cidr_ipv4         = "0.0.0.0/0"' in main, "DMS all-egress baseline missing"

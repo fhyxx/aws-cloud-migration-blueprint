@@ -64,4 +64,4 @@ assert 'resource "aws_vpc_endpoint" "datasync"' in main, "Private DataSync inter
 assert 'service_name        = "com.amazonaws.${var.aws_region}.datasync"' in main, "DataSync endpoint service name mismatch"
 assert 'vpc_endpoint_type   = "Interface"' in main and 'aws_security_group.datasync_endpoint.id' in main, "DataSync endpoint must use dedicated SG"
 
-print("PASS: nine subnets, scoped VPN propagation, S3 endpoint associations, opt-in NAT/VPN, DMS egress, SG boundaries, MGN source scope and acceptance catalogue.")
+print("PASS: eleven subnets, scoped VPN propagation, S3 endpoint associations, opt-in NAT/VPN/workloads/migration services, DMS IAM hardening, DataSync Interface endpoint, SG boundaries and acceptance catalogue.")

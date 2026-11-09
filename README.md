@@ -11,18 +11,18 @@ A cloud migration blueprint for a fictional Nigerian retail/distribution company
 | Region | `us-east-1` |
 | VPC | `10.30.0.0/16`, two AZs |
 | Steady-state subnets | 2 public, 2 private app, 2 isolated DB |
-| Migration subnet | Additional private MGN staging subnet; migration-only |
+| Migration subnets | MGN staging `10.30.31.0/24`, DMS-A/B `10.30.41.0/24` and `10.30.42.0/24`, DataSync endpoint/task `10.30.51.0/24` and `10.30.52.0/24`; five migration-only subnets |
 | Application | 2 Linux servers, 4 vCPU / 16 GiB each, EC2 in a two-AZ Auto Scaling Group |
 | Database | PostgreSQL to RDS PostgreSQL Multi-AZ DB instance deployment; 500 GB source logical-data assumption and separate 500 GB target gp3 provisioned-storage input; primary and standby billed under Multi-AZ pricing |
 | Shared files | 1 TB Regional EFS, mount target in each application AZ |
 | Archives | 500 GB S3 Standard via Gateway Endpoint where appropriate |
-| Hybrid | 1 dynamic-BGP Site-to-Site VPN to VGW; fictional source `10.50.0.0/16`; ASN 65010/64512; two redundant tunnels (no VGW ECMP). Route propagation is limited to dedicated DMS-A/DMS-B and MGN staging route tables. |
+| Hybrid | 1 dynamic-BGP Site-to-Site VPN to VGW; fictional source `10.50.0.0/16`; ASN 65010/64512; two redundant tunnels (no VGW ECMP). Route propagation is limited to DMS-A/DMS-B, MGN staging and the two DataSync migration route tables. |
 | Entry | Public ALB, HTTPS 443; ACM certificate and DNS required |
 | Business targets | 99.9% availability; RTO 4h; RPO 15m—not demonstrated |
 
 ## Architecture
 
-The canonical master Mermaid source is [architecture/target-architecture.mmd](architecture/target-architecture.mmd); inspect it in the [rendered master view](architecture/target-architecture.md). For clearer review, use the focused [runtime/network view](architecture/runtime-network-view.md) (subnet CIDRs, AZ placement, route intent and security-group boundaries) and [migration data-flow view](architecture/migration-data-flow.md) (separate MGN, DMS and DataSync paths). Editable Mermaid sources are provided beside each rendered page. The master and focused views, including the latest DMS subnet-isolation update, have been visually confirmed rendering correctly by the user; the runtime view is unchanged by this update. All views remain proposed design artifacts; implementation and connectivity validation are pending. The master and migration diagrams show dedicated DMS migration subnets `10.30.41.0/24` and `10.30.42.0/24`; ordinary application subnets do not receive the on-premises route.
+The canonical master Mermaid source is [architecture/target-architecture.mmd](architecture/target-architecture.mmd); inspect it in the [rendered master view](architecture/target-architecture.md). For clearer review, use the focused [runtime/network view](architecture/runtime-network-view.md) (subnet CIDRs, AZ placement, route intent and security-group boundaries) and [migration data-flow view](architecture/migration-data-flow.md) (separate MGN, DMS and DataSync paths). Editable Mermaid sources are provided beside each rendered page. The master and focused views, including the latest DMS subnet-isolation update, have been visually confirmed rendering correctly by the user; the runtime view is unchanged by this update. All views remain proposed design artifacts; implementation and connectivity validation are pending. The master and focused diagrams show dedicated DMS and DataSync migration subnets; only DMS-A/B, MGN staging and the two DataSync migration route tables receive the on-premises route. Ordinary application, public and DB subnets do not.
 
 ## Deliverables
 

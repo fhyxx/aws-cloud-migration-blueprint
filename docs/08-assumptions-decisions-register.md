@@ -260,6 +260,10 @@ Evidence should be dated, attributed to an owner and labelled measured, derived 
 - [ ] Dated calculator CSV/PDF or equivalent export and share URL if approved for portfolio publication.
 - [ ] Statement that estimates exclude taxes and do not imply deployed infrastructure or executed migration.
 
+## Calculator evidence checkpoint — 9 November 2026
+
+The saved partial calculator estimate and fresh PDF/CSV exports reconcile to **$1,930.76/month ($23,169.12 annualised)** across six steady-state services. The public share link was generated after owner authorization of AWS's public-server acknowledgement. Export hashes, service reconciliation and the public-link disclosure are in [Calculator export evidence](../evidence/aws-pricing-calculator-2026-11-09.md). This evidence checkpoint does not approve or close any workload, architecture, production-sizing, or migration decision in this register. All existing Pending Validation and Provisional statuses remain unchanged.
+
 ## Governance and change history
 
 No open scenario is Approved in this revision. This document records decisions and evidence needs; it does not approve workload quantities, amend architecture, update the calculator or claim production measurements. Future changes should update the relevant ID, owner, evidence, status, dependencies and calculator references together.

@@ -12,33 +12,30 @@ A partial estimate is saved in AWS Pricing Calculator. Its currently verified su
 
 ### Saved calculator reconciliation and export status — 9 November 2026
 
-A read-only inspection of the saved AWS Pricing Calculator estimate confirmed the live estimate view is dated **8 November 2026**, contains **six steady-state service entries**, and displays **$1,930.76/month** (**$23,169.12 annualised**). The service rows reconcile exactly:
+The saved AWS Pricing Calculator estimate is dated **9 November 2026**, contains **six steady-state service entries**, and displays **$1,930.76/month** (**$23,169.12 annualised**). The migration-period group is present but empty (0 services); migration costs remain unpriced.
 
 | Saved service entry | Monthly cost |
 |---|---:|
-| Amazon EC2 | $274.94 |
-| Amazon RDS for PostgreSQL | $1,227.52 |
-| Amazon EFS | $300.00 |
-| Amazon S3 | $11.50 |
-| VPC — Site-to-Site VPN and two tunnel public IPv4 addresses | $43.80 |
-| VPC — two conventional NAT Gateways and two NAT public IPv4 addresses | $73.00 |
+| Amazon EC2 — two Linux `t3.xlarge` instances, 730 On-Demand hours/month; 200 GB gp3 in the EC2 entry | $274.94 |
+| Amazon RDS for PostgreSQL — `db.m6i.2xlarge`, Multi-AZ DB instance deployment, 500 GB gp3, 12,000 IOPS, 500 MiB/s | $1,227.52 |
+| Amazon EFS — 1,000 GB Regional Standard | $300.00 |
+| Amazon S3 — 500 GB Standard | $11.50 |
+| VPC — Site-to-Site VPN connection plus two tunnel public IPv4 addresses | $43.80 |
+| VPC — two conventional NAT Gateways plus two NAT public IPv4 addresses | $73.00 |
 | **Total** | **$1,930.76** |
 
-The migration-period group is present but empty (**0 services**). No migration-period price has been entered. The displayed total therefore remains a partial steady-state subtotal, not a complete estimate or approved budget.
+The fresh calculator-generated PDF and CSV both reconcile to the live saved total. The CSV's detailed cost components sum to $1,930.764 at underlying precision and round to $1,930.76; its 12-month total is $23,169.12. The fresh artifacts, SHA-256 digests, configuration notes and owner-authorized public share URL are recorded in [Calculator export evidence](../evidence/aws-pricing-calculator-2026-11-09.md). AWS displays a notice that anyone with the public share link can access the estimate; the link expires after one year. The prior 8 November PDF at $1,850.46/month is stale and is retained only as historical evidence; do not use it as the current estimate.
 
-The previously generated PDF export is **stale**: its 8 November export showed **$1,850.46/month** and contained only five service entries. It predates the separate $73.00 NAT entry and the $7.30 VPN tunnel public-IPv4 addition. The difference from the current saved estimate is **$80.30/month** ($963.60 annualised). Do not use that older PDF as the current estimate or attach it as final evidence. A fresh PDF and CSV export, plus the public share URL, remain outstanding; export them from the current saved estimate and reconcile the exported totals before marking the evidence pack complete.
+### Calculator configuration QA and adjustments — 9 November 2026
 
-No calculator values were changed during this read-only audit.
+The VPN and NAT descriptions were corrected and the existing estimate was saved. The six service entries and numeric subtotal were preserved.
 
-### Calculator configuration QA — additional findings, 9 November 2026
+- **VPN:** 1 standard Site-to-Site connection to the VGW at 730 hours/month: $36.50; two in-use tunnel public IPv4 address-hours: $7.30; combined entry: **$43.80/month**. The 22-working-days field displayed in the row summary belongs to the unselected Client VPN inputs and does not affect the Site-to-Site connection-hours. VPN transfer remains unpriced.
+- **NAT:** two conventional gateways × 730 hours × $0.045 = $65.70, plus two in-use public IPv4 addresses × 730 hours × $0.005 = $7.30; combined entry: **$73.00/month**. The calculator displays residual Regional NAT input values of 5 gateways and 3 AZs. Its expanded Regional NAT calculation explicitly totals **$0.00/month** and does not contribute to the estimate. The input control rejects a Regional NAT quantity below 1, so the existing residual input was preserved; no Regional NAT charge is included. NAT processed data remains a zero placeholder.
+- **RDS:** the saved configuration summary confirms `db.m6i.2xlarge`, a Multi-AZ DB instance deployment, 500 GB gp3, 12,000 IOPS and 500 MiB/s throughput. The displayed $1,227.52 is the calculator result for the configured input; it is not independent proof of correct production sizing. PostgreSQL version and workload suitability remain unresolved. No RDS Proxy service entry exists. Extended Support applicability is pending the exact PostgreSQL version.
+- **No other numeric entry was changed.** The total remains $1,930.76/month and the migration group remains empty.
 
-The current estimate view still displays **$1,930.76/month**, but two description/configuration checks remain open before the estimate can be treated as fully reconciled:
-
-1. **VPN row description is stale.** The $43.80 VPC/VPN row description says the NAT Gateway quantity is not represented and remains outstanding. A separate $73.00 VPC/NAT row is now present. Update the VPN row description to state that it covers the VPN connection and two tunnel public IPv4 addresses, with NAT Gateway costs priced separately.
-2. **NAT calculator configuration needs confirmation.** The $73.00 NAT row description says two conventional public NAT Gateways, one per AZ, with two public IPv4 addresses, and says Regional NAT is not selected. Its configuration summary nevertheless displays Regional NAT parameters of 5 gateways and 3 Availability Zones alongside 2 conventional NAT Gateways. The $73.00 amount arithmetically matches two conventional NAT Gateways at 730 hours plus two public IPv4 addresses at 730 hours; this is a derived check, not proof that the Regional NAT fields are inactive. Confirm the selected NAT type and ensure the Regional NAT parameters are not contributing to the estimate before exporting.
-
-The calculator's export flow also displays a **Public server acknowledgment** stating that the estimate data will be stored on AWS public servers and that anyone with the public share link can access it. No acknowledgement has been accepted and no public share link has been created in this session. Obtain explicit owner consent before accepting that disclosure or generating a public link. A fresh PDF/CSV export remains outstanding; no exported file path has been verified.
-
+This remains a **partial calculator subtotal**, not an approved budget or complete operating cost. ALB LCU, DNS/Route 53 authority and billable queries, CloudWatch, EFS usage/lifecycle/cross-AZ traffic, VPN transfer, NAT processed data, applicable interface endpoints, backups and migration-period resources remain unpriced or provisional. The calculator's zero placeholders are not validated zero usage. Do not import illustrative scenario quantities into the saved estimate without evidence.
 
 ## Architecture quantities to price
 

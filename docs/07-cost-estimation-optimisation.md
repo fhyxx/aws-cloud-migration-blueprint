@@ -251,6 +251,9 @@ These rules are exposure, not usage estimates. [EFS pricing](https://aws.amazon.
 
 ### Migration-period model and first-year projection
 
+A dedicated [Migration-period Cost Model](17-migration-cost-model.md) now consolidates the MGN, DMS, DataSync, temporary-network and source/target-overlap formulas, conditional examples, owner evidence requirements and Calculator-entry gates. It does not create a migration total: the migration group remains intentionally unpriced until source measurements, representative DMS/MGN sizing, transfer quantities and an approved calendar exist. CI runs `scripts/validate_cost_model.py` against the pricing CSV to protect the $1,930.76 verified steady-state subtotal and the separation between verified amounts, conditional sensitivities and unpriced migration items.
+
+
 The saved estimate's migration group remains empty. The steady-state subtotal remains **$1,930.76/month ($23,169.12 annualised)** and contains six service entries. The migration service scenarios below are separate from that subtotal. No migration values were entered into AWS Pricing Calculator. The three durations are illustrative schedule cases only, not client commitments.
 
 #### MGN assumptions and service-fee sensitivity

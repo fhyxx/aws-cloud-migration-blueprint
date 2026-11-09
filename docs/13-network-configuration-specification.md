@@ -1,6 +1,6 @@
 # 13 — Network Configuration Specification
 
-**ID:** CLI-AWS-NCS-013 | **Version:** 1.2 | **Status:** Approved synthetic configuration baseline — live AWS execution gated  
+**ID:** CLI-AWS-NCS-013 | **Version:** 1.3 | **Status:** Approved synthetic configuration baseline — live AWS execution gated  
 **Project:** Clafoke Investors Ltd (fictional portfolio case study)  
 **Related:** [Network and security design](03-network-security-design.md), [Network implementation preparation](11-network-implementation-preparation.md), [Network implementation review](12-network-implementation-review.md), [Migration readiness matrix](09-migration-readiness-matrix.md), [Technical architecture audit](10-technical-architecture-audit.md)
 
@@ -10,7 +10,7 @@
 
 This document is the configuration-level handoff between the architecture/preparation artifacts and a future implementation plan. It defines subnet and route-table intent, route propagation boundaries, security-group policy, service-specific network dependencies, endpoint decision criteria, and acceptance tests.
 
-**Current decision: approved for the fictional portfolio baseline.** Synthetic values are fixed in document 14 and Terraform variables. Account-specific AZ IDs, a real customer gateway IP, ACM certificate, activated DataSync agent and real source credentials are runtime inputs only if the corresponding AWS resources are enabled. Continue Terraform engineering and validation without waiting for fictional customer evidence. Do not apply resources or start migration tasks without explicit user permission.
+**Current decision: approved for the fictional portfolio baseline.** Synthetic values are fixed in document 14 and Terraform variables. The rendered architecture views are checked in CI for source synchronisation and key subnet/route-boundary consistency. Account-specific AZ IDs, a real customer gateway IP, ACM certificate, activated DataSync agent and real source credentials are runtime inputs only if the corresponding AWS resources are enabled. Continue Terraform engineering and validation without waiting for fictional customer evidence. Do not apply resources or start migration tasks without explicit user permission.
 
 ### Decision labels
 
@@ -99,7 +99,7 @@ Security groups are stateful. Prefer SG-to-SG references for VPC-local peers; us
 
 | Rule ID | SG / direction | Source or destination | Protocol / port | Purpose and constraints | Owner / validation |
 |---|---|---|---|---|---|
-| SG-01 | ALB ingress | Approved client CIDRs | TCP 443 | Public HTTPS only; ACM certificate and listener confirmed | Security + App; verify TLS/listener |
+| SG-01 | ALB ingress | `0.0.0.0/0` (public HTTPS baseline) | TCP 443 | Current Terraform baseline exposes the internet-facing ALB publicly; replace with an approved client allow-list only if the business access requirement calls for restricted source ranges. ACM certificate and listener must be confirmed. | Security + App; verify TLS/listener and confirm public-vs-allow-list decision |
 | SG-02 | ALB ingress (conditional) | Approved client CIDRs | TCP 80 | Only if HTTP-to-HTTPS redirect is required | Security; otherwise omit |
 | SG-03 | ALB egress | App SG | TCP 8080 (synthetic application contract) | Listener and health-check target; confirm actual application contract | App; target health test |
 | SG-04 | App ingress | ALB SG | Actual target protocol/port (8080 provisional) | No direct public or on-premises application ingress | App + Security |

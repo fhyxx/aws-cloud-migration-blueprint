@@ -3,14 +3,8 @@ flowchart TB
 
   subgraph VPC["VPC 10.30.0.0/16 — us-east-1 — two Availability Zones"]
     IGW["Internet Gateway"]
-    DNS -->|"DNS resolves to ALB DNS name"| ALB
-    IGW -->|"Internet ingress via public subnet routes"| ALB
-    ALB -.->|"Subnet mapping / ALB ENI — AZ-A"| ALB_A
-    ALB -.->|"Subnet mapping / ALB ENI — AZ-B"| ALB_B
     VGW["Virtual Private Gateway<br/>BGP ASN 64512<br/>Site-to-Site VPN"]
-    DS_EP["DataSync VPC service endpoint<br/>TCP 1024–1064 from agent"]
-    DS_TASK["DataSync task ENI<br/>TCP 443 from agent; TCP 2049 to EFS"]
-
+    
     subgraph PUB_A["AZ-A — Public subnet 10.30.1.0/24"]
       ALB_A["ALB node A<br/>HTTPS listener 443"]
       NAT_A["NAT Gateway A"]
@@ -19,6 +13,12 @@ flowchart TB
       ALB_B["ALB node B<br/>HTTPS listener 443"]
       NAT_B["NAT Gateway B"]
     end
+
+    ALB["Internet-facing ALB<br/>public HTTPS 443"]
+    DNS -->|"DNS resolves to ALB DNS name"| ALB
+    IGW -->|"Internet ingress via public subnet routes"| ALB
+    ALB -.->|"Subnet mapping / ALB ENI — AZ-A"| ALB_A
+    ALB -.->|"Subnet mapping / ALB ENI — AZ-B"| ALB_B
 
     subgraph APP_A["AZ-A — Private app subnet 10.30.11.0/24"]
       APP_EC2_A["EC2 application A<br/>ASG member"]
@@ -36,17 +36,29 @@ flowchart TB
       DB_STANDBY["RDS PostgreSQL<br/>Multi-AZ standby"]
     end
 
+    subgraph MGN_STAGING["AZ-A — MGN staging subnet 10.30.31.0/24"]
+      MGN_REPL["MGN replication servers<br/>single-AZ staging design"]
+    end
+
+    subgraph DMS_A["AZ-A — Dedicated DMS subnet 10.30.41.0/24"]
+      DMS_SUBNET_A["DMS subnet-group member A"]
+    end
+    subgraph DMS_B["AZ-B — Dedicated DMS subnet 10.30.42.0/24"]
+      DMS_SUBNET_B["DMS subnet-group member B"]
+    end
+    DMS["Provisioned DMS replication instance<br/>private; non-Multi-AZ Terraform baseline<br/>dedicated DMS SG"]
+
     EFS["Regional EFS<br/>1 TB planning assumption"]
     subgraph DS_ENDPOINT_SUBNET["AZ-A — DataSync endpoint subnet 10.30.51.0/24"]
-      DS_EP
+      DS_EP["DataSync VPC service endpoint<br/>TCP 1024–1064 from agent"]
     end
     subgraph DS_TASK_SUBNET["AZ-A — DataSync task subnet 10.30.52.0/24"]
-      DS_TASK
+      DS_TASK["DataSync task ENI<br/>TCP 443 from agent; TCP 2049 to EFS"]
     end
     S3EP["S3 Gateway Endpoint<br/>prefix-list route"]
     S3["S3 Standard archive target<br/>500 GB capacity assumption"]
     OPS["PrivateLink candidates — conditional<br/>SSM / ssmmessages / Secrets Manager<br/>CloudWatch Logs / Monitoring"]
-    
+
     ALB_A --> APP_EC2_A
     ALB_A --> APP_EC2_B
     ALB_B --> APP_EC2_A
@@ -57,8 +69,8 @@ flowchart TB
     APP_EC2_A -->|"TCP 2049 — application SG to EFS mount-target SG"| EFS_MTA
     APP_EC2_B -->|"TCP 2049 — application SG to EFS mount-target SG"| EFS_MTB
     EFS_MTA --- EFS
-    DS_TASK -->|"TCP 2049 — task-ENI SG to EFS mount-target SG"| EFS_MTA
     EFS_MTB --- EFS
+    DS_TASK -->|"TCP 2049 — task-ENI SG to EFS mount-target SG"| EFS_MTA
     APP_EC2_A --> S3EP
     APP_EC2_B --> S3EP
     S3EP --> S3
@@ -68,25 +80,42 @@ flowchart TB
     APP_EC2_B -->|"Default route via same-AZ NAT"| NAT_B
     NAT_A --> IGW
     NAT_B --> IGW
+
+    MGN_REPL -->|"Controlled TCP 443 service egress"| NAT_A
+    DMS_SUBNET_A -.->|subnet-group membership; placement is one AZ| DMS
+    DMS_SUBNET_B -.->|subnet-group membership; placement is one AZ| DMS
+    DMS -->|"TCP 5432 — temporary target access"| DB_PRIMARY
+    DMS -->|"Source TCP 5432 over VPN"| VGW
   end
 
-  ONPREM["Illustrative on-premises<br/>10.50.0.0/16<br/>App 10.50.10.0/24<br/>DB/NFS 10.50.20.0/24<br/>DataSync agent 10.50.20.50/32"] ---|"IPsec VPN • BGP ASN 65010 ↔ 64512<br/>two tunnels • VGW no ECMP"| VGW
-  ONPREM -->|"TCP 1024–1064 control plane<br/>TCP 443 task data plane over VPN"| VGW
+  ONPREM["Illustrative on-premises network<br/>10.50.0.0/16"] ---|"IPsec VPN • BGP ASN 65010 ↔ 64512<br/>two tunnels • VGW no ECMP"| VGW
+  SRC_APP["Source application VMs<br/>10.50.10.0/24"] --- ONPREM
+  PG_SRC["Self-managed PostgreSQL source<br/>10.50.20.0/24"] --- ONPREM
+  DS_AGENT["DataSync agent<br/>10.50.20.50/32"] --- ONPREM
+  SRC_APP -->|"MGN replication TCP 1500 over VPN"| VGW
+  VGW -->|"TCP 1500 to staging"| MGN_REPL
+  DMS -->|"Source PostgreSQL TCP 5432 over VPN"| VGW
+  VGW -->|"TCP 5432"| PG_SRC
+  DS_AGENT -->|"TCP 1024–1064 control plane"| VGW
   VGW --> DS_EP
+  DS_AGENT -->|"TCP 443 task data plane"| VGW
   VGW --> DS_TASK
 
   subgraph ROUTING["Route-table intent — proposed, not deployed"]
     R1["Public A/B: default route to IGW"]
-    R2["App A/B: same-AZ NAT default<br/>BGP 10.50.0.0/16 → VGW<br/>propagation enabled"]
+    R2["App A/B: same-AZ NAT default + S3 Gateway Endpoint<br/>No VGW propagation"]
     R3["DB A/B: VPC-local routes only<br/>No IGW, NAT or VGW propagation"]
-    R4["S3 prefix-list route via Gateway Endpoint<br/>MGN 10.30.31.0/24: BGP source route + controlled NAT"]
-    R5["DataSync endpoint 10.30.51.0/24 and task ENI 10.30.52.0/24:<br/>BGP source route only; no default route"]
+    R4["MGN staging 10.30.31.0/24: BGP source route + same-AZ NAT default<br/>S3 Gateway Endpoint association"]
+    R5["DMS A/B 10.30.41.0/24 and 10.30.42.0/24:<br/>BGP source route + same-AZ NAT default"]
+    R6["DataSync endpoint 10.30.51.0/24 and task 10.30.52.0/24:<br/>BGP source route only; no default route"]
   end
 
   subgraph SECURITY["Security-group intent — proposed, not deployed"]
-    SG1["ALB SG: inbound HTTPS 443<br/>approved client ranges; egress to App SG listener/health port"]
-    SG2["App SG: inbound app port 8080 from ALB SG<br/>port is provisional"]
-    SG3["DB SG: TCP 5432 from App SG<br/>and approved DBA path"]
+    SG1["ALB SG: public HTTPS 443 ingress<br/>egress to App SG on target port 8080"]
+    SG2["App SG: TCP 8080 from ALB SG only<br/>egress TCP 5432 to RDS SG; TCP 2049 to EFS SG"]
+    SG3["DB SG: TCP 5432 from App SG<br/>and temporary DMS SG during migration"]
     SG4["EFS mount-target SG: TCP 2049<br/>from App SG and DataSync task-ENI SG"]
-    SG5["DataSync endpoint SG: TCP 1024–1064 from agent /32<br/>Task ENI SG: TCP 443 from agent /32"]
+    SG5["DMS SG: no inbound by default<br/>all-outbound baseline; peer ingress and routes remain scoped"]
+    SG6["MGN staging SG: TCP 1500 from source app CIDR<br/>TCP 443 controlled egress"]
+    SG7["DataSync endpoint SG: TCP 1024–1064 from agent /32<br/>Task ENI SG: TCP 443 from agent /32; egress TCP 2049 to EFS SG"]
   end

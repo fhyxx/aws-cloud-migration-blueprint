@@ -36,7 +36,7 @@ flowchart TB
       ASG --> EC2_B
     end
     subgraph DMS_MIGRATION["Private DMS migration subnets A/B<br/>10.30.41.0/24 • 10.30.42.0/24"]
-      DMS[DMS replication instance or Serverless<br/>dedicated DMS security group<br/>source route via VGW; service egress via same-AZ NAT]
+      DMS[Provisioned DMS replication instance<br/>current Terraform baseline; non-Multi-AZ<br/>dedicated DMS security group; source via VGW; service egress via same-AZ NAT]
     end
     subgraph DB["Isolated DB subnets A/B"]
       RDS[(RDS PostgreSQL<br/>Multi-AZ DB instance deployment<br/>500 GB configured storage input)]

@@ -70,6 +70,7 @@ resource "aws_iam_role" "mgn_service" {
   for_each = var.enable_mgn_resources ? local.mgn_service_role_definitions : {}
 
   name = each.value.name
+  path = "/service-role/"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -94,6 +95,7 @@ resource "aws_iam_role" "mgn_agent" {
   count = var.enable_mgn_resources ? 1 : 0
 
   name = "AWSApplicationMigrationAgentRole"
+  path = "/service-role/"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

@@ -126,10 +126,11 @@ target_source = (architecture_dir / "target-architecture.mmd").read_text().strip
 target_view = (architecture_dir / "target-architecture.md").read_text()
 migration_source = (architecture_dir / "migration-data-flow.mmd").read_text().strip()
 migration_view = (architecture_dir / "migration-data-flow.md").read_text()
+network_spec = (ROOT / "docs" / "13-network-configuration-specification.md").read_text()
 
 
 def embedded_mermaid(markdown: str) -> str:
-    match = re.search(r"\x60\x60\x60mermaid\\s*(.*?)\x60\x60\x60", markdown, re.DOTALL)
+    match = re.search(r"```mermaid\s*(.*?)```", markdown, re.DOTALL)
     assert match, "Rendered Markdown page must contain a Mermaid block"
     return match.group(1).strip()
 
@@ -159,6 +160,9 @@ assert "DMS reuses the two private application subnets" not in runtime_view, (
 )
 assert "Provisioned DMS replication instance" in target_source
 assert "Provisioned AWS DMS replication instance" in migration_source
+assert "`0.0.0.0/0` (public HTTPS baseline)" in network_spec, (
+    "Network specification must disclose the public ALB ingress baseline"
+)
 assert "instance or Serverless" not in target_source + migration_source, (
     "Diagrams must distinguish the provisioned Terraform baseline from an unimplemented Serverless alternative"
 )

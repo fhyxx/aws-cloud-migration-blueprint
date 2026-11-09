@@ -34,7 +34,7 @@ jobs:
           terraform_version: 1.9.8
 
       - name: Terraform format
-        run: terraform -chdir=terraform fmt -check -recursive
+        run: terraform -chdir=terraform fmt -diff -recursive
 
       - name: Terraform init (no backend)
         run: terraform -chdir=terraform init -backend=false

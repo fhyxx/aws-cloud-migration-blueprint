@@ -9,6 +9,27 @@ The earlier **$2,214–$2,702/month** range is retained only as a historical, il
 
 A partial estimate is saved in AWS Pricing Calculator. Its currently verified subtotal is **$1,930.76/month** and **$23,169.12 annualised**. This is a calculator result for the entered configurations, not a complete operating budget, approved budget or proof of production workload suitability. Material usage-dependent items and migration costs remain unpriced. The saved RDS configuration is a sizing proxy pending PostgreSQL version, workload and compatibility validation. See [the Assumptions and Decisions Register](08-assumptions-decisions-register.md) and [Migration Readiness Matrix](09-migration-readiness-matrix.md).
 
+
+### Saved calculator reconciliation and export status — 9 November 2026
+
+A read-only inspection of the saved AWS Pricing Calculator estimate confirmed the live estimate view is dated **8 November 2026**, contains **six steady-state service entries**, and displays **$1,930.76/month** (**$23,169.12 annualised**). The service rows reconcile exactly:
+
+| Saved service entry | Monthly cost |
+|---|---:|
+| Amazon EC2 | $274.94 |
+| Amazon RDS for PostgreSQL | $1,227.52 |
+| Amazon EFS | $300.00 |
+| Amazon S3 | $11.50 |
+| VPC — Site-to-Site VPN and two tunnel public IPv4 addresses | $43.80 |
+| VPC — two conventional NAT Gateways and two NAT public IPv4 addresses | $73.00 |
+| **Total** | **$1,930.76** |
+
+The migration-period group is present but empty (**0 services**). No migration-period price has been entered. The displayed total therefore remains a partial steady-state subtotal, not a complete estimate or approved budget.
+
+The previously generated PDF export is **stale**: its 8 November export showed **$1,850.46/month** and contained only five service entries. It predates the separate $73.00 NAT entry and the $7.30 VPN tunnel public-IPv4 addition. The difference from the current saved estimate is **$80.30/month** ($963.60 annualised). Do not use that older PDF as the current estimate or attach it as final evidence. A fresh PDF and CSV export, plus the public share URL, remain outstanding; export them from the current saved estimate and reconcile the exported totals before marking the evidence pack complete.
+
+No calculator values were changed during this read-only audit.
+
 ## Architecture quantities to price
 
 | Service | Current design input | Pricing status / required decision |

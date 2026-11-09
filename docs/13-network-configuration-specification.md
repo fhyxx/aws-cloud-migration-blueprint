@@ -32,14 +32,12 @@ This document is the configuration-level handoff between the architecture/prepar
 | DB-A | `10.30.21.0/24` | AZ-A | RT-DB-A | RDS subnet group |
 | DB-B | `10.30.22.0/24` | AZ-B | RT-DB-B | RDS subnet group |
 | MGN staging | `10.30.31.0/24` | AZ-A (provisional) | RT-MGN | MGN replication servers |
-| RT-DATASYNC-ENDPOINT | DataSync endpoint `10.30.51.0/24` | `10.30.0.0/16 → local`; propagated `10.50.0.0/16 → VGW` | No default route; endpoint TCP 1024–1064 return path to the on-prem agent |
-| RT-DATASYNC-TASK | DataSync task ENIs `10.30.52.0/24` | `10.30.0.0/16 → local`; propagated `10.50.0.0/16 → VGW` | No default route; task ENIs in AZ-A with EFS mount target A; agent TCP 443 return path |
 | DMS-A | `10.30.41.0/24` | AZ-A | RT-DMS-A | DMS replication subnet group |
 | DMS-B | `10.30.42.0/24` | AZ-B | RT-DMS-B | DMS replication subnet group |
 | DataSync endpoint | `10.30.51.0/24` | AZ-A | RT-DATASYNC-ENDPOINT | VPC service endpoint ENI |
 | DataSync task | `10.30.52.0/24` | AZ-A | RT-DATASYNC-TASK | DataSync task ENIs; same AZ as EFS mount target A |
 
-VPC: `10.30.0.0/16`, Region `us-east-1`, two logical AZs. Resolve AZ-A/AZ-B to account-specific AZ IDs before implementation. The six steady-state subnets and three migration-only subnets are separate network segments. Each /24 has 251 initially assignable IPv4 addresses before ENIs and service consumption; this is not a capacity guarantee. Recheck free IP headroom for ALB, NAT, DMS, MGN and interface endpoint ENIs.
+VPC: `10.30.0.0/16`, Region `us-east-1`, two logical AZs. Resolve AZ-A/AZ-B to account-specific AZ IDs before implementation. The six steady-state subnets and five migration-only subnets are separate network segments. Each /24 has 251 initially assignable IPv4 addresses before ENIs and service consumption; this is not a capacity guarantee. Recheck free IP headroom for ALB, NAT, DMS, MGN and interface endpoint ENIs.
 
 ### 2.2 Customer/on-premises network placeholders
 
@@ -87,7 +85,7 @@ All route tables include the VPC-local route. The table below lists additional i
 | Customer prefixes | `10.50.0.0/16` | Replace with approved actual prefixes |
 | VPN connection | One connection, two AWS tunnels | Business/Network owner approves resilience tier |
 | Customer outside IP | Placeholder only | Exchange securely; never invent |
-| Route propagation | DMS-A, DMS-B, MGN only | Verify exact three route-table associations |
+| Route propagation | DMS-A, DMS-B, MGN, DataSync endpoint and DataSync task only | Verify exact five route-table associations |
 
 Configure both tunnels from AWS-generated configuration for the actual customer gateway vendor/firmware. Do not hard-code outside IPs, tunnel inside CIDRs, pre-shared keys or device commands in this document. Permit asymmetric routing where required by the VGW design and verify return paths.
 
